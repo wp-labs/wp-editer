@@ -1,0 +1,49 @@
+/target
+
+# dependencies
+/node_modules
+
+# testing
+/coverage
+
+# production
+/build
+/dist
+temp.zip
+template.zip
+
+# misc
+.DS_Store
+*.swp
+*.dia~
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# local env files
+.env*.local
+
+# tmp
+.ice
+/temp
+# cache
+.eslintcache
+.stylelintcache
+*.log
+out
+rescue
+gen.dat
+*.rlib
+temp.*
+.run*
+.trae/
+.claude/
+.cursor/
+project_root/
+.vscode/
+.*/
+!.github/   
+CLAUDE.md

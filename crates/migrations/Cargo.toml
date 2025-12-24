@@ -1,0 +1,10 @@
+[package]
+name = "wp-editer-migrations"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sea-orm = { version = "1.1", default-features = false, features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-chrono"] }
+sea-orm-migration = { version = "1.1", default-features = false, features = ["sqlx-postgres", "runtime-tokio-rustls"] }
+serde = { version = "1.0", features = ["derive"] }
+async-trait = "0.1"

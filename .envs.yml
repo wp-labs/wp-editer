@@ -1,0 +1,6 @@
+# 是否编译上传Docker镜像
+ENABLE_DOCKER_PUBLISH: true
+# 是否上传二进制文件
+ENABLE_BINARY_PUBLISH: true
+# 二进制文件名称
+BINARY_NAME: wp-editer

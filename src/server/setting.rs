@@ -1,0 +1,91 @@
+use config::{Config, File};
+use serde::Deserialize;
+use std::path::Path;
+use std::sync::OnceLock;
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct LogConf {
+    pub level: String,
+    pub output: String,
+    pub output_path: String,
+}
+
+impl Default for LogConf {
+    fn default() -> Self {
+        LogConf {
+            level: "debug".to_string(),
+            output: "Console".to_string(),
+            output_path: "./logs/".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct WebConf {
+    pub host: String,
+    pub port: u16,
+}
+
+impl Default for WebConf {
+    fn default() -> Self {
+        WebConf {
+            host: "0.0.0.0".to_string(),
+            port: 8080,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct Setting {
+    pub log: LogConf,
+    pub web: WebConf,
+    #[serde(default = "default_project_root")]
+    pub project_root: String,
+}
+
+fn default_project_root() -> String {
+    "./project_root".to_string()
+}
+
+impl Default for Setting {
+    fn default() -> Self {
+        Setting {
+            log: LogConf::default(),
+            web: WebConf::default(),
+            project_root: default_project_root(),
+        }
+    }
+}
+
+impl Setting {
+    pub fn load() -> Self {
+        static SETTING: OnceLock<Setting> = OnceLock::new();
+
+        SETTING
+            .get_or_init(|| {
+                let config_path = "config/config.toml";
+                let mut builder = Config::builder();
+
+                // 如果配置文件存在，就加载它，否则使用默认配置
+                if Path::new(&config_path).exists() {
+                    builder = builder.add_source(File::with_name(config_path));
+                }
+
+                // 使用构建器加载配置，如果失败则使用默认值
+                builder
+                    .build()
+                    .unwrap_or_else(|_| {
+                        // 配置文件加载失败，使用默认配置
+                        warn!("配置文件加载失败，使用默认配置");
+                        Config::builder().build().unwrap()
+                    })
+                    .try_deserialize()
+                    .unwrap_or_else(|_| {
+                        // 配置文件解析失败，使用默认配置
+                        warn!("配置文件解析失败，使用默认配置");
+                        Setting::default()
+                    })
+            })
+            .clone()
+    }
+}
