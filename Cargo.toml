@@ -33,7 +33,7 @@ wp_wpl = { package = "wp-lang", git = "https://github.com/wp-labs/wp-engine.git"
 wp_oml = { package = "wp-oml", git = "https://github.com/wp-labs/wp-engine.git", tag = "v1.4.2-alpha" }
 wp_parser = { package = "wp-parser", git = "https://github.com/wp-labs/wp-engine.git", tag = "v1.4.2-alpha" }
 wp_proj = { package = "wp-proj", git = "https://github.com/wp-labs/wp-engine.git", tag = "v1.4.2-alpha" }
-wp_knowledge = { package = "wp-knowledge", path = "../git/wp-engine/crates/wp-knowledge" }
+wp_knowledge = { package = "wp-knowledge", git = "https://github.com/wp-labs/wp-engine.git", tag = "v1.4.2-alpha" }
 wp_data_utils = { package = "wp-data-utils", git = "https://github.com/wp-labs/wp-engine.git", tag = "v1.4.2-alpha" }
 wp_model_core = { package = "wp-model-core", git = "https://github.com/wp-labs/wp-open-api.git", tag = "v0.5.1-beta" }
 wp_parse_api = { package = "wp-parse-api", git = "https://github.com/wp-labs/wp-open-api.git", tag = "v0.5.1-beta" }
