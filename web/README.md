@@ -1,10 +1,10 @@
-# WpEditer 控制平台
+# WpEditer
 
-基于 React 19 + Ant Design v5 实现的 WpEditer 控制平台前端应用。
+基于 React 19 + Ant Design v5 实现的 WpEditer前端应用。
 
 ## 项目概述
 
-本项目根据 `pages/` 目录下的 HTML 原型和接口设计文档，使用 React 技术栈实现了完整的控制平台前端。
+本项目根据 `pages/` 目录下的 HTML 原型和接口设计文档，使用 React 技术栈实现了完整的前端。
 
 ## 技术栈
 

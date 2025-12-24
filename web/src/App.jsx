@@ -46,7 +46,6 @@ function SimpleHeader() {
       <div className="brand">
         <img src="/assets/images/index.png" alt="WpEditer" className="logo" style={{ height: '70px' }} />
         <span className="divider">|</span>
-        <span className="subtitle">控制平台</span>
         {versionInfo.wpEditer || versionInfo.warpParse ? (
           <span
             className="version-info"

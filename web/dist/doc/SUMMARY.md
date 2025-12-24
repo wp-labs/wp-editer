@@ -1,6 +1,6 @@
 # Summary
 
-- [使用配置者（User）索引](10-user/README.md)
+- [使用配置者（User）索引](README.md)
   - [CLI 工具集](10-user/01-cli/README.md)
     - [CLI 工具概览](10-user/01-cli/00-cli-tools-overview.md)
     - [GettingStarted](10-user/01-cli/01-getting_started.md)
