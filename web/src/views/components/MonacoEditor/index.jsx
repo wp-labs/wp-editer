@@ -21,6 +21,10 @@ const MonacoEditor = forwardRef((props, ref) => {
 
   const handleEditorDidMount = (editor) => {
     editorRef.current = editor;
+
+    editor.addCommand(monaco.KeyCode.Tab, () => {
+      editor.trigger('keyboard', 'type', { text: '\t' });
+    });
   };
 
   return (

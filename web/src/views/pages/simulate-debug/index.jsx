@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
 import { Table, message, Modal, Select, Tree } from 'antd';
+import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { parseLogs, convertRecord } from '@/services/debug';
+import Textarea from '@/views/components/Textarea';
 
 
 /**
@@ -401,7 +402,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                       </button>
                     </div>
                   </div>
-                  <textarea
+                  <Textarea
                     className="code-area"
                     rows={7}
                     value={inputValue}
@@ -426,7 +427,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                         </button>
                       </div>
                     </div>
-                    <textarea
+                    <Textarea
                       className="code-area code-area--large"
                       rows={12}
                       value={ruleValue}
@@ -541,7 +542,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                         </button>
                       </div>
                     </div>
-                    <textarea
+                    <Textarea
                       className="code-area code-area--large"
                       rows={14}
                       value={transformOml}
