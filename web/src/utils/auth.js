@@ -5,7 +5,7 @@
  */
 
 // localStorage 存储键名
-const AUTH_KEY = 'wpediter_auth_logged_in';
+const AUTH_KEY = 'wpeditor_auth_logged_in';
 
 /**
  * 检查用户是否已登录

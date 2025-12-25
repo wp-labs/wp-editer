@@ -1,5 +1,5 @@
 [package]
-name = "wp-editer-migrations"
+name = "wp-editor-migrations"
 version = "0.1.0"
 edition = "2021"
 

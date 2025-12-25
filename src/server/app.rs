@@ -41,7 +41,7 @@ pub async fn start() -> std::io::Result<()> {
     let setting = Setting::load();
     simple_log::quick!(&setting.log.level);
 
-    info!("启动 WpEditer 服务器");
+    info!("启动 WpEditor 服务器");
     info!("Web 地址: {}:{}", setting.web.host, setting.web.port);
 
     // 创建并注入 SharedRecord

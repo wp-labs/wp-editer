@@ -1,6 +1,6 @@
-# wp-editer
+# wp-editor
 
-Wp Editer 是一个独立运行的 WEB 系统，专门用于日志解析和数据转换。它提供了完整的日志解析、数据转换和项目管理功能。
+Wp Editor 是一个独立运行的 WEB 系统，专门用于日志解析和数据转换。它提供了完整的日志解析、数据转换和项目管理功能。
 
 ## 功能特性
 
@@ -35,7 +35,7 @@ Wp Editer 是一个独立运行的 WEB 系统，专门用于日志解析和数�
 1. **克隆项目**
 ```bash
 git clone <repository-url>
-cd wp-editer
+cd wp-editor
 ```
 
 2. **构建后端**
@@ -109,7 +109,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
 ## 项目结构
 
 ```
-wp-editer/
+wp-editor/
 ├── .github/          # GitHub Actions 工作流配置
 ├── _gal/             # 内部工具配置,使用gflow更新版本依赖
 ├── config/           # 配置文件
@@ -180,13 +180,13 @@ wp-editer/
 
 ### Docker 部署
 ```bash
-docker build -t wp-editer .
-docker run -p 8080:8080 wp-editer
+docker build -t wp-editor .
+docker run -p 8080:8080 wp-editor
 ```
 
 ### 直接部署
 1. 构建后端: `cargo build --release`
-2. 运行: `./target/release/wp-editer`
+2. 运行: `./target/release/wp-editor`
 
 ## 贡献指南
 

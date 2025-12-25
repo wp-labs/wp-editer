@@ -1,6 +1,6 @@
-# WpEditer
+# WpEditor
 
-基于 React 19 + Ant Design v5 实现的 WpEditer前端应用。
+基于 React 19 + Ant Design v5 实现的 WpEditor前端应用。
 
 ## 项目概述
 
@@ -182,8 +182,8 @@ VITE_API_BASE_URL=http://localhost:8080
 ```nginx
 server {
   listen 80;
-  server_name wpediter.example.com;
-  root /var/www/wpediter/dist;
+  server_name wpeditor.example.com;
+  root /var/www/wpeditor/dist;
   index index.html;
 
   location / {

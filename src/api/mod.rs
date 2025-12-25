@@ -7,7 +7,7 @@ pub mod debug;
 
 #[derive(Serialize)]
 struct VersionInfo {
-    wp_editer: String,
+    wp_editor: String,
     warp_engine: String,
 }
 
@@ -15,7 +15,7 @@ struct VersionInfo {
 #[get("/api/version")]
 pub async fn get_version() -> impl Responder {
     HttpResponse::Ok().json(VersionInfo {
-        wp_editer: env!("CARGO_PKG_VERSION").to_string(),
+        wp_editor: env!("CARGO_PKG_VERSION").to_string(),
         warp_engine: env!("WARP_ENGINE_VERSION").to_string(), // 使用 wp_parser 依赖的版本
     })
 }

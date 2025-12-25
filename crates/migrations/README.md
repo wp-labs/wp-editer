@@ -1,6 +1,6 @@
 # 数据库迁移文件
 
-本目录包含 wpEditer 项目的数据库迁移脚本。
+本目录包含 wpEditor 项目的数据库迁移脚本。
 
 ## 文件说明
 
@@ -10,7 +10,7 @@
 ## 数据库配置
 
 - **数据库类型**: PostgreSQL 12+
-- **数据库名称**: wp-editer
+- **数据库名称**: wp-editor
 - **字符集**: UTF8
 - **时区**: UTC
 
@@ -20,10 +20,10 @@
 
 ```bash
 # 1. 创建数据库
-createdb wp-editer
+createdb wp-editor
 
 # 2. 连接数据库
-psql -d wp-editer
+psql -d wp-editor
 
 # 3. 执行迁移脚本
 \i migrations/V001__init_database.sql
@@ -34,9 +34,9 @@ psql -d wp-editer
 
 ```bash
 # 创建数据库并执行所有迁移
-psql -U postgres -c "CREATE DATABASE \"wp-editer\";"
-psql -U postgres -d wp-editer -f migrations/V001__init_database.sql
-psql -U postgres -d wp-editer -f migrations/V002__seed_data.sql
+psql -U postgres -c "CREATE DATABASE \"wp-editor\";"
+psql -U postgres -d wp-editor -f migrations/V001__init_database.sql
+psql -U postgres -d wp-editor -f migrations/V002__seed_data.sql
 ```
 
 ### 方法三：使用 Docker Compose
@@ -47,8 +47,8 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_DB: wp-editer
-      POSTGRES_USER: wpEditer
+      POSTGRES_DB: wp-editor
+      POSTGRES_USER: wpEditor
       POSTGRES_PASSWORD: your_password
     ports:
       - "5432:5432"
@@ -69,7 +69,7 @@ volumes:
 cargo install sqlx-cli --no-default-features --features postgres
 
 # 设置数据库 URL
-export DATABASE_URL="postgresql://username:password@localhost/wp-editer"
+export DATABASE_URL="postgresql://username:password@localhost/wp-editor"
 
 # 创建数据库
 sqlx database create
@@ -175,8 +175,8 @@ postgresql://[user[:password]@][host][:port][/dbname][?param1=value1&...]
 
 示例：
 ```
-postgresql://wpEditer:password@localhost:5432/wp-editer
-postgresql://postgres@localhost/wp-editer
+postgresql://wpEditor:password@localhost:5432/wp-editor
+postgresql://postgres@localhost/wp-editor
 ```
 
 ## 常见问题
@@ -201,7 +201,7 @@ use sqlx::postgres::PgPoolOptions;
 
 let pool = PgPoolOptions::new()
     .max_connections(5)
-    .connect("postgresql://user:pass@localhost/wp-editer")
+    .connect("postgresql://user:pass@localhost/wp-editor")
     .await?;
 ```
 

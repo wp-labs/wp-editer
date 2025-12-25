@@ -1,5 +1,5 @@
 [package]
-name = "wp-editer"
+name = "wp-editor"
 version = "0.1.17"
 edition = "2024"
 build = "build.rs"
@@ -47,7 +47,7 @@ sea-orm = { version = "1.1", features = [
     "macros",
     "with-chrono",
 ] }
-wp-editer-migrations = { path = "crates/migrations" }
+wp-editor-migrations = { path = "crates/migrations" }
 
 [build-dependencies]
 serde = { version = "~1.0", features = ["derive"] }

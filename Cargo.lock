@@ -5366,7 +5366,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "wp-editer"
+name = "wp-editor"
 version = "0.1.17"
 dependencies = [
  "actix-files",
@@ -5394,7 +5394,7 @@ dependencies = [
  "tracing",
  "wp-data-fmt",
  "wp-data-utils",
- "wp-editer-migrations",
+ "wp-editor-migrations",
  "wp-knowledge",
  "wp-lang",
  "wp-model-core",
@@ -5408,7 +5408,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "wp-editer-migrations"
+name = "wp-editor-migrations"
 version = "0.1.0"
 dependencies = [
  "async-trait",

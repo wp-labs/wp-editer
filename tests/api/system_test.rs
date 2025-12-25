@@ -2,11 +2,11 @@ use actix_web::test;
 use actix_web::{App, body::to_bytes, http::StatusCode};
 use serde::Deserialize;
 
-use wp_editer::api;
+use wp_editor::api;
 
 #[derive(Deserialize)]
 struct VersionResponse {
-    wp_editer: String,
+    wp_editor: String,
     warp_engine: String,
 }
 
@@ -24,6 +24,6 @@ async fn api_get_version_returns_versions() {
     let version: VersionResponse =
         serde_json::from_slice(&body_bytes).expect("parse version response failed");
 
-    assert!(!version.wp_editer.is_empty());
+    assert!(!version.wp_editor.is_empty());
     assert!(!version.warp_engine.is_empty());
 }

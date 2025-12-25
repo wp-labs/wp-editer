@@ -1,4 +1,4 @@
-// WpEditer Library
+// WpEditor Library
 
 #[macro_use]
 extern crate tracing;

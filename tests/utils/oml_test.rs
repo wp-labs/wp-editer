@@ -1,5 +1,5 @@
 use wp_data_fmt::{DataFormat, FormatType, Json};
-use wp_editer::{convert_record, record_to_fields, warp_check_record};
+use wp_editor::{convert_record, record_to_fields, warp_check_record};
 
 #[test]
 fn test_wpl_to_oml_transform() {

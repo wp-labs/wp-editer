@@ -1,4 +1,4 @@
-// WpEditer 数据库迁移和实体定义
+// WpEditor 数据库迁移和实体定义
 
 pub use sea_orm_migration::prelude::*;
 

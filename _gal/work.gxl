@@ -4,7 +4,7 @@ mod envs  {
    env _common  : rust_env.init   {
     root      = ".";
     target_name = "";
-    prj_key   = "wp-editer" ;
+    prj_key   = "wp-editor" ;
     DIST_REPO = "unknow";
 
   }

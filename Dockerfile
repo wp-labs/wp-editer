@@ -22,7 +22,7 @@ RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 WORKDIR /app
 
 # 从构建阶段拷贝二进制文件
-COPY --from=builder /usr/src/app/target/release/wp-editer /app/wp-editer
+COPY --from=builder /usr/src/app/target/release/wp-editor /app/wp-editor
 COPY --from=builder /usr/src/app/template /app/template
 COPY --from=builder /usr/src/app/web/dist /app/web/dist
 
@@ -31,4 +31,4 @@ RUN chown -R appuser:appgroup /app
 USER appuser
 
 EXPOSE 8080
-CMD ["/app/wp-editer"]
+CMD ["/app/wp-editor"]

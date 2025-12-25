@@ -22,15 +22,15 @@ const theme = {
 
 // 简化版导航栏组件，只包含logo展示
 function SimpleHeader() {
-  const [versionInfo, setVersionInfo] = useState({ wpEditer: '', warpParse: '', warpEngine: '' });
+  const [versionInfo, setVersionInfo] = useState({ wpEditor: '', warpParse: '', warpEngine: '' });
 
-  // 获取版本信息：wp-editer 与 warp-parse/warp-engine
+  // 获取版本信息：wp-editor 与 warp-parse/warp-engine
   useEffect(() => {
     const fetchVersion = async () => {
       try {
         const response = await httpRequest.get('/version');
         setVersionInfo({
-          wpEditer: response?.wp_editer || '',
+          wpEditor: response?.wp_editor || '',
           warpParse: response?.warp_parse || '',
           warpEngine: response?.warp_engine || '',
         });
@@ -45,7 +45,7 @@ function SimpleHeader() {
   return (
     <header className="main-header">
       <div className="brand" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
-        <img src="/assets/images/index.png" alt="WpEditer" className="logo" style={{ height: '70px' }} />
+        <img src="/assets/images/index.png" alt="WpEditor" className="logo" style={{ height: '70px' }} />
         <span className="divider">|</span>
         {/* 确保显示subtitle */}
         <span className="subtitle" style={{ marginRight: 10, color: '#fff', fontSize: '20px', fontWeight: '600' }}>Wp Editor</span>
@@ -54,8 +54,8 @@ function SimpleHeader() {
           className="version-info"
           style={{ marginLeft: 8, fontSize: 12, color: '#fff', display: 'inline-block', backgroundColor: 'rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: '4px' }}
         >
-          {versionInfo.wpEditer && (
-            <span style={{ marginRight: 8 }}>wp-editer: {versionInfo.wpEditer}</span>
+          {versionInfo.wpEditor && (
+            <span style={{ marginRight: 8 }}>wp-editor: {versionInfo.wpEditor}</span>
           )}<br/>
           {/* 显示warp-engine，如果没有则显示warp-parse */}
           {(versionInfo.warpEngine || versionInfo.warpParse) ? (

@@ -4,7 +4,7 @@ use crate::error::{DbError, DbResult};
 use chrono::Utc;
 use sea_orm::{DatabaseConnection, QueryOrder, Set, entity::prelude::*};
 use serde::{Deserialize, Serialize};
-use wp_editer_migrations::entity::knowledge_config::{ActiveModel, Column, Entity, Model};
+use wp_editor_migrations::entity::knowledge_config::{ActiveModel, Column, Entity, Model};
 
 pub type KnowledgeConfig = Model;
 

@@ -153,9 +153,9 @@ fn main() {
         .and_then(|v| v.as_array())
         .expect("No packages found in cargo metadata");
 
-    let wp_editer = get_package_version(packages, app_name);
+    let wp_editor = get_package_version(packages, app_name);
     let warp_engine = get_package_version(packages, warp_engine_pkg_name);
 
-    println!("cargo:rustc-env=wp_editer_VERSION={}", wp_editer);
+    println!("cargo:rustc-env=wp_editor_VERSION={}", wp_editor);
     println!("cargo:rustc-env=WARP_ENGINE_VERSION={}", warp_engine);
 }

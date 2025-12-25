@@ -1,5 +1,5 @@
 use wp_data_fmt::{DataFormat, FormatType, Json};
-use wp_editer::{record_to_fields, warp_check_record};
+use wp_editor::{record_to_fields, warp_check_record};
 
 #[test]
 fn test_warp_check_nginx_log() {

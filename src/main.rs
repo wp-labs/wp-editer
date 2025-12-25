@@ -1,5 +1,5 @@
 use clap::Parser;
-use wp_editer::server::start;
+use wp_editor::server::start;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

@@ -17,12 +17,12 @@ function Navigation({ children }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
   const [refreshKey, setRefreshKey] = useState(0); // 用于强制重新渲染
-  const [versionInfo, setVersionInfo] = useState({ wpEditer: '', warpEngine: '' });
+  const [versionInfo, setVersionInfo] = useState({ wpEditor: '', warpEngine: '' });
 
   // 调试：添加默认版本信息，确保元素能显示
   useEffect(() => {
     // 如果API请求失败或返回空值，使用默认值
-    if (!versionInfo.wpEditer && !versionInfo.warpEngine) {
+    if (!versionInfo.wpEditor && !versionInfo.warpEngine) {
       console.log('Using default version info for display');
       // 不实际设置状态，只在渲染时使用默认值
     }
@@ -87,13 +87,13 @@ function Navigation({ children }) {
     };
   }, [location.pathname, refreshKey]); // 当路由变化或 refreshKey 变化时重新计算
 
-  // 获取版本信息：wp-editer 与 warp-parse
+  // 获取版本信息：wp-editor 与 warp-parse
   useEffect(() => {
     const fetchVersion = async () => {
       try {
         const response = await httpRequest.get('/version');
         setVersionInfo({
-          wpEditer: response?.wp_editer || '',
+          wpEditor: response?.wp_editor || '',
           warpEngine: response?.warp_engine || '',
         });
       } catch (error) {
@@ -108,7 +108,7 @@ function Navigation({ children }) {
   // useEffect(() => {
   //   // 模拟版本信息
   //   setVersionInfo({
-  //     wpEditer: '1.0.0',
+  //     wpEditor: '1.0.0',
   //     warpEngine: '2.0.0',
   //   });
   // }, []);
@@ -182,7 +182,7 @@ function Navigation({ children }) {
       <header className="main-header">
         <div style={{ display: 'block', width: '100%', zIndex: 100 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src="/assets/images/index.png" alt="WpEditer" style={{ height: '70px', display: 'inline-block' }} />
+            <img src="/assets/images/index.png" alt="WpEditor" style={{ height: '70px', display: 'inline-block' }} />
             <span style={{ color: '#fff', fontSize: '20px' }}>|</span>
             <span style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold' }}>Wp Editor</span>
           </div>
@@ -195,7 +195,7 @@ function Navigation({ children }) {
             borderRadius: '4px',
             display: 'inline-block'
           }}>
-            <div>wp-editer: {versionInfo.wpEditer || '1.0.0'}</div>
+            <div>wp-editor: {versionInfo.wpEditor || '1.0.0'}</div>
             <div>warp-engine: {versionInfo.warpEngine || '2.0.0'}</div>
           </div>
         </div>
