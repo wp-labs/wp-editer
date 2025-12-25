@@ -59,14 +59,14 @@ fn try_parse_with_rules(rule_items: Vec<RunParseProc>, data: &str) -> Result<Dat
     for (index, (vm_unit, _funcs)) in rule_items.iter().enumerate() {
         let evaluator = WplEvaluator::from(vm_unit, None).map_err(AppError::wpl_parse)?;
         let raw = RawData::from_string(data.to_string());
-        match evaluator.proc(raw, 0){
+        match evaluator.proc(raw, 0) {
             Ok((tdc, _pipeline)) => return Ok(tdc),
             Err(err) => {
                 if index >= rule_items.len() - 1 {
                     return Err(AppError::wpl_parse(err));
                 }
             }
-        }      
+        }
     }
     Err(AppError::wpl_parse("所有 WPL 规则执行失败"))
 }
