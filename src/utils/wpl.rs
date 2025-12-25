@@ -56,14 +56,19 @@ pub fn warp_check_record(wpl: &str, data: &str) -> Result<DataRecord, AppError> 
 
 /// 尝试用规则列表解析数据
 fn try_parse_with_rules(rule_items: Vec<RunParseProc>, data: &str) -> Result<DataRecord, AppError> {
-    rule_items
-        .into_iter()
-        .find_map(|(wpl_express, _funcs)| {
-            let evaluator = WplEvaluator::from(&wpl_express, None).ok()?;
-            let raw = RawData::from_string(data.to_string());
-            evaluator.proc(raw, 0).ok().map(|(tdc, _pipeline)| tdc)
-        })
-        .ok_or_else(|| AppError::wpl_parse("所有 WPL 规则执行失败"))
+    for (index, (vm_unit, _funcs)) in rule_items.iter().enumerate() {
+        let evaluator = WplEvaluator::from(vm_unit, None).map_err(AppError::wpl_parse)?;
+        let raw = RawData::from_string(data.to_string());
+        match evaluator.proc(raw, 0){
+            Ok((tdc, _pipeline)) => return Ok(tdc),
+            Err(err) => {
+                if index >= rule_items.len() - 1 {
+                    return Err(AppError::wpl_parse(err));
+                }
+            }
+        }      
+    }
+    Err(AppError::wpl_parse("所有 WPL 规则执行失败"))
 }
 
 fn extract_rule_items(wpl_package: &WplPackage) -> anyhow::Result<Vec<RunParseProc>> {

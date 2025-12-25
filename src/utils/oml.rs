@@ -18,7 +18,7 @@ pub fn convert_record(oml: &str, record: DataRecord) -> Result<DataRecord, AppEr
         .join("\n");
 
     let model = oml_parse(&mut filter_oml.as_str())
-        .map_err(|e| AppError::oml_transform(format!("OML 语法解析错误: {:?}", e)))?;
+        .map_err(|e| AppError::oml_transform(e))?;
     let mut cache = FieldQueryCache::with_capacity(10);
     let target = model.transform(record, &mut cache);
     Ok(target)

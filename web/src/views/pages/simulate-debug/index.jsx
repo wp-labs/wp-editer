@@ -6,10 +6,10 @@ import { parseLogs, convertRecord } from '@/services/debug';
 
 
 /**
- * 模拟调试页面
+ * Wp Editor
  * 功能：
- * 1. 日志解析调试
- * 2. 记录转换调试
+ * 1. 日志解析
+ * 2. 记录转换
  * 3. 知识库状态查询
  * 对应原型：pages/views/simulate-debug/simulate-parse.html
  */
@@ -34,7 +34,10 @@ function SimulateDebugPage() {
   // 解析页“显示空值”开关
   const [showEmpty, setShowEmpty] = useState(true);
   
-  // 转换调试相关状态
+  // 解析错误状态
+  const [parseError, setParseError] = useState(null);
+  
+  // 转换相关状态
   const [transformOml, setTransformOml] = useState('');
   const [transformParseResult, setTransformParseResult] = useState(null);
   const [transformResult, setTransformResult] = useState(null);
@@ -43,6 +46,8 @@ function SimulateDebugPage() {
   // 转换页各自的“显示空值”开关（解析结果 / 转换结果互相独立）
   const [transformParseShowEmpty, setTransformParseShowEmpty] = useState(true);
   const [transformResultShowEmpty, setTransformResultShowEmpty] = useState(true);
+  // 转换错误状态
+  const [transformError, setTransformError] = useState(null);
   
   // 帮助中心相关状态
   const [helpSearchText, setHelpSearchText] = useState('');
@@ -57,6 +62,7 @@ function SimulateDebugPage() {
    */
   const handleTest = async () => {
     setLoading(true);
+    setParseError(null); // 重置错误状态
     try {
       // 调用服务层解析日志（使用对象参数）
       const response = await parseLogs({ 
@@ -68,6 +74,8 @@ function SimulateDebugPage() {
       if (response && Array.isArray(response.fields)) {
         setTransformParseResult({ fields: response.fields });
       }
+    } catch (error) {
+      setParseError(error); // 将错误存储到状态中
     } finally {
       setLoading(false);
     }
@@ -82,6 +90,7 @@ function SimulateDebugPage() {
     setRuleValue(EXAMPLE_RULE);
     // 自动执行解析
     setLoading(true);
+    setParseError(null); // 重置错误状态
     try {
       const response = await parseLogs({
         logs: EXAMPLE_LOG,
@@ -107,6 +116,8 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
       if (response && Array.isArray(response.fields)) {
         setTransformParseResult({ fields: response.fields });
       }
+    } catch (error) {
+      setParseError(error); // 将错误存储到状态中
     } finally {
       setLoading(false);
     }
@@ -121,10 +132,12 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
     setInputValue('');
     setRuleValue('');
     setResult(null);
+    setParseError(null); // 清空解析错误
     // 清空转换页面
     setTransformOml('');
     setTransformParseResult(null);
     setTransformResult(null);
+    setTransformError(null); // 清空转换错误
   };
 
   const handleTransform = async () => {
@@ -133,6 +146,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
       return;
     }
     setLoading(true);
+    setTransformError(null); // 重置转换错误状态
     try {
       const response = await convertRecord({ oml: transformOml });
       // 新 API 直接返回 { fields: [...] } 格式
@@ -140,8 +154,11 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
         fields: Array.isArray(response?.fields) ? response.fields : [],
         formatJson: response.formatJson || '',
       });
+      setTransformError(null);
     } catch (error) {
       message.error(`执行转换失败：${error?.message || error}`);
+      setTransformError(error);
+      setTransformResult(null);
     } finally {
       setLoading(false);
     }
@@ -175,14 +192,70 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
     });
   };
 
+  // 统一渲染解析错误内容，仅保留错误标题和错误码提示
+  const renderParseError = () => {
+    if (!parseError) return null;
+
+    return (
+      <div
+        style={{
+          padding: '20px',
+          backgroundColor: '#fff1f0',
+          border: '1px solid #ffccc7',
+          borderRadius: 4,
+          margin: '10px',
+        }}
+      >
+        <h4 style={{ color: '#f5222d', marginBottom: '8px' }}>解析失败</h4>
+        <p>{parseError.message || '执行解析失败，请稍后重试'}</p>
+        {parseError.code && (
+          <p style={{ color: '#f5222d', margin: '8px 0 0 0' }}>
+            <span style={{ fontWeight: 'bold' }}>错误码：</span>
+            {parseError.code}
+          </p>
+        )}
+      </div>
+    );
+  };
+
+  // 转换错误展示，仅保留错误标题与错误码
+  const renderTransformError = () => {
+    if (!transformError) return null;
+    const errorMessage = transformError.message
+      || transformError.responseData?.error?.message
+      || transformError.data?.error?.message
+      || '执行转换失败，请稍后重试';
+
+    return (
+      <div
+        style={{
+          padding: '20px',
+          backgroundColor: '#fff1f0',
+          border: '1px solid #ffccc7',
+          borderRadius: 4,
+          margin: '10px',
+        }}
+      >
+        <h4 style={{ color: '#f5222d', marginBottom: '8px' }}>转换失败</h4>
+        <p>{errorMessage}</p>
+        {transformError.code && (
+          <p style={{ color: '#f5222d', margin: '8px 0 0 0' }}>
+            <span style={{ fontWeight: 'bold' }}>错误码：</span>
+            {transformError.code}
+          </p>
+        )}
+      </div>
+    );
+  };
+
   // 获取页面标题（与旧版本一致）
   const getPageTitle = () => {
     const titles = {
-      parse: '解析调试',
-      convert: '转换调试',
+      parse: '解析',
+      convert: '转换',
       knowledge: '帮助中心'
     };
-    return titles[activeKey] || '模拟调试';
+    return titles[activeKey] || 'Wp Editor';
   };
 
   // 将 docToc（带 level 的扁平数组）转换为 antd Tree 所需的树形结构
@@ -286,14 +359,14 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
           className={`side-item ${activeKey === 'parse' ? 'is-active' : ''}`}
           onClick={() => setActiveKey('parse')}
         >
-        <h2>解析调试</h2>
+        <h2>解析</h2>
         </button>
         <button
           type="button"
           className={`side-item ${activeKey === 'convert' ? 'is-active' : ''}`}
           onClick={() => setActiveKey('convert')}
         >
-          <h2>转换调试</h2>
+          <h2>转换</h2>
         </button>
         <button
           type="button"
@@ -310,7 +383,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
             <h2>{getPageTitle()}</h2>
           </header>
           <section className="panel-body simulate-body">
-            {/* 解析调试页面 */}
+            {/* 解析页面 */}
             {activeKey === 'parse' && (
               <>
                 <div className="panel-block">
@@ -396,7 +469,9 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                         </label>
                       </div>
                       <div className={`mode-content ${viewMode === 'table' ? 'is-active' : ''}`}>
-                        {result ? (
+                        {parseError ? (
+                          renderParseError()
+                        ) : result ? (
                           <Table
                               size="small"
                               columns={resultColumns}
@@ -413,7 +488,9 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                         )}
                       </div>
                       <div className={`mode-content ${viewMode === 'json' ? 'is-active' : ''}`}>
-                        {result ? (
+                        {parseError ? (
+                          renderParseError()
+                        ) : result ? (
                           <pre className="code-block" style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
                             {JSON.stringify(
                               {
@@ -436,7 +513,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
               </>
             )}
 
-            {/* 转换调试页面 */}
+            {/* 转换页面 */}
             {activeKey === 'convert' && (
               <div className="split-layout transform-layout">
                 <div className="split-col transform-col">
@@ -444,7 +521,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                     <div className="block-header">
                       <div>
                         <h3>OML 输入</h3>
-                        <p className="block-desc">根据解析结果补齐转换逻辑，支持断点调试。</p>
+                        <p className="block-desc">根据解析结果补齐转换逻辑。</p>
                       </div>
                       <div className="block-actions">
                         <button
@@ -581,7 +658,9 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                       </label>
                     </div>
                     <div className={`mode-content ${transformResultViewMode === 'table' ? 'is-active' : ''}`}>
-                      {transformResult ? (
+                      {transformError ? (
+                        renderTransformError()
+                      ) : transformResult ? (
                         <Table
                           size="small"
                           columns={resultColumns}
@@ -601,7 +680,9 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                       )}
                     </div>
                     <div className={`mode-content ${transformResultViewMode === 'json' ? 'is-active' : ''}`}>
-                      {transformResult ? (
+                      {transformError ? (
+                        renderTransformError()
+                      ) : transformResult ? (
                         <pre className="code-block" style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
                           {(() => {
                             if (transformResult.formatJson) {

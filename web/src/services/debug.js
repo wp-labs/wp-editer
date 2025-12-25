@@ -16,18 +16,88 @@ import httpRequest from './request';
 export async function parseLogs(options) {
   const { logs, rules, connectionId } = options;
 
-  // 调用后端解析接口：POST /api/debug/parse
-  const response = await httpRequest.post('/debug/parse', {
-    connection_id: connectionId,
-    rules,
-    logs,
-  });
-
-  // 后端直接返回字段数组，包装为统一格式
-  return {
-    success: true,
-    fields: Array.isArray(response) ? response : [],
+  /**
+   * 统一构造解析错误对象，附带后端响应，便于前端展示
+   * @param {Object} payload - 错误信息载体
+   * @param {string} payload.message - 错误文案
+   * @param {string} [payload.code] - 错误码
+   * @param {Object} [payload.details] - 细节信息
+   * @param {Object} [payload.responseData] - 原始响应体
+   * @returns {Error} 带扩展字段的错误对象
+   */
+  const createParseError = (payload) => {
+    const errorMessage = payload?.message || '执行解析失败，请稍后重试';
+    const parseError = new Error(errorMessage);
+    if (payload?.code) {
+      parseError.code = payload.code;
+    }
+    if (payload?.details) {
+      parseError.details = payload.details;
+    }
+    if (payload?.responseData) {
+      parseError.responseData = payload.responseData;
+    }
+    return parseError;
   };
+
+  try {
+    // 调用后端解析接口：POST /api/debug/parse
+    const response = await httpRequest.post('/debug/parse', {
+      connection_id: connectionId,
+      rules,
+      logs,
+    });
+
+    // 兼容后端直接返回或包一层 data 的情况
+    const data = response && typeof response === 'object' && 'data' in response
+      ? response.data
+      : response;
+
+    // 如果后端返回 success:false，视为业务错误，抛出供调用方捕获
+    if (data && data.success === false) {
+      throw createParseError({
+        message: data.error?.message,
+        code: data.error?.code,
+        details: data.error?.details || data.error,
+        responseData: data,
+      });
+    }
+
+    // 后端直接返回字段数组，包装为统一格式
+    return {
+      success: true,
+      fields: Array.isArray(data) ? data : [],
+    };
+  } catch (error) {
+    // 将请求异常与业务异常统一为可展示的错误对象，优先挂载后端响应
+    const responseData = error?.response?.data || error?.data;
+    if (responseData && responseData.success === false) {
+      throw createParseError({
+        message: responseData.error?.message || error?.message,
+        code: responseData.error?.code,
+        details: responseData.error?.details || responseData.error,
+        responseData,
+      });
+    }
+
+    if (error instanceof Error) {
+      if (responseData && !error.responseData) {
+        error.responseData = responseData;
+      }
+      if (!error.details && responseData?.error) {
+        error.details = responseData.error;
+      }
+      if (!error.code && responseData?.error?.code) {
+        error.code = responseData.error.code;
+      }
+      throw error;
+    }
+
+    throw createParseError({
+      message: typeof error === 'string' ? error : '执行解析失败，请稍后重试',
+      responseData,
+    });
+  }
 }
 
 /**
@@ -40,38 +110,82 @@ export async function parseLogs(options) {
 export async function convertRecord(options) {
   const { oml, connectionId } = options;
 
-  // 调用后端转换接口：POST /api/debug/transform
-  // parse_result 参数保留但后端实际使用 SharedRecord
-  const response = await httpRequest.post('/debug/transform', {
-    connection_id: connectionId,
-    parse_result: {}, // 占位，后端使用 SharedRecord
-    oml,
-  });
-
-  // 兼容后端直接返回或包一层 data 的情况
-  const data = response && typeof response === 'object' && 'data' in response
-    ? response.data
-    : response;
-
-  // 如果后端返回 success:false，视为业务错误，抛出供调用方捕获
-  if (data && data.success === false) {
-    const errorMessage = data.error?.message || '执行转换失败，请稍后重试';
-    const error = new Error(errorMessage);
-    if (data.error?.code) {
-      // 将后端错误码附加到错误对象，方便调用方按需处理
-      error.code = data.error.code;
+  /**
+   * 构造转换错误对象，携带后端响应内容，便于前端展示
+   * @param {Object} payload - 错误信息载体
+   * @param {string} payload.message - 错误文案
+   * @param {string} [payload.code] - 错误码
+   * @param {Object} [payload.responseData] - 原始响应
+   * @returns {Error} 带扩展字段的错误对象
+   */
+  const createTransformError = (payload) => {
+    const errorMessage = payload?.message || '执行转换失败，请稍后重试';
+    const transformError = new Error(errorMessage);
+    if (payload?.code) {
+      transformError.code = payload.code;
     }
-    throw error;
-  }
-
-  // 后端返回 DebugTransformResponse 结构，包含 fields 和 format_json
-  const payload = data;
-
-  return {
-    fields: Array.isArray(payload?.fields) ? payload.fields : [],
-    // 提供给前端 JSON 模式直接展示的标准 JSON 字符串
-    formatJson: typeof payload?.format_json === 'string' ? payload.format_json : '',
+    if (payload?.responseData) {
+      transformError.responseData = payload.responseData;
+    }
+    return transformError;
   };
+
+  try {
+    // 调用后端转换接口：POST /api/debug/transform
+    // parse_result 参数保留但后端实际使用 SharedRecord
+    const response = await httpRequest.post('/debug/transform', {
+      connection_id: connectionId,
+      parse_result: {}, // 占位，后端使用 SharedRecord
+      oml,
+    });
+
+    // 兼容后端直接返回或包一层 data 的情况
+    const data = response && typeof response === 'object' && 'data' in response
+      ? response.data
+      : response;
+
+    // 如果后端返回 success:false，视为业务错误
+    if (data && data.success === false) {
+      throw createTransformError({
+        message: data.error?.message,
+        code: data.error?.code,
+        responseData: data,
+      });
+    }
+
+    // 后端返回 DebugTransformResponse 结构，包含 fields 和 format_json
+    const payload = data;
+
+    return {
+      fields: Array.isArray(payload?.fields) ? payload.fields : [],
+      // 提供给前端 JSON 模式直接展示的标准 JSON 字符串
+      formatJson: typeof payload?.format_json === 'string' ? payload.format_json : '',
+    };
+  } catch (error) {
+    const responseData = error?.response?.data || error?.data;
+    if (responseData && responseData.success === false) {
+      throw createTransformError({
+        message: responseData.error?.message || error?.message,
+        code: responseData.error?.code,
+        responseData,
+      });
+    }
+
+    if (error instanceof Error) {
+      if (responseData && !error.responseData) {
+        error.responseData = responseData;
+      }
+      if (!error.code && responseData?.error?.code) {
+        error.code = responseData.error.code;
+      }
+      throw error;
+    }
+
+    throw createTransformError({
+      message: typeof error === 'string' ? error : '执行转换失败，请稍后重试',
+      responseData,
+    });
+  }
 }
 
 /**
