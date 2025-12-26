@@ -7,7 +7,7 @@ Wp Editor 是一个独立运行的 WEB 系统，专门用于日志解析和数�
 - **日志解析**: 支持 WPL (Warp Parse Language) 规则，可解析多种格式的日志
 - **数据转换**: 支持 OML (Object Mapping Language) 规则，将解析后的数据转换为指定格式
 - **实时预览**: 支持实时解析和转换结果预览
-- **规则编辑**: 内置 Monaco Editor，支持语法高亮和智能提示
+- **规则编辑**: 内置 CodeMirror 6 编辑器，支持语法高亮和智能提示
 
 ## 技术栈
 
@@ -21,7 +21,7 @@ Wp Editor 是一个独立运行的 WEB 系统，专门用于日志解析和数�
 - **框架**: React 19.0.0
 - **构建工具**: Vite 6.3.5
 - **UI 组件**: Ant Design 5.24.9
-- **编辑器**: Monaco Editor 0.52.2
+- **编辑器**: CodeMirror 6
 
 ## 快速开始
 
