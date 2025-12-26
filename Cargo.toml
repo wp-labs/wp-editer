@@ -26,7 +26,7 @@ config = "~0.14"
 toml = "~0.8"
 chrono = { version = "~0.4", features = ["serde"] }
 thiserror = "~1.0"
-strum = { version = "~0.26", features = ["derive"] }
+strum = { version = "~0.27", features = ["derive"] }
 regex = "~1.12"
 anyhow = "~1"
 
