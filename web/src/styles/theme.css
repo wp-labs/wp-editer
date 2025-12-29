@@ -1432,7 +1432,6 @@ body:not(.login-page) .connection-page-wrapper {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
-  min-height: 0;
 }
 
 /* Placeholder 样式（与旧版本一致） */
