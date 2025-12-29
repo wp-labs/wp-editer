@@ -45,26 +45,47 @@ function SimpleHeader() {
   return (
     <header className="main-header">
       <div className="brand" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
-        <img src="/assets/images/index.png" alt="WpEditor" className="logo" style={{ height: '70px' }} />
+        <img
+          src="/assets/images/index.png"
+          alt="WpEditor"
+          className="logo"
+          style={{ height: '70px' }}
+        />
         <span className="divider">|</span>
         {/* 确保显示subtitle */}
-        <span className="subtitle" style={{ marginRight: 10, color: '#fff', fontSize: '20px', fontWeight: '600' }}>Wp Editor</span>
-        {/* 确保版本信息始终显示 */}
         <span
-          className="version-info"
-          style={{ marginLeft: 8, fontSize: 12, color: '#fff', display: 'inline-block', backgroundColor: 'rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: '4px' }}
+          className="subtitle"
+          style={{ marginRight: 10, color: '#fff', fontSize: '20px', fontWeight: '600' }}
         >
-          {versionInfo.wpEditor && (
-            <span style={{ marginRight: 8 }}>wp-editor: {versionInfo.wpEditor}</span>
-          )}<br/>
-          {/* 显示warp-engine，如果没有则显示warp-parse */}
-          {(versionInfo.warpEngine || versionInfo.warpParse) ? (
-            <span>{versionInfo.warpEngine ? 'warp-engine' : 'warp-parse'}: {versionInfo.warpEngine || versionInfo.warpParse}</span>
-          ) : (
-            <span style={{ opacity: 0.7 }}>warp-engine: -</span>
-          )}
+          Wp Editor
         </span>
       </div>
+      {/* 版本信息移到右侧 */}
+      <span
+        className="version-info"
+        style={{
+          fontSize: 12,
+          color: '#fff',
+          display: 'inline-block',
+          backgroundColor: 'rgba(255,255,255,0.1)',
+          padding: '8px 12px',
+          borderRadius: '4px',
+          lineHeight: '1.4',
+        }}
+      >
+        {versionInfo.wpEditor && (
+          <span style={{ display: 'block' }}>wp-editor: {versionInfo.wpEditor}</span>
+        )}
+        {/* 显示warp-engine，如果没有则显示warp-parse */}
+        {versionInfo.warpEngine || versionInfo.warpParse ? (
+          <span style={{ display: 'block' }}>
+            {versionInfo.warpEngine ? 'warp-engine' : 'warp-parse'}:{' '}
+            {versionInfo.warpEngine || versionInfo.warpParse}
+          </span>
+        ) : (
+          <span style={{ opacity: 0.7, display: 'block' }}>warp-engine: -</span>
+        )}
+      </span>
     </header>
   );
 }
