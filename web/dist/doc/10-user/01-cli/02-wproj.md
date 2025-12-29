@@ -1,6 +1,6 @@
-# wproj CLI
+# Wproj 
 
-wproj 是 Warp Flow Engine 项目管理工具，提供完整的项目生命周期管理功能，包括项目初始化和配置管理、数据源的检查和统计、模型管理和知识库创建维护。
+wproj 是 Warp Parse 项目管理工具，提供完整的项目生命周期管理功能，包括项目初始化和配置管理、数据源的检查和统计、模型管理和知识库创建维护。
 
 ## 命令概览
 
@@ -17,32 +17,6 @@ Commands:
 
 ---
 
-## rule - 规则工具
-
-离线解析测试，验证 WPL 规则。
-
-```bash
-wproj rule parse [OPTIONS]
-```
-
-| 参数 | 短选项 | 长选项 | 默认值 | 说明 |
-|------|--------|--------|--------|------|
-| in_path | `-i` | `--in-path` | - | 输入文件路径 |
-| rule_file | `-R` | `--rule-file` | - | 规则文件路径 |
-| json | - | `--json` | false | JSON 格式输出 |
-| quiet | `-q` | `--quiet` | false | 静默模式 |
-
-**示例：**
-
-```bash
-# 使用规则执行离线解析测试
-wproj rule parse --in-path /data/sample.txt \
-    --rule-file /rules/parser.wpl \
-    --json \
-    -q
-```
-
----
 
 ## init - 项目初始化
 
@@ -54,7 +28,6 @@ wproj init [OPTIONS]
 
 | 参数 | 短选项 | 长选项 | 默认值 | 说明 |
 |------|--------|--------|--------|------|
-| work_root | `-w` | `--work-root` | `.` | 工作目录 |
 | mode | `-m` | `--mode` | `conf` | 初始化模式 |
 
 **初始化模式：**
@@ -64,7 +37,7 @@ wproj init [OPTIONS]
 | `full` | 完整项目（配置+模型+数据+示例+链接器） |
 | `normal` | 完整项目（配置+模型+数据+示例） |
 | `model` | 仅模型文件 |
-| `conf` | 仅配置文件（默认） |
+| `conf` | 仅配置文件 |
 | `data` | 仅数据目录 |
 
 **示例：**
@@ -140,31 +113,18 @@ Subcommands:
 清理项目输出数据。
 
 ```bash
-wproj data clean [OPTIONS]
+wproj data clean
 ```
 
-| 参数 | 短选项 | 长选项 | 默认值 | 说明 |
-|------|--------|--------|--------|------|
-| work_root | `-w` | `--work-root` | `.` | 工作目录 |
-| local | - | `--local` | false | 仅本地清理 |
 
 ### data stat
 
 统计数据量。
 
 ```bash
-wproj data stat [OPTIONS] <SUBCOMMAND>
-
-Subcommands:
-  file       统计源+汇文件
-  src-file   仅统计源文件
-  sink-file  仅统计汇文件
+wproj data stat 
 ```
 
-| 参数 | 短选项 | 长选项 | 默认值 | 说明 |
-|------|--------|--------|--------|------|
-| work_root | `-w` | `--work-root` | `.` | 工作目录 |
-| json | - | `--json` | false | JSON 格式输出 |
 
 ### data validate
 
@@ -176,176 +136,41 @@ wproj data validate [OPTIONS]
 
 | 参数 | 短选项 | 长选项 | 默认值 | 说明 |
 |------|--------|--------|--------|------|
-| work_root | `-w` | `--work-root` | `.` | 工作目录 |
 | input_cnt | - | `--input-cnt` | - | 输入总数（分母） |
-| stats_file | - | `--stats-file` | - | 统计文件路径 |
-| verbose | `-v` | `--verbose` | false | 详细输出 |
 
 **示例：**
 
 ```bash
 # 清理输出数据
-wproj data clean -w /project --local
+wproj data clean 
 
-# 统计源+汇文件行数
-wproj data stat -w /project file
-
-# 仅统计源文件
-wproj data stat -w /project src-file --json
+# 统计源+SINK文件行数
+wproj data stat 
 
 # 验证数据分布
-wproj data validate -w /project \
-    --input-cnt 10000 \
-    --stats-file stats.json \
-    -v
+wproj data validate 
 ```
 
 ---
 
 ## model - 模型管理
+TODO!
+
+---
+
+## rule - 规则工具
+
+离线解析测试，验证 WPL 规则。
 
 ```bash
-wproj model <SUBCOMMAND>
-
-Subcommands:
-  sources  列出并检查源连接器
-  sinks    列出汇组和路由
-  route    显示数据流路径
-  knowdb   知识库管理
+wproj rule parse [OPTIONS]
 ```
-
-### model sources
-
-列出并验证源连接器配置。
-
-```bash
-wproj model sources [OPTIONS]
-```
-
-### model sinks
-
-列出汇组和路由配置。
-
-```bash
-wproj model sinks [OPTIONS]
-```
-
-### model route
-
-显示数据流路径（规则 → OML → 汇）。
-
-```bash
-wproj model route [OPTIONS]
-```
-
-| 参数 | 短选项 | 长选项 | 默认值 | 说明 |
-|------|--------|--------|--------|------|
-| work_root | `-w` | `--work-root` | `.` | 工作目录 |
-| group | - | `--group` | - | 指定汇组 |
-| sink | - | `--sink` | - | 指定汇 |
-| path_like | - | `--path-like` | - | 路径匹配 |
-
-### model knowdb
-
-知识库管理。
-
-```bash
-wproj model knowdb <SUBCOMMAND>
-
-Subcommands:
-  init   生成 KnowDB 骨架
-  check  校验 KnowDB 结构
-  clean  清理 KnowDB 缓存
-```
-
-**knowdb init 参数：**
-
-| 参数 | 短选项 | 长选项 | 默认值 | 说明 |
-|------|--------|--------|--------|------|
-| work_root | `-w` | `--work-root` | `.` | 工作目录 |
-| full | - | `--full` | false | 生成完整模板 |
 
 **示例：**
 
 ```bash
-# 列出所有源连接器
-wproj model sources -w /project
-
-# 列出所有汇及其配置
-wproj model sinks -w /project
-
-# 显示指定汇的数据流路径
-wproj model route -w /project \
-    --group "group1" \
-    --sink "sink1" \
-    --path-like "/output"
-
-# 初始化知识库（完整模板）
-wproj model knowdb init -w /project --full
-
-# 校验知识库结构
-wproj model knowdb check -w /project
-
-# 清理知识库缓存
-wproj model knowdb clean -w /project
+# 使用规则执行离线解析测试
+wproj rule parse 
 ```
 
 ---
-
-## JSON 输出格式
-
-### stat src-file
-
-```json
-{
-  "ok": true,
-  "summary": { "total_enabled_lines": 12345 },
-  "items": [
-    { "key": "file_1", "path": "/abs/a.log", "enabled": true, "lines": 12000, "error": null }
-  ]
-}
-```
-
-### stat sink-file
-
-```json
-{
-  "ok": true,
-  "summary": { "total_lines": 9876 },
-  "items": [
-    { "group": "http", "sink": "ok_sink", "path": "./out/http/ok.dat", "framework": false, "lines": 9600 }
-  ]
-}
-```
-
-### validate
-
-```json
-{
-  "ok": false,
-  "items": [
-    { "severity": "ERROR", "group": "http", "sink": "residue_sink", "msg": "actual ratio 0.04 > max 0.02" }
-  ]
-}
-```
-
----
-
-## 完整示例
-
-```bash
-# 项目初始化
-wproj init -w /project --mode full
-
-# 项目检查
-wproj check -w /project --what all
-
-# 数据统计与校验
-wproj data stat -w /project sink-file --json
-wproj data validate -w /project --input-cnt 10000
-
-# 模型管理
-wproj model sources -w /project
-wproj model sinks -w /project
-wproj model knowdb init -w /project --full
-```

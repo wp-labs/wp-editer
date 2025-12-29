@@ -9,14 +9,14 @@ OML（Object Modeling Language）用于在 Warp Parse 中对解析后的记录�
 - [OML 语言基础](./01-oml_basics.md)
 - [OML 使用示例](./02-oml_examples.md)
 - [OML 语法（EBNF）](./03-oml_grammar_ebnf.md)
-- [OML DSL 改进建议（草案）](./04-oml_dsl_changes_proposal.md)
+- [OML 函数参考](./04-oml_functions.md)
 
 ## 特性概览
 
 - 取值与缺省：`read(...)`（非破坏）/`take(...)`（破坏）+ 默认体 `{ _ : <值/函数> }`
 - 对象/数组聚合：`object { ... }`、`collect read(keys:[...])`
 - 条件匹配：`match read(x) { ... }` 与二元匹配 `match (read(a), read(b)) { ... }`
-- 管道与格式化：`read(x) | to_json | base64_en`，`fmt("{}-{}", @a, read(b))`
+- 管道与格式化：`read(x) | to_json | base64_encode`，`fmt("{}-{}", @a, read(b))`
 - SQL：`select <cols from table> where <cond>;`（主体白名单校验，严格模式可通过 `OML_SQL_STRICT=0` 关闭）
 - 批量目标：目标名含 `*` 时按批量模式求值（仅支持 take/read）
 - 隐私段：末尾通过第二个 `---` 声明字段隐私处理器映射
@@ -27,12 +27,12 @@ OML（Object Modeling Language）用于在 Warp Parse 中对解析后的记录�
 name : example
 ---
 user_id        = read(user_id) ;
-occur_time:time= Time::now() ;
+occur_time:time= Now::time() ;
 values : obj   = object {
   cpu_free, memory_free : digit = take() ;
 };
 ports : array  = collect read(keys:[sport,dport]) ;
-ports_json     = read(ports) | to_json ;
+ports_json     = pipe read(ports) | to_json ;
 full           = fmt("{}-{}", @user, read(city)) ;
 name,pinying   = select name,pinying from example where pinying = read(py) ;
 ---

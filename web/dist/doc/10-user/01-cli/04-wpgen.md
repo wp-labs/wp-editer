@@ -1,6 +1,6 @@
-# wpgen CLI
+# Wpgen 
 
-wpgen 是 WarpParse 数据生成器，用于基于 WPL 规则或样本文件生成测试数据。
+wpgen 是 WarpParse 数据生成器，用于基于WPL规则或样本文件生成测试数据。
 
 ## 命令概览
 
@@ -26,7 +26,6 @@ wpgen rule [OPTIONS]
 
 | 参数 | 短选项 | 长选项 | 默认值 | 说明 |
 |------|--------|--------|--------|------|
-| work_root | `-w` | `--work-root` | `.` | 工作根目录 |
 | wpl_dir | - | `--wpl` | - | WPL 规则目录覆盖 |
 | conf_name | `-c` | `--conf` | `wpgen.toml` | 配置文件名 |
 | stat_print | `-p` | `--print_stat` | false | 周期打印统计信息 |
@@ -42,7 +41,6 @@ wpgen rule [OPTIONS]
 wpgen sample [OPTIONS]
 ```
 
-参数与 `rule` 子命令相同。
 
 ### conf - 配置管理
 
@@ -54,10 +52,6 @@ Subcommands:
   clean  清理生成器配置
   check  检查配置有效性
 ```
-
-| 参数 | 短选项 | 长选项 | 默认值 | 说明 |
-|------|--------|--------|--------|------|
-| work_root | `-w` | `--work-root` | `.` | 工作根目录 |
 
 ### data - 数据管理
 
@@ -71,9 +65,7 @@ Subcommands:
 
 | 参数 | 短选项 | 长选项 | 默认值 | 说明 |
 |------|--------|--------|--------|------|
-| work_root | `-w` | `--work-root` | `.` | 工作根目录 |
 | conf_name | `-c` | `--conf` | `wpgen.toml` | 配置文件名 |
-| local | - | `--local` | true | 仅清理本地输出（不触达远端） |
 
 ## 运行语义
 
@@ -98,21 +90,21 @@ wpgen conf init -w .
 wpgen conf check -w .
 
 # 基于规则生成 10000 条数据
-wpgen sample -w . -n 10000 -p
+wpgen sample -n 10000 -p
 
 # 自定义规则目录和生成速度
-wpgen sample --work-root /project \
-    --wpl /custom/rules \
+wpgen rule 
+    --wpl nginx \
     -c custom.toml \
     -s 1000 \
     --stat 2 \
     -p
 
 # 基于样本文件生成
-wpgen sample -w . -n 50000 -s 5000 --stat 5 -p
+wpgen sample  -n 50000 -s 5000 --stat 5 -p
 
 # 清理生成的数据
-wpgen data clean -w . -c wpgen.toml --local
+wpgen data clean -c wpgen.toml --local
 ```
 
 ## 常见问题
@@ -135,5 +127,4 @@ parallel = 4       # 并行 worker 数
 [output]
 # 输出配置...
 ```
-
 生成文件通常位于 `./data/in_dat/`，可在配置中调整目标路径。

@@ -1,10 +1,9 @@
-# wparse 
+# Wparse 
 
 ## 运行模式
 
 - 两种运行模式：`wparse daemon`（常驻服务）和 `wparse batch`（批处理）
 - 批处理模式读完文件后自动退出，daemon 模式需信号触发退出
-- batch 模式下会忽略网络类源（TCP/Syslog TCP），如需接收 TCP 数据请使用 daemon 模式
 
 ## 命令行参数
 
@@ -20,7 +19,6 @@ Commands:
 
 | 参数 | 短选项 | 长选项 | 默认值 | 说明 |
 |------|--------|--------|--------|------|
-| work_root | - | `--work-root` | `.` | 工作根目录 |
 | parse_workers | `-w` | `--parse-workers` | - | 解析线程数 |
 | stat_sec | - | `--stat` | - | 统计输出间隔（秒） |
 | stat_print | `-p` | `--print_stat` | false | 周期打印统计信息 |
@@ -33,7 +31,7 @@ Commands:
 wparse batch -n 3000 --stat 2 -p
 
 # 批处理模式：指定工作目录和多线程
-wparse batch --work-root /project -w 4 --parse-workers 4
+wparse batch  -w 4 --parse-workers 4
 
 # 守护进程模式：常驻服务，每 5 秒输出统计
 wparse daemon --stat 5 -p
