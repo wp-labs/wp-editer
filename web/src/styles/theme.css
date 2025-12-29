@@ -2040,7 +2040,7 @@ mark.diff-highlight {
 }
 
 .side-nav h2 {
-  margin: 0 0 16px;
+  margin: 0;
   font-size: 18px;
   font-family: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
 }
@@ -2128,7 +2128,6 @@ mark.diff-highlight {
   gap: 20px;
   /* 移除高度限制，让内容自然增长 */
   flex: 1 1 auto;
-  overflow-y: auto;
 }
 
 .panel-block {
@@ -2918,7 +2917,9 @@ mark.diff-highlight {
   color: #ffffff;
   padding: 22px 36px 28px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
   gap: 18px;
   box-shadow: var(--shadow);
   position: relative;
@@ -3230,6 +3231,7 @@ mark.diff-highlight {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow: hidden;
 }
 
 /* 左侧 OML 输入占 50% */
@@ -3248,13 +3250,14 @@ mark.diff-highlight {
 
 .transform-col .panel-block--fill .code-area {
   flex: 1 1 auto;
-  min-height: 200px;
+  min-height: 300px;
 }
 
 /* 右侧的两个块平均分配空间 */
 .transform-col:last-child .panel-block--scrollable {
   flex: 1 1 0;
-  min-height: 0;
+  min-height: 300px;
+  max-height: 50%;
 }
 
 /* 解析调试页面 - 只固定解析结果块的高度 */
@@ -3281,17 +3284,16 @@ mark.diff-highlight {
 /* 内容区域占据剩余空间 - 只对激活的模式生效 */
 .panel-block--scrollable .mode-content.is-active {
   flex: 1 1 auto;
-  overflow: visible;
+  overflow: auto;
   display: flex;
   flex-direction: column;
-  min-height: 200px;
+  min-height: 0;
 }
 
 /* 表格容器内部滚动 */
 .panel-block--scrollable .mode-content.is-active .ant-spin-nested-loading {
   flex: 1 1 auto;
-  overflow-y: auto;
-  overflow-x: auto;
+  overflow: visible;
   min-height: 0;
   max-height: none;
 }

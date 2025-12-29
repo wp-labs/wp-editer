@@ -5,7 +5,6 @@ import remarkGfm from 'remark-gfm';
 import { parseLogs, convertRecord } from '@/services/debug';
 import CodeJarEditor from '@/views/components/CodeJarEditor';
 
-
 /**
  * Wp Editor
  * 功能：
@@ -34,10 +33,10 @@ function SimulateDebugPage() {
   const [viewMode, setViewMode] = useState('table');
   // 解析页“显示空值”开关
   const [showEmpty, setShowEmpty] = useState(true);
-  
+
   // 解析错误状态
   const [parseError, setParseError] = useState(null);
-  
+
   // 转换相关状态
   const [transformOml, setTransformOml] = useState('');
   const [transformParseResult, setTransformParseResult] = useState(null);
@@ -50,7 +49,7 @@ function SimulateDebugPage() {
   const [transformParseShowEmpty, setTransformParseShowEmpty] = useState(true);
   // 转换错误状态
   const [transformError, setTransformError] = useState(null);
-  
+
   // 帮助中心相关状态
   const [helpSearchText, setHelpSearchText] = useState('');
   const [docToc, setDocToc] = useState([]);
@@ -67,9 +66,9 @@ function SimulateDebugPage() {
     setParseError(null); // 重置错误状态
     try {
       // 调用服务层解析日志（使用对象参数）
-      const response = await parseLogs({ 
-        logs: inputValue, 
-        rules: ruleValue 
+      const response = await parseLogs({
+        logs: inputValue,
+        rules: ruleValue,
       });
       setResult(response);
       // 同步更新转换页的解析结果
@@ -96,7 +95,7 @@ function SimulateDebugPage() {
     try {
       const response = await parseLogs({
         logs: EXAMPLE_LOG,
-        rules: EXAMPLE_RULE
+        rules: EXAMPLE_RULE,
       });
       setResult(response);
 
@@ -176,7 +175,12 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
     { title: 'no', dataIndex: 'no', key: 'no', width: 60 },
     { title: 'meta', dataIndex: 'meta', key: 'meta', width: 120 },
     { title: 'name', dataIndex: 'name', key: 'name', width: 150 },
-    { title: 'value', dataIndex: 'value', key: 'value', style: { wordWrap: 'break-word', wordBreak: 'break-all', maxWidth: 300 } },
+    {
+      title: 'value',
+      dataIndex: 'value',
+      key: 'value',
+      style: { wordWrap: 'break-word', wordBreak: 'break-all', maxWidth: 300 },
+    },
   ];
 
   /**
@@ -188,7 +192,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
     if (showEmptyFlag) {
       return list;
     }
-    return list.filter((fieldItem) => {
+    return list.filter(fieldItem => {
       if (!fieldItem || typeof fieldItem !== 'object') {
         return false;
       }
@@ -226,10 +230,11 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
   // 转换错误展示，仅保留错误标题与错误码
   const renderTransformError = () => {
     if (!transformError) return null;
-    const errorMessage = transformError.message
-      || transformError.responseData?.error?.message
-      || transformError.data?.error?.message
-      || '执行转换失败，请稍后重试';
+    const errorMessage =
+      transformError.message ||
+      transformError.responseData?.error?.message ||
+      transformError.data?.error?.message ||
+      '执行转换失败，请稍后重试';
 
     return (
       <div
@@ -258,17 +263,17 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
     const titles = {
       parse: '解析',
       convert: '转换',
-      knowledge: '帮助中心'
+      knowledge: '帮助中心',
     };
     return titles[activeKey] || 'Wp Editor';
   };
 
   // 将 docToc（带 level 的扁平数组）转换为 antd Tree 所需的树形结构
-  const buildDocTree = (items) => {
+  const buildDocTree = items => {
     const roots = [];
     const stack = [];
 
-    items.forEach((item) => {
+    items.forEach(item => {
       const node = {
         title: item.title,
         key: item.id,
@@ -295,10 +300,10 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
   };
 
   // 解析 SUMMARY.md 为简单的文档目录
-  const parseSummary = (markdownText) => {
+  const parseSummary = markdownText => {
     const lines = markdownText.split(/\r?\n/);
     const items = [];
-    lines.forEach((line) => {
+    lines.forEach(line => {
       const match = line.match(/^(\s*)- \[(.+?)\]\((.+?)\)/);
       if (match) {
         const indent = match[1] || '';
@@ -311,7 +316,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
     return items;
   };
 
-  const loadDocContent = async (docPath) => {
+  const loadDocContent = async docPath => {
     if (!docPath) return;
     setDocLoading(true);
     try {
@@ -341,7 +346,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
         const items = parseSummary(text);
         setDocToc(items);
         if (!activeDoc && items.length > 0) {
-          const firstDoc = items.find((item) => item.path && item.path.endsWith('.md')) || items[0];
+          const firstDoc = items.find(item => item.path && item.path.endsWith('.md')) || items[0];
           setActiveDoc(firstDoc);
           loadDocContent(firstDoc.path);
         }
@@ -364,7 +369,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
           className={`side-item ${activeKey === 'parse' ? 'is-active' : ''}`}
           onClick={() => setActiveKey('parse')}
         >
-        <h2>解析</h2>
+          <h2>解析</h2>
         </button>
         <button
           type="button"
@@ -409,33 +414,33 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                   <CodeJarEditor
                     className="code-area"
                     value={inputValue}
-                    onChange={(value) => setInputValue(value)}
+                    onChange={value => setInputValue(value)}
                   />
                 </div>
 
                 <div className="split-layout">
                   <div className="split-col">
-                  <div className="panel-block panel-block--stretch">
-                    <div className="block-header">
-                      <h3>解析规则</h3>
-                      <div className="block-actions">
-                        <button
-                          type="button"
-                          className="btn primary"
-                          onClick={handleTest}
-                          disabled={loading}
-                        >
-                          {loading ? '解析中...' : '解析'}
-                        </button>
+                    <div className="panel-block panel-block--stretch">
+                      <div className="block-header">
+                        <h3>解析规则</h3>
+                        <div className="block-actions">
+                          <button
+                            type="button"
+                            className="btn primary"
+                            onClick={handleTest}
+                            disabled={loading}
+                          >
+                            {loading ? '解析中...' : '解析'}
+                          </button>
+                        </div>
                       </div>
+                      <CodeJarEditor
+                        className="code-area code-area--large"
+                        value={ruleValue}
+                        onChange={value => setRuleValue(value)}
+                      />
                     </div>
-                    <CodeJarEditor
-                      className="code-area code-area--large"
-                      value={ruleValue}
-                      onChange={(value) => setRuleValue(value)}
-                    />
                   </div>
-                </div>
 
                   <div className="split-col">
                     <div className="panel-block panel-block--stretch panel-block--scrollable">
@@ -463,7 +468,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                           <input
                             type="checkbox"
                             checked={showEmpty}
-                            onChange={(e) => setShowEmpty(e.target.checked)}
+                            onChange={e => setShowEmpty(e.target.checked)}
                           />
                           <span className="switch-slider"></span>
                           <span className="switch-label">显示空值</span>
@@ -474,14 +479,14 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                           renderParseError()
                         ) : result ? (
                           <Table
-                              size="small"
-                              columns={resultColumns}
-                              dataSource={filterFieldsByShowEmpty(result.fields, showEmpty)}
-                              pagination={false}
-                              rowKey="no"
-                              className="data-table compact"
-                              scroll={{ y: 400 }}
-                            />
+                            size="small"
+                            columns={resultColumns}
+                            dataSource={filterFieldsByShowEmpty(result.fields, showEmpty)}
+                            pagination={false}
+                            rowKey="no"
+                            className="data-table compact"
+                            scroll={{ y: 400 }}
+                          />
                         ) : (
                           <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
                             点击"解析"按钮查看结果
@@ -492,29 +497,29 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                         {parseError ? (
                           renderParseError()
                         ) : result ? (
-                          <pre className="code-block" style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
+                          <pre
+                            className="code-block"
+                            style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}
+                          >
                             {(() => {
-                            if (result.formatJson) {
-                              try {
-                                const parsed = JSON.parse(result.formatJson);
-                                return JSON.stringify(parsed, null, 2);
-                              } catch (_e) {
-                                // 如果不是严格 JSON 字符串，则按原样输出
-                                return result.formatJson;
+                              if (result.formatJson) {
+                                try {
+                                  const parsed = JSON.parse(result.formatJson);
+                                  return JSON.stringify(parsed, null, 2);
+                                } catch (_e) {
+                                  // 如果不是严格 JSON 字符串，则按原样输出
+                                  return result.formatJson;
+                                }
                               }
-                            }
-                            return JSON.stringify(
-                              {
-                                ...result,
-                                fields: filterFieldsByShowEmpty(
-                                  result.fields,
-                                  showEmpty,
-                                ),
-                              },
-                              null,
-                              2,
-                            );
-                          })()}
+                              return JSON.stringify(
+                                {
+                                  ...result,
+                                  fields: filterFieldsByShowEmpty(result.fields, showEmpty),
+                                },
+                                null,
+                                2
+                              );
+                            })()}
                           </pre>
                         ) : (
                           <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
@@ -559,7 +564,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                     <CodeJarEditor
                       className="code-area code-area--large"
                       value={transformOml}
-                      onChange={(value) => setTransformOml(value)}
+                      onChange={value => setTransformOml(value)}
                     />
                   </div>
                 </div>
@@ -571,14 +576,18 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                         <div className="mode-toggle">
                           <button
                             type="button"
-                            className={`toggle-btn ${transformParseViewMode === 'table' ? 'is-active' : ''}`}
+                            className={`toggle-btn ${
+                              transformParseViewMode === 'table' ? 'is-active' : ''
+                            }`}
                             onClick={() => setTransformParseViewMode('table')}
                           >
                             表格模式
                           </button>
                           <button
                             type="button"
-                            className={`toggle-btn ${transformParseViewMode === 'json' ? 'is-active' : ''}`}
+                            className={`toggle-btn ${
+                              transformParseViewMode === 'json' ? 'is-active' : ''
+                            }`}
                             onClick={() => setTransformParseViewMode('json')}
                           >
                             JSON 模式
@@ -589,20 +598,24 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                         <input
                           type="checkbox"
                           checked={transformParseShowEmpty}
-                          onChange={(e) => setTransformParseShowEmpty(e.target.checked)}
+                          onChange={e => setTransformParseShowEmpty(e.target.checked)}
                         />
                         <span className="switch-slider"></span>
                         <span className="switch-label">显示空值</span>
                       </label>
                     </div>
-                    <div className={`mode-content ${transformParseViewMode === 'table' ? 'is-active' : ''}`}>
+                    <div
+                      className={`mode-content ${
+                        transformParseViewMode === 'table' ? 'is-active' : ''
+                      }`}
+                    >
                       {transformParseResult ? (
                         <Table
                           size="small"
                           columns={resultColumns}
                           dataSource={filterFieldsByShowEmpty(
                             transformParseResult.fields,
-                            transformParseShowEmpty,
+                            transformParseShowEmpty
                           )}
                           pagination={false}
                           rowKey="no"
@@ -615,19 +628,26 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                         </div>
                       )}
                     </div>
-                    <div className={`mode-content ${transformParseViewMode === 'json' ? 'is-active' : ''}`}>
+                    <div
+                      className={`mode-content ${
+                        transformParseViewMode === 'json' ? 'is-active' : ''
+                      }`}
+                    >
                       {transformParseResult ? (
-                        <pre className="code-block" style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
+                        <pre
+                          className="code-block"
+                          style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}
+                        >
                           {JSON.stringify(
                             {
                               ...transformParseResult,
                               fields: filterFieldsByShowEmpty(
                                 transformParseResult.fields,
-                                transformParseShowEmpty,
+                                transformParseShowEmpty
                               ),
                             },
                             null,
-                            2,
+                            2
                           )}
                         </pre>
                       ) : (
@@ -645,14 +665,18 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                         <div className="mode-toggle">
                           <button
                             type="button"
-                            className={`toggle-btn ${transformResultViewMode === 'table' ? 'is-active' : ''}`}
+                            className={`toggle-btn ${
+                              transformResultViewMode === 'table' ? 'is-active' : ''
+                            }`}
                             onClick={() => setTransformResultViewMode('table')}
                           >
                             表格模式
                           </button>
                           <button
                             type="button"
-                            className={`toggle-btn ${transformResultViewMode === 'json' ? 'is-active' : ''}`}
+                            className={`toggle-btn ${
+                              transformResultViewMode === 'json' ? 'is-active' : ''
+                            }`}
                             onClick={() => setTransformResultViewMode('json')}
                           >
                             JSON 模式
@@ -663,13 +687,17 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                         <input
                           type="checkbox"
                           checked={transformResultShowEmpty}
-                          onChange={(e) => setTransformResultShowEmpty(e.target.checked)}
+                          onChange={e => setTransformResultShowEmpty(e.target.checked)}
                         />
                         <span className="switch-slider"></span>
                         <span className="switch-label">显示空值</span>
                       </label>
                     </div>
-                    <div className={`mode-content ${transformResultViewMode === 'table' ? 'is-active' : ''}`}>
+                    <div
+                      className={`mode-content ${
+                        transformResultViewMode === 'table' ? 'is-active' : ''
+                      }`}
+                    >
                       {transformError ? (
                         renderTransformError()
                       ) : transformResult ? (
@@ -678,7 +706,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                           columns={resultColumns}
                           dataSource={filterFieldsByShowEmpty(
                             transformResult.fields,
-                            transformResultShowEmpty,
+                            transformResultShowEmpty
                           )}
                           pagination={false}
                           rowKey="no"
@@ -691,11 +719,18 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                         </div>
                       )}
                     </div>
-                    <div className={`mode-content ${transformResultViewMode === 'json' ? 'is-active' : ''}`}>
+                    <div
+                      className={`mode-content ${
+                        transformResultViewMode === 'json' ? 'is-active' : ''
+                      }`}
+                    >
                       {transformError ? (
                         renderTransformError()
                       ) : transformResult ? (
-                        <pre className="code-block" style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
+                        <pre
+                          className="code-block"
+                          style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}
+                        >
                           {(() => {
                             if (transformResult.formatJson) {
                               try {
@@ -703,11 +738,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                                 if (transformResultShowEmpty) {
                                   return JSON.stringify(parsed, null, 2);
                                 }
-                                return JSON.stringify(
-                                  filterEmptyFields(parsed),
-                                  null,
-                                  2
-                                );
+                                return JSON.stringify(filterEmptyFields(parsed), null, 2);
                               } catch (_e) {
                                 return transformResult.formatJson;
                               }
@@ -717,11 +748,11 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                                 ...transformResult,
                                 fields: filterFieldsByShowEmpty(
                                   transformResult.fields,
-                                  transformResultShowEmpty,
+                                  transformResultShowEmpty
                                 ),
                               },
                               null,
-                              2,
+                              2
                             );
                           })()}
                         </pre>
@@ -735,7 +766,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                 </div>
               </div>
             )}
-            
+
             {/* 帮助中心页面 */}
             {activeKey === 'knowledge' && (
               <div
@@ -744,6 +775,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                   display: 'flex',
                   gap: '16px',
                   alignItems: 'stretch',
+                  minHeight: 0,
                 }}
               >
                 <aside
@@ -775,7 +807,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                       treeData={buildDocTree(docToc)}
                       selectedKeys={activeDoc ? [activeDoc.id] : []}
                       blockNode
-                      titleRender={(node) => (
+                      titleRender={node => (
                         <span
                           style={{
                             display: 'block',
@@ -805,8 +837,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                         height: '100%',
                         overflowY: 'auto',
                         fontSize: '14px',
-                        fontFamily:
-                          '"PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif',
+                        fontFamily: '"PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif',
                         background: '#f9fafb',
                       }}
                     />
@@ -912,7 +943,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                               {...props}
                             />
                           ),
-                          code: ({ inline, node, ...props }) => (
+                          code: ({ inline, node, ...props }) =>
                             inline ? (
                               <code
                                 style={{
@@ -934,18 +965,13 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                                   fontSize: '12px',
                                   whiteSpace: 'pre-wrap',
                                   wordWrap: 'break-word',
-                                  fontFamily:
-                                    'Menlo, Monaco, Consolas, "Courier New", monospace',
+                                  fontFamily: 'Menlo, Monaco, Consolas, "Courier New", monospace',
                                 }}
                                 {...props}
                               />
-                            )
-                          ),
+                            ),
                           a: ({ node, ...props }) => (
-                            <a
-                              style={{ color: '#2563eb', textDecoration: 'none' }}
-                              {...props}
-                            />
+                            <a style={{ color: '#2563eb', textDecoration: 'none' }} {...props} />
                           ),
                           table: ({ node, ...props }) => (
                             <div style={{ overflowX: 'auto', margin: '12px 0' }}>
@@ -995,7 +1021,9 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                       </ReactMarkdown>
                     </div>
                   ) : (
-                    <p style={{ fontSize: '14px', color: '#6b7280' }}>请选择左侧目录中的文档进行查看。</p>
+                    <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                      请选择左侧目录中的文档进行查看。
+                    </p>
                   )}
                 </main>
               </div>
