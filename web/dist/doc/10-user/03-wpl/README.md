@@ -5,8 +5,7 @@ WPL (Warp Processing Language) 是 Warp Parse 解析子系统（warp-parse）使
 ## 内容概览
 
 - [WPL 语言基础](./01-wpl_basics.md)
-- [WPL 语法（EBNF）](./03-wpl_grammar.md)
-- [WPL 管道函数](./04-wpl_pipe_functions.md)
+- [WPL 语法（EBNF）](./02-wpl_grammar.md)
 
 ## 快速示例
 

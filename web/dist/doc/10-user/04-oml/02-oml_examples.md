@@ -170,9 +170,9 @@ log_time = "15/Jan/2024:14:30:00 +0800"
 name : time_conversion
 ---
 # 使用时间函数获取当前时间
-now = Now::time() ;
-now_date = Now::date() ;
-now_hour = Now::hour() ;
+now = Time::now() ;
+now_date = Time::now_date() ;
+now_hour = Time::now_hour() ;
 ```
 
 **输出结果**:
@@ -196,11 +196,11 @@ occur_time = "2024-01-15 14:30:00"
 name : timestamp_conversion
 ---
 # 不同精度的时间戳
-ts_ss = pipe read(occur_time) | Time::to_ts_zone(0, ss) ;
-ts_ms = pipe read(occur_time) | Time::to_ts_zone(0, ms) ;
-ts_us = pipe read(occur_time) | Time::to_ts_zone(0, us) ;
+ts_ss = pipe read(occur_time) | to_timestamp_zone(0, ss) ;
+ts_ms = pipe read(occur_time) | to_timestamp_zone(0, ms) ;
+ts_us = pipe read(occur_time) | to_timestamp_zone(0, us) ;
 # 带时区
-ts_utc8 = pipe read(occur_time) | Time::to_ts_zone(8, s) ;
+ts_utc8 = pipe read(occur_time) | to_timestamp_zone(8, s) ;
 ```
 
 **输出结果**:
@@ -229,7 +229,7 @@ ports = collect read(keys:[sport, dport]) ;
 # 转换为 JSON
 ports_json = pipe read(ports) | to_json ;
 # 获取第一个端口
-first_port = pipe read(ports) | nth(0) ;
+first_port = pipe read(ports) | arr_get(0) ;
 # 统计数组长度
 port_count = pipe read(ports) | arr_len ;
 ```
@@ -253,13 +253,13 @@ url = "https://www.example.com:8080/path/to/resource?param1=value1&param2=value2
 ```oml
 name : url_parsing
 ---
-scheme = pipe read(url) | url(scheme) ;
-domain = pipe read(url) | url(domain) ;
-host = pipe read(url) | url(host) ;
-port = pipe read(url) | url(port) ;
-path = pipe read(url) | url(path) ;
-params = pipe read(url) | url(params) ;
-fragment = pipe read(url) | url(fragment) ;
+scheme = pipe read(url) | url_get(scheme) ;
+domain = pipe read(url) | url_get(domain) ;
+host = pipe read(url) | url_get(host) ;
+port = pipe read(url) | url_get(port) ;
+path = pipe read(url) | url_get(path) ;
+params = pipe read(url) | url_get(params) ;
+fragment = pipe read(url) | url_get(fragment) ;
 ```
 
 **输出结果**:
@@ -287,16 +287,16 @@ json_text = '{"key":"value with \"quotes\""}'
 name : encoding_pipe
 ---
 # Base64 编解码
-b64_encoded = pipe read(message) | base64_encode ;
-b64_decoded = pipe read(b64_encoded) | base64_decode(Utf8) ;
+b64_encoded = pipe read(message) | base64_en ;
+b64_decoded = pipe read(b64_encoded) | base64_de(Utf8) ;
 
 # HTML 转义
-html_escaped = pipe read(html) | html_escape ;
-html_unescaped = pipe read(html_escaped) | html_unescape ;
+html_escaped = pipe read(html) | html_escape_en ;
+html_unescaped = pipe read(html_escaped) | html_escape_de ;
 
 # JSON 转义
-json_escaped = pipe read(json_text) | json_escape ;
-json_unescaped = pipe read(json_escaped) | json_unescape ;
+json_escaped = pipe read(json_text) | json_escape_en ;
+json_unescaped = pipe read(json_escaped) | json_escape_de ;
 ```
 
 **输出结果**:
@@ -816,19 +816,19 @@ log_line = '192.168.1.100 - - [15/Jan/2024:14:30:00 +0800] "GET /api/users HTTP/
 name : log_processing
 ---
 # 提取 IP（使用正则或字符串分割）
-ip = pipe read(log_line) | split(' ') | nth(0) ;
+ip = pipe read(log_line) | split(' ') | arr_get(0) ;
 
 # 提取时间戳
-timestamp = pipe read(log_line) | split('[') | nth(1) | split(']') | nth(0) ;
+timestamp = pipe read(log_line) | split('[') | arr_get(1) | split(']') | arr_get(0) ;
 
 # 提取 HTTP 方法
-method = pipe read(log_line) | split('"') | nth(2) | split(' ') | nth(0) ;
+method = pipe read(log_line) | split('"') | arr_get(2) | split(' ') | arr_get(0) ;
 
 # 提取 URL
-url = pipe read(log_line) | split('"') | nth(2) | split(' ') | nth(1) ;
+url = pipe read(log_line) | split('"') | arr_get(2) | split(' ') | arr_get(1) ;
 
 # 提取状态码
-status = pipe read(log_line) | split('"') | nth(2) | split(' ') | nth(2) ;
+status = pipe read(log_line) | split('"') | arr_get(2) | split(' ') | arr_get(2) ;
 ```
 
 **输出结果**:
@@ -893,7 +893,7 @@ referer = "https://example.com/"
 name : web_access_analysis
 ---
 # 基础字段处理
-event_time = pipe read(timestamp) | Time::to_ts_zone(0, ss) ;
+event_time = pipe read(timestamp) | to_timestamp_zone(0, ss) ;
 source_ip = take(src_ip) ;
 http_method = read(method) ;
 request_uri = read(url) ;
@@ -901,10 +901,10 @@ response_code = read(status) ;
 size = read(response_size) ;
 
 # URL 解析
-protocol = pipe read(request_uri) | url(scheme) ;
-host = pipe read(request_uri) | url(host) ;
-path = pipe read(request_uri) | url(path) ;
-query = pipe read(request_uri) | url(params) ;
+protocol = pipe read(request_uri) | url_get(scheme) ;
+host = pipe read(request_uri) | url_get(host) ;
+path = pipe read(request_uri) | url_get(path) ;
+query = pipe read(request_uri) | url_get(params) ;
 
 # 状态码分类
 status_category = match read(response_code) {
@@ -990,8 +990,8 @@ load_15m = "1.8"
 name : system_monitoring
 ---
 # 时间处理
-event_ts = pipe read(timestamp) | Time::to_ts_zone(8, ss) ;
-event_hour = pipe read(timestamp) | Time::to_ts_zone(8, hh) ;
+event_ts = pipe read(timestamp) | to_timestamp_zone(8, ss) ;
+event_hour = pipe read(timestamp) | to_timestamp_zone(8, hh) ;
 
 # CPU 指标计算
 cpu_total = pipe read(cpu_user) | add(read(cpu_system)) | add(read(cpu_idle)) ;
@@ -1133,8 +1133,8 @@ memory_usage = "60.8"
 name : complete_log_processing
 ---
 # === 时间和基础信息 ===
-event_time = pipe read(log_time) | Time::to_ts_zone(0, ss) ;
-event_date = Now::date() ;
+event_time = pipe read(log_time) | to_timestamp_zone(0, ss) ;
+event_date = Time::now_date() ;
 
 # === 网络信息处理 ===
 # IP 地址转换

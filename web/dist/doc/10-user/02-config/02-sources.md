@@ -1,12 +1,13 @@
-# Sources配置
+# 源配置（Sources）
+<!-- 角色：使用配置者 | 最近验证：2025-12-21 -->
 
 ## 概览
 
-Source（源）是 warp-parse 系统中负责数据输入的组件，支持多种数据源和协议。采用统一的连接器架构，提供灵活的数据接入能力。
+Source（源）是 warp-flow 系统中负责数据输入的组件，支持多种数据源和协议。采用统一的连接器架构，提供灵活的数据接入能力。
 
 ### 定位与目录
 - **配置文件**：`$WORK_ROOT/topology/sources/wpsrc.toml`
-- **连接器定义**：从 `$WORK_ROOT/models/sources` 起向上查找最近的 `connectors/source.d/*.toml`
+- **连接器定义**：从 `$WORK_ROOT/models/sources` 起向上查找最近的 `connectors/source.d/*.toml`（≤32 层）
 
 ### 核心概念
 - **连接器**：可复用的输入连接定义，包含 `id/type/params/allow_override`
@@ -17,8 +18,9 @@ Source（源）是 warp-parse 系统中负责数据输入的组件，支持多�
 
 ### 内置 Source
 - **file**：文件输入，支持监控和轮询
+- **null**：空输入，用于测试
 - **syslog**：Syslog 协议输入（UDP/TCP）
-- **tcp**：协议输入
+- **tcp**：Syslog 协议输入（UDP/TCP）
 
 ### 扩展 Source
 - **kafka**：Apache Kafka 消息队列输入
@@ -98,3 +100,11 @@ params= {
   prefer_newline = true
 }
 ```
+
+
+## 标签系统
+
+### 标签用途
+- **路由选择**：基于标签进行数据路由
+- **过滤条件**：在处理流程中基于标签过滤
+- **监控统计**：按标签维度进行数据统计

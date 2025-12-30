@@ -1,4 +1,5 @@
-# KnowDB 配置
+# KnowDB 配置指南
+<!-- 角色：使用配置者 | 最近验证：2025-12-21 -->
 
 本指南描述知识库（KnowDB）的目录式配置与装载规范。
 
@@ -27,6 +28,18 @@ models/knowledge/
 顶层配置（models/knowledge/knowdb.toml）
 ```toml
 version = 2
+# 注：`wproj knowdb init` 生成的是“最小化”配置，不包含以下默认段落；
+# 如需修改默认行为，可手动追加：
+# base_dir = "."                      # 相对 knowdb.toml 所在目录，默认 "."
+# [default]                            # 表级 load 默认（可在每张表覆盖）
+# transaction = true
+# batch_size  = 2000
+# on_error    = "fail"                 # fail | skip
+# [csv]                                 # CSV 方言默认（可在每张表覆盖）
+# has_header  = true
+# delimiter   = ","
+# encoding    = "utf-8"
+# trim        = true
 
 [[tables]]
 name = "example"
@@ -46,6 +59,11 @@ SQL 文件规范
 - 推荐 `by_header=[..]`，按 CSV 表头名映射到 `insert.sql` 中的列
 - 若 `has_header=false`，必须提供 `by_index=[..]`
 - 可选增强（实现层）：若未配置 columns，且 `insert.sql` 显式了列清单，可解析 insert 的列名作为 `by_header`
+
+CSV 方言（默认可省略）
+- 默认：`has_header=true`、`delimiter=","`、`encoding="utf-8"`（容忍 BOM）、`trim=true`
+- 继承：表级 `[[tables.csv]]` 覆盖全局 `[csv]`；未设置则使用默认
+- 非 UTF-8 需在 `encoding` 显式指定并确保 Loader 支持（或预处理转码）
 
 装载策略（默认可省略）
 - 默认：`transaction=true`、`batch_size=2000`、`on_error="fail"`

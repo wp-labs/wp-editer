@@ -45,7 +45,7 @@ name : minimal
 # 从输入记录读取 user_id；未指定类型时默认为 auto
 user_id = read(user_id) ;
 # 调用内置时间函数
-occur_time : time = Now::time() ;
+occur_time : time = Time::now() ;
 ```
 
 ### 语法要素
@@ -170,7 +170,7 @@ count = digit(42) ;
 # IP
 addr = ip(192.168.1.1) ;
 # 时间
-now = Now::time() ;
+now = Time::now() ;
 # 布尔值
 flag = bool(true) ;
 ```
@@ -268,13 +268,13 @@ name : pipe_example
 # 数组转 JSON
 ports_json = pipe read(ports) | to_json ;
 # 取数组首元素
-first_port = pipe read(ports) | nth(0) ;
+first_port = pipe read(ports) | arr_get(0) ;
 # URL 解析
-host = pipe read(http_uri) | url(host) ;
+host = pipe read(http_uri) | url_get(host) ;
 # 时间戳转换
-occur_ms = pipe read(occur_time) | Time::to_ts_zone(0,ms) ;
+occur_ms = pipe read(occur_time) | to_timestamp_zone(0,ms) ;
 # Base64 编码
-raw_b64 = pipe read(payload) | base64_encode ;
+raw_b64 = pipe read(payload) | base64_en ;
 ```
 
 ## 高级特性
@@ -286,7 +286,7 @@ raw_b64 = pipe read(payload) | base64_encode ;
 ```oml
 name : sql_example
 ---
-# where 中可使用 read/take/Now::time/常量
+# where 中可使用 read/take/Time::now/常量
 name,pinying = select name,pinying from example where pinying = read(py) ;
 
 # 使用内置 UDF（例如 IPv4 区间匹配）
@@ -355,11 +355,11 @@ version = chars(1.0.0) ;
 ```oml
 # 推荐：使用描述性名称
 user_id = read() ;
-occur_time = Now::time() ;
+occur_time = Time::now() ;
 
 # 避免：使用缩写或无意义名称
 uid = read() ;
-ot = Now::time() ;
+ot = Time::now() ;
 ```
 
 ### 2. 类型声明
@@ -387,10 +387,10 @@ version = read() { _ : chars(1.0.0) } ;
 # 推荐：按逻辑分组
 # === 基础字段 ===
 user_id = read() ;
-occur_time = Now::time() ;
+occur_time = Time::now() ;
 
 # === 转换字段 ===
-timestamp = pipe read(occur_time) | Time::to_ts_zone(0,ms) ;
+timestamp = pipe read(occur_time) | to_timestamp_zone(0,ms) ;
 
 # === 聚合字段 ===
 summary = object {
