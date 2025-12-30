@@ -1,12 +1,29 @@
-# Sink 配置指南
-<!-- 角色：使用配置者 | 最近验证：2025-12-21 -->
+# Sink 配置
+
 
 ## 目录与文件组织
 - sink_root：用例内通常为 <case>/sink
   - business.d/**/*.toml：业务组路由（场景输出，支持子目录）
   - infra.d/**/*.toml：基础组路由（default/miss/residue/intercept/error/monitor，支持子目录）
   - defaults.toml：默认组级期望 [defaults.expect]
-  - connectors/sink.d/*.toml：连接器定义（loader 自 sink_root 向上查找最近的该目录）
+
+- connectors/sink.d/*.toml：连接器定义（loader 自 sink_root 向上查找最近的该目录）
+
+
+## 路由文件格式
+- 顶层
+  - version（可选）
+  - sink_group
+    - name：组名（字符串）
+    - oml / rule：推荐扁平写法；均可为字符串或字符串数组；用于匹配模型或规则。
+    - expect：可选，组级期望（覆盖 defaults）
+    - sinks：数组，每项为单个 sink 定义
+- 单个 sink 字段
+  - name：该 sink 的名称（组内唯一）；未提供则按 [index] 回退
+  - connect：引用连接器 id（兼容读取 `use`/`connector`）
+  - params：对连接器默认参数的白名单覆盖（keys 必须在连接器 allow_override 列表中）
+  - expect：可选，单 sink 期望（仅 ratio/tol/min/max，互斥关系：ratio/tol 与 min/max 不可混用）
+  - filter：可选，拦截条件文件路径；命中 true 时丢弃该 sink 并发送至 intercept
 
 ## 配置示例：
 ### 基础组
@@ -49,24 +66,6 @@ params = { base = "./out/sink", file = "safe.dat" }
 - 过滤语义（filter）
   - filter 是“拦截条件”：表达式求值为 true 时，该条数据不写入该 sink，而是转发到基础组 intercept（framework/intercept）
   - 每个 sink 可独立设置 filter；与 expect 相互独立
-
-
-
-## 路由文件格式
-- 顶层
-  - version（可选）
-  - sink_group
-    - name：组名（字符串）
-    - oml / rule：推荐扁平写法；均可为字符串或字符串数组；用于匹配模型或规则。
-    - expect：可选，组级期望（覆盖 defaults）
-    - sinks：数组，每项为单个 sink 定义
-- 单个 sink 字段
-  - name：该 sink 的名称（组内唯一）；未提供则按 [index] 回退
-  - connect：引用连接器 id（兼容读取 `use`/`connector`）
-  - params：对连接器默认参数的白名单覆盖（keys 必须在连接器 allow_override 列表中）
-  - expect：可选，单 sink 期望（仅 ratio/tol/min/max，互斥关系：ratio/tol 与 min/max 不可混用）
-  - filter：可选，拦截条件文件路径；命中 true 时丢弃该 sink 并发送至 intercept
-
 
 
 

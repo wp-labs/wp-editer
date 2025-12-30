@@ -45,5 +45,5 @@ temp.*
 project_root/
 .vscode/
 .*/
-!.github/   
+!.github/
 CLAUDE.md

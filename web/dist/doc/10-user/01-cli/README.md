@@ -1,23 +1,9 @@
 # CLI 工具集
+本文档集合介绍 WarpParse提供的完整命令行工具集，包括数据解析、生成、项目管理等功能。
 
-本文档集合介绍 Dayu-Veyron ETL 引擎提供的完整命令行工具集，包括数据解析、生成、项目管理等功能。
-
-## 快速导航
+## 工具总览
 
 ### 核心工具
-
-- [CLI 工具概览](./00-cli-tools-overview.md) - 所有工具的详细参数和使用说明
-- [wparse 运行模式](./02-run_modes.md) - daemon 和 batch 两种运行模式详解
-- [wpgen 使用指南](./03-wpgen.md) - 数据生成器完整使用说明
-- [wproj 项目管理](./04-wproj.md) - 项目管理工具详细说明
-- [wprescue 数据恢复](./05-wprescue.md) - 数据恢复工具使用指南
-- [日志设置与问题定位](./06-logging.md) - 日志配置和故障排除
-
-### 使用指南
-
-- [快速入门指南](./01-getting_started.md) - 从零开始配置项目，包含完整工作流程
-
-## 工具概览
 
 | 工具 | 功能描述 | 主要用途 |
 |------|---------|---------|
@@ -37,17 +23,6 @@ wparse daemon --work-root ./myproject --stat-print
 # 批处理模式
 wparse batch --work-root ./myproject --max-line 10000 --stat 5
 
-# 常用参数
-# --work-root, -w: 工作根目录（默认：.）
-# --mode, -m: 执行模式（p=精确，默认；a=自动）
-# --max-line, -n: 最大处理行数
-# --parse-workers: 并发解析 worker 数
-# --check-stop, -S: 错误停止阈值
-# --check-continue, -s: 错误继续阈值
-# --robust: 鲁棒模式（develop/alpha/beta/online/crucial）
-# --print-stat, -p: 周期性打印统计信息
-# --log-profile: 日志预设（dev/int/prod）
-# --wpl: 覆盖 WPL 模型目录
 ```
 
 ### wpgen - 数据生成器
@@ -66,15 +41,8 @@ wpgen conf clean
 
 # 数据管理
 wpgen data clean
+wpgen data check
 
-# 常用参数
-# --work-root, -w: 工作根目录（默认：.）
-# --wpl: 覆盖 WPL 规则目录
-# --conf-name, -c: 配置文件名（默认：wpgen.toml）
-# --print-stat, -p: 周期性打印统计信息
-# --line-cnt, -n: 总行数覆盖
-# --gen-speed, -s: 生成速度覆盖（行/秒）
-# --stat: 统计输出间隔（默认：1秒）
 ```
 
 ### wproj - 项目管理工具
@@ -93,17 +61,19 @@ wproj data clean
 wproj stat file
 wproj stat file --output json
 
+# 模型管理
+wproj model list
+wproj model validate
+
+# 规则工具
+wproj rule parse --rule-id myrule
+wproj rule test --input sample.log
+
 # 配置管理
 wproj sinks list
 wproj sinks validate
 wproj sinks route
 
-# 模型管理
-wproj model sources
-
-# 常用参数
-# --work-root, -w: 工作根目录（默认：.）
-# --mode: 模式（base=conf+data, env=base+connectors, full=env+models）
 ```
 
 ### wprescue - 数据恢复工具
@@ -112,35 +82,37 @@ wproj model sources
 # 批处理模式恢复数据
 wprescue batch --work-root ./myproject
 
-# 常用参数
-# --work-root, -w: 工作根目录（默认：.）
-# --mode: 执行模式（p=精确，默认；a=自动）
-# --max-line, -n: 最大处理行数
-# --robust: 鲁棒模式
 ```
 
-## 快速开始
+## 工具关系图
 
-### 1. 初始化项目
+```mermaid
+graph TD
+    A[wproj] --> B[初始化项目]
+    A --> C[检查配置]
+    A --> D[统计数据]
 
-```bash
-# 创建并初始化项目目录
-mkdir my-etl-project
-cd my-etl-project
+    B --> E[生成配置文件]
+    B --> F[创建目录结构]
 
-# 初始化完整配置
-wproj init --mode full
+    C --> G[验证配置有效性]
 
-# 检查配置
-wproj check
+    D --> H[源数据统计]
+    D --> I[输出数据统计]
+
+    J[wpgen] --> K[生成测试数据]
+    J --> L[管理生成器配置]
+    J --> M[管理输出数据]
+
+    N[wparse] --> O[实时流处理]
+    N --> P[批处理分析]
+    N --> Q[性能调优]
+
+<<<<<<< HEAD
+    R[wprescue] --> S[数据恢复]
+    R --> T[故障恢复]
 ```
-
-### 2. 生成测试数据
-
-```bash
-# 清理旧数据
-wpgen data clean
-
+=======
 # 生成测试数据（10000 行，3秒统计间隔）
 wpgen rule -n 10000 --stat 3
 ```
@@ -319,3 +291,4 @@ warp-parse/
 - [配置参考](../02-config/)
 - [用户文档](../)
 - [API 文档](../03-api/)
+>>>>>>> 67a6813c4c73265246df81e69b2f9addd4e01b62
