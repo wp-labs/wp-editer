@@ -1,7 +1,5 @@
-import { Table, message, Modal, Select, Tree } from 'antd';
-import React, { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { Table, message } from 'antd';
+import React, { useState } from 'react';
 import { parseLogs, convertRecord } from '@/services/debug';
 import CodeJarEditor from '@/views/components/CodeJarEditor';
 
@@ -23,6 +21,8 @@ const EXAMPLE_RULE = `package /example/simple {
         (ip:sip,2*_,time:recv_time<[,]>,http/request",http/status,digit,chars",http/agent",_")
   }
 }`;
+// 帮助中心在线文档地址，使用 iframe 内嵌以保持当前界面
+const HELP_CENTER_URL = 'https://wp-labs.github.io/wp-docs/';
 
 function SimulateDebugPage() {
   const [activeKey, setActiveKey] = useState('parse');
@@ -49,13 +49,6 @@ function SimulateDebugPage() {
   const [transformParseShowEmpty, setTransformParseShowEmpty] = useState(true);
   // 转换错误状态
   const [transformError, setTransformError] = useState(null);
-
-  // 帮助中心相关状态
-  const [helpSearchText, setHelpSearchText] = useState('');
-  const [docToc, setDocToc] = useState([]);
-  const [activeDoc, setActiveDoc] = useState(null);
-  const [docContent, setDocContent] = useState('');
-  const [docLoading, setDocLoading] = useState(false);
 
   /**
    * 处理测试/解析按钮点击
@@ -267,99 +260,6 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
     };
     return titles[activeKey] || 'Wp Editor';
   };
-
-  // 将 docToc（带 level 的扁平数组）转换为 antd Tree 所需的树形结构
-  const buildDocTree = items => {
-    const roots = [];
-    const stack = [];
-
-    items.forEach(item => {
-      const node = {
-        title: item.title,
-        key: item.id,
-        path: item.path,
-        level: item.level,
-        children: [],
-      };
-
-      // 根据 level 维护父子关系
-      while (stack.length > 0 && stack[stack.length - 1].level >= item.level) {
-        stack.pop();
-      }
-
-      if (stack.length === 0) {
-        roots.push(node);
-      } else {
-        stack[stack.length - 1].children.push(node);
-      }
-
-      stack.push(node);
-    });
-
-    return roots;
-  };
-
-  // 解析 SUMMARY.md 为简单的文档目录
-  const parseSummary = markdownText => {
-    const lines = markdownText.split(/\r?\n/);
-    const items = [];
-    lines.forEach(line => {
-      const match = line.match(/^(\s*)- \[(.+?)\]\((.+?)\)/);
-      if (match) {
-        const indent = match[1] || '';
-        const title = match[2];
-        const path = match[3];
-        const level = Math.floor(indent.length / 2);
-        items.push({ id: `${title}-${path}`, title, path, level });
-      }
-    });
-    return items;
-  };
-
-  const loadDocContent = async docPath => {
-    if (!docPath) return;
-    setDocLoading(true);
-    try {
-      const response = await fetch(`/doc/${docPath}`);
-      if (!response.ok) {
-        setDocContent(`无法加载文档：${docPath} (HTTP ${response.status})`);
-        return;
-      }
-      const text = await response.text();
-      setDocContent(text);
-    } catch (error) {
-      setDocContent(`加载文档失败：${String(error)}`);
-    } finally {
-      setDocLoading(false);
-    }
-  };
-
-  // 当进入帮助中心时，加载 SUMMARY.md 并初始化文档目录
-  useEffect(() => {
-    const loadSummary = async () => {
-      try {
-        const response = await fetch('/doc/SUMMARY.md');
-        if (!response.ok) {
-          return;
-        }
-        const text = await response.text();
-        const items = parseSummary(text);
-        setDocToc(items);
-        if (!activeDoc && items.length > 0) {
-          const firstDoc = items.find(item => item.path && item.path.endsWith('.md')) || items[0];
-          setActiveDoc(firstDoc);
-          loadDocContent(firstDoc.path);
-        }
-      } catch (error) {
-        // ignore, 在 UI 中通过内容区域提示
-        setDocContent(`加载文档目录失败：${String(error)}`);
-      }
-    };
-
-    if (activeKey === 'knowledge' && docToc.length === 0) {
-      loadSummary();
-    }
-  }, [activeKey, docToc.length, activeDoc]);
 
   return (
     <>
@@ -773,259 +673,25 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                 className="docs-layout"
                 style={{
                   display: 'flex',
-                  gap: '16px',
                   alignItems: 'stretch',
                   minHeight: 0,
                 }}
               >
-                <aside
-                  className="docs-sidenav"
-                  style={{
-                    width: '260px',
-                    padding: '16px 12px',
-                    borderRadius: '12px',
-                    border: '1px solid #e5e7eb',
-                    background: '#f9fafb',
-                    overflow: 'hidden',
-                    height: '100%',
-                  }}
-                >
-                  <div
-                    style={{
-                      marginBottom: '12px',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      letterSpacing: '0.04em',
-                      textTransform: 'uppercase',
-                      color: '#6b7280',
-                    }}
-                  >
-                    文档目录
-                  </div>
-                  {docToc.length > 0 ? (
-                    <Tree
-                      treeData={buildDocTree(docToc)}
-                      selectedKeys={activeDoc ? [activeDoc.id] : []}
-                      blockNode
-                      titleRender={node => (
-                        <span
-                          style={{
-                            display: 'block',
-                            padding: '4px 8px',
-                            borderRadius: 8,
-                            color: '#1b2533',
-                            fontWeight: node.level === 0 ? 600 : 400,
-                            fontSize: 14,
-                          }}
-                        >
-                          {node.title}
-                        </span>
-                      )}
-                      onSelect={(keys, info) => {
-                        const { node } = info;
-                        if (!node || !node.path) return;
-                        const selected = {
-                          id: node.key,
-                          title: node.title,
-                          path: node.path,
-                          level: typeof node.level === 'number' ? node.level : 0,
-                        };
-                        setActiveDoc(selected);
-                        loadDocContent(node.path);
-                      }}
-                      style={{
-                        height: '100%',
-                        overflowY: 'auto',
-                        fontSize: '14px',
-                        fontFamily: '"PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif',
-                        background: '#f9fafb',
-                      }}
-                    />
-                  ) : (
-                    <div style={{ fontSize: '13px', color: '#9ca3af' }}>
-                      暂无文档目录或 SUMMARY.md 加载失败
-                    </div>
-                  )}
-                </aside>
-
-                <main
-                  className="docs-content"
+                <iframe
+                  title="帮助中心"
+                  src={HELP_CENTER_URL}
                   style={{
                     flex: 1,
-                    borderRadius: '12px',
                     border: '1px solid #e5e7eb',
-                    background: '#ffffff',
-                    padding: '20px 24px',
-                    maxHeight: 'calc(100vh - 220px)',
-                    overflowY: 'auto',
+                    borderRadius: '12px',
+                    width: '100%',
+                    height: 'calc(100vh - 220px)',
+                    background: '#fff',
                   }}
-                >
-                  {docLoading ? (
-                    <p style={{ fontSize: '14px', color: '#6b7280' }}>文档加载中...</p>
-                  ) : docContent && docContent.trim().length > 0 ? (
-                    <div className="markdown-body">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          h1: ({ node, ...props }) => (
-                            <h1
-                              style={{
-                                fontSize: '26px',
-                                fontWeight: 700,
-                                margin: '0 0 18px',
-                                color: '#111827',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          h2: ({ node, ...props }) => (
-                            <h2
-                              style={{
-                                fontSize: '22px',
-                                fontWeight: 600,
-                                margin: '28px 0 14px',
-                                borderBottom: '1px solid #e5e7eb',
-                                paddingBottom: '6px',
-                                color: '#111827',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          h3: ({ node, ...props }) => (
-                            <h3
-                              style={{
-                                fontSize: '18px',
-                                fontWeight: 600,
-                                margin: '22px 0 10px',
-                                color: '#111827',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          p: ({ node, ...props }) => (
-                            <p
-                              style={{
-                                margin: '8px 0',
-                                fontSize: '14px',
-                                lineHeight: 1.7,
-                                color: '#374151',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          ul: ({ node, ...props }) => (
-                            <ul
-                              style={{
-                                paddingLeft: '1.5em',
-                                margin: '8px 0',
-                                fontSize: '14px',
-                                color: '#374151',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          ol: ({ node, ...props }) => (
-                            <ol
-                              style={{
-                                paddingLeft: '1.5em',
-                                margin: '8px 0',
-                                fontSize: '14px',
-                                color: '#374151',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          li: ({ node, ...props }) => (
-                            <li
-                              style={{
-                                margin: '4px 0',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          code: ({ inline, node, ...props }) =>
-                            inline ? (
-                              <code
-                                style={{
-                                  background: 'rgba(15,23,42,0.04)',
-                                  padding: '1px 4px',
-                                  borderRadius: '4px',
-                                  fontSize: '12px',
-                                }}
-                                {...props}
-                              />
-                            ) : (
-                              <code
-                                style={{
-                                  display: 'block',
-                                  background: '#0b1020',
-                                  color: '#e5e7eb',
-                                  padding: '12px 14px',
-                                  borderRadius: '8px',
-                                  fontSize: '12px',
-                                  whiteSpace: 'pre-wrap',
-                                  wordWrap: 'break-word',
-                                  fontFamily: 'Menlo, Monaco, Consolas, "Courier New", monospace',
-                                }}
-                                {...props}
-                              />
-                            ),
-                          a: ({ node, ...props }) => (
-                            <a style={{ color: '#2563eb', textDecoration: 'none' }} {...props} />
-                          ),
-                          table: ({ node, ...props }) => (
-                            <div style={{ overflowX: 'auto', margin: '12px 0' }}>
-                              <table
-                                style={{
-                                  width: '100%',
-                                  borderCollapse: 'collapse',
-                                  fontSize: '13px',
-                                  color: '#374151',
-                                }}
-                                {...props}
-                              />
-                            </div>
-                          ),
-                          thead: ({ node, ...props }) => (
-                            <thead
-                              style={{
-                                background: 'rgba(17,24,39,0.03)',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          th: ({ node, ...props }) => (
-                            <th
-                              style={{
-                                border: '1px solid #e5e7eb',
-                                padding: '6px 10px',
-                                textAlign: 'left',
-                                fontWeight: 600,
-                              }}
-                              {...props}
-                            />
-                          ),
-                          td: ({ node, ...props }) => (
-                            <td
-                              style={{
-                                border: '1px solid #e5e7eb',
-                                padding: '6px 10px',
-                                verticalAlign: 'top',
-                              }}
-                              {...props}
-                            />
-                          ),
-                        }}
-                      >
-                        {docContent}
-                      </ReactMarkdown>
-                    </div>
-                  ) : (
-                    <p style={{ fontSize: '14px', color: '#6b7280' }}>
-                      请选择左侧目录中的文档进行查看。
-                    </p>
-                  )}
-                </main>
+                  allow="clipboard-read; clipboard-write; fullscreen"
+                  allowFullScreen
+                  loading="lazy"
+                />
               </div>
             )}
           </section>

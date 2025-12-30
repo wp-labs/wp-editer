@@ -44,7 +44,7 @@ fn run_npm_build() {
 }
 
 /// 递归复制目录，打印每个文件的复制日志
-fn copy_dir_all(src: &Path, dst: &Path) -> Result<()> {
+fn _copy_dir_all(src: &Path, dst: &Path) -> Result<()> {
     if !dst.exists() {
         fs::create_dir_all(dst)?;
     }
@@ -54,7 +54,7 @@ fn copy_dir_all(src: &Path, dst: &Path) -> Result<()> {
         let src_path = entry.path();
         let dst_path = dst.join(entry.file_name());
         if ty.is_dir() {
-            copy_dir_all(&src_path, &dst_path)?;
+            _copy_dir_all(&src_path, &dst_path)?;
         } else {
             fs::copy(&src_path, &dst_path)?;
         }
@@ -62,7 +62,7 @@ fn copy_dir_all(src: &Path, dst: &Path) -> Result<()> {
     Ok(())
 }
 
-fn dir_hash<P: AsRef<Path>>(dir: P) -> u64 {
+fn _dir_hash<P: AsRef<Path>>(dir: P) -> u64 {
     let mut hasher = DefaultHasher::new();
     let mut queue = VecDeque::new();
     let base = dir.as_ref().to_path_buf();
@@ -97,12 +97,12 @@ fn dir_hash<P: AsRef<Path>>(dir: P) -> u64 {
 }
 
 /// 判断两个目录内容是否一致
-fn compare_dirs(src: &Path, dst: &Path) -> bool {
-    dir_hash(src) == dir_hash(dst)
+fn _compare_dirs(src: &Path, dst: &Path) -> bool {
+    _dir_hash(src) == _dir_hash(dst)
 }
 
 /// 复制 warp_parse_doc 的 docs 目录到 web/public/doc
-fn copy_docs_assets(metadata: &Value) {
+fn _copy_docs_assets(metadata: &Value) {
     let docs_pkg = metadata["packages"]
         .as_array()
         .unwrap()
@@ -118,11 +118,11 @@ fn copy_docs_assets(metadata: &Value) {
         let src = Path::new(&docs_path).join("docs/");
         let dst = Path::new("web/public/doc");
         if src.exists() {
-            if dst.exists() && compare_dirs(&src, dst) {
+            if dst.exists() && _compare_dirs(&src, dst) {
                 println!("cargo:warning=文件未变动,无需复制: {:?} -> {:?}", src, dst);
             } else {
                 println!("cargo:warning=拷贝文件: {:?} -> {:?}", src, dst);
-                copy_dir_all(&src, dst).expect("Failed to copy docs assets");
+                _copy_dir_all(&src, dst).expect("Failed to copy docs assets");
             }
         }
     }
@@ -137,7 +137,7 @@ fn main() {
 
     if !is_release {
         // 拉取帮助文档资源
-        copy_docs_assets(&metadata);
+        // copy_docs_assets(&metadata);
         // 构建静态文件
         run_npm_build();
     } else {
