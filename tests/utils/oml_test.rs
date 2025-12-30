@@ -7,7 +7,7 @@ fn test_wpl_to_oml_transform() {
 
     let wpl_rule = r#"package /example/simple {
 rule nginx {
-    (ip:sip,_^2,time:recv_time<[,]>,http/request",http/status,digit,chars",http/agent",_")
+    (ip:sip,2*_,time:recv_time<[,]>,http/request",http/status,digit,chars",http/agent",_")
 }
 }"#;
 

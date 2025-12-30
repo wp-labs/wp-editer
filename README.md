@@ -80,7 +80,7 @@ WPL (Warp Parse Language) 用于定义日志解析规则:
 ```wpl
 package /example/simple {
     rule nginx {
-        (ip:sip,_^2,time:recv_time<[,]>,http/request",http/status,digit,chars",http/agent",_")
+        (ip:sip,2*_,time:recv_time<[,]>,http/request",http/status,digit,chars",http/agent",_")
     }
 }
 ```

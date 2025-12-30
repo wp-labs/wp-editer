@@ -20,7 +20,7 @@ const EXAMPLE_LOG = `222.133.52.20 - - [06/Aug/2019:12:12:19 +0800] "GET /nginx-
 // 示例解析规则
 const EXAMPLE_RULE = `package /example/simple {
   rule nginx {
-        (ip:sip,_^2,time:recv_time<[,]>,http/request",http/status,digit,chars",http/agent",_")
+        (ip:sip,2*_,time:recv_time<[,]>,http/request",http/status,digit,chars",http/agent",_")
   }
 }`;
 
