@@ -420,7 +420,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
 
                 <div className="split-layout">
                   <div className="split-col">
-                    <div className="panel-block panel-block--stretch">
+                    <div className="panel-block panel-block--fill">
                       <div className="block-header">
                         <h3>解析规则</h3>
                         <div className="block-actions">
