@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Route, Routes } from 'react-router-dom';
-import { ConfigProvider, FloatButton } from 'antd';
+import { ConfigProvider, Button } from 'antd';
 import { RedditOutlined, SlackOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 import SimulateDebugPage from '@/views/pages/simulate-debug';
@@ -61,32 +61,65 @@ function SimpleHeader() {
           Wp Editor
         </span>
       </div>
-      {/* 版本信息移到右侧 */}
-      <span
-        className="version-info"
-        style={{
-          fontSize: 12,
-          color: '#fff',
-          display: 'inline-block',
-          backgroundColor: 'rgba(255,255,255,0.1)',
-          padding: '8px 12px',
-          borderRadius: '4px',
-          lineHeight: '1.4',
-        }}
-      >
-        {versionInfo.wpEditor && (
-          <span style={{ display: 'block' }}>wp-editor: {versionInfo.wpEditor}</span>
-        )}
-        {/* 显示warp-engine，如果没有则显示warp-parse */}
-        {versionInfo.warpEngine || versionInfo.warpParse ? (
-          <span style={{ display: 'block' }}>
-            {versionInfo.warpEngine ? 'warp-engine' : 'warp-parse'}:{' '}
-            {versionInfo.warpEngine || versionInfo.warpParse}
-          </span>
-        ) : (
-          <span style={{ opacity: 0.7, display: 'block' }}>warp-engine: -</span>
-        )}
-      </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* 社区快速访问按钮 */}
+        <Button
+          type="primary"
+          icon={<SlackOutlined style={{ fontSize: '18px' }} />}
+          size="large"
+          style={{
+            background: '#4A154B',
+            borderColor: '#4A154B',
+            fontWeight: 600,
+            fontSize: '15px',
+          }}
+          onClick={() =>
+            window.open('https://app.slack.com/client/T0A53FLT4R4/C0A4Q3SC2CF', '_blank')
+          }
+        >
+          Slack
+        </Button>
+        <Button
+          type="primary"
+          icon={<RedditOutlined style={{ fontSize: '18px' }} />}
+          size="large"
+          style={{
+            background: '#FF4500',
+            borderColor: '#FF4500',
+            fontWeight: 600,
+            fontSize: '15px',
+          }}
+          onClick={() => window.open('https://www.reddit.com/r/warppase/', '_blank')}
+        >
+          Reddit
+        </Button>
+        {/* 版本信息 */}
+        <span
+          className="version-info"
+          style={{
+            fontSize: 12,
+            color: '#fff',
+            display: 'inline-block',
+            backgroundColor: 'rgba(255,255,255,0.1)',
+            padding: '8px 12px',
+            borderRadius: '4px',
+            lineHeight: '1.4',
+          }}
+        >
+          {versionInfo.wpEditor && (
+            <span style={{ display: 'block' }}>wp-editor: {versionInfo.wpEditor}</span>
+          )}
+          {/* 显示warp-engine，如果没有则显示warp-parse */}
+          {versionInfo.warpEngine || versionInfo.warpParse ? (
+            <span style={{ display: 'block' }}>
+              {versionInfo.warpEngine ? 'warp-engine' : 'warp-parse'}:{' '}
+              {versionInfo.warpEngine || versionInfo.warpParse}
+            </span>
+          ) : (
+            <span style={{ opacity: 0.7, display: 'block' }}>warp-engine: -</span>
+          )}
+        </span>
+      </div>
     </header>
   );
 }
@@ -105,24 +138,6 @@ function App() {
             </Routes>
           </div>
         </div>
-
-        {/* 社区快速访问浮动按钮 */}
-        <FloatButton
-          icon={<SlackOutlined />}
-          tooltip="Slack 社区"
-          type="primary"
-          style={{ right: 24, bottom: 96 }}
-          onClick={() =>
-            window.open('https://app.slack.com/client/T0A53FLT4R4/C0A4Q3SC2CF', '_blank')
-          }
-        />
-        <FloatButton
-          icon={<RedditOutlined />}
-          tooltip="Reddit 社区"
-          type="primary"
-          style={{ right: 24, bottom: 24 }}
-          onClick={() => window.open('https://www.reddit.com/r/warppase/', '_blank')}
-        />
       </div>
     </ConfigProvider>
   );
