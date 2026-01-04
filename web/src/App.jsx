@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Route, Routes } from 'react-router-dom';
-import { ConfigProvider, Button } from 'antd';
-import { RedditOutlined, SlackOutlined, GithubOutlined } from '@ant-design/icons';
+import { ConfigProvider, Button, Modal } from 'antd';
+import { RedditOutlined, SlackOutlined, GithubOutlined, WechatOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 import SimulateDebugPage from '@/views/pages/simulate-debug';
 import httpRequest from '@/services/request';
@@ -22,7 +22,7 @@ const theme = {
 };
 
 // 简化版导航栏组件，只包含logo展示
-function SimpleHeader() {
+function SimpleHeader({ onWechatClick }) {
   const [versionInfo, setVersionInfo] = useState({ wpEditor: '', warpParse: '', warpEngine: '' });
 
   // 获取版本信息：wp-editor 与 warp-parse/warp-engine
@@ -121,6 +121,17 @@ function SimpleHeader() {
         >
           掘金
         </Button>
+        <Button
+          type="primary"
+          icon={<WechatOutlined style={{ fontSize: '20px' }} />}
+          size="large"
+          shape="circle"
+          style={{
+            background: '#07C160',
+            borderColor: '#07C160',
+          }}
+          onClick={onWechatClick}
+        />
         {/* 版本信息 */}
         <span
           className="version-info"
@@ -153,10 +164,12 @@ function SimpleHeader() {
 }
 
 function App() {
+  const [wechatModalOpen, setWechatModalOpen] = useState(false);
+
   return (
     <ConfigProvider locale={zhCN} theme={theme}>
       <div className="app-shell">
-        <SimpleHeader />
+        <SimpleHeader onWechatClick={() => setWechatModalOpen(true)} />
         <div className="app-shell-body">
           <div className="main-content">
             <Routes>
@@ -166,6 +179,27 @@ function App() {
             </Routes>
           </div>
         </div>
+
+        {/* 微信群二维码弹窗 */}
+        <Modal
+          title="加入 WarpPase 官方支持交流群"
+          open={wechatModalOpen}
+          onCancel={() => setWechatModalOpen(false)}
+          footer={null}
+          centered
+          width={400}
+        >
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <img
+              src="/assets/images/vx.png"
+              alt="微信群二维码"
+              style={{ width: '100%', maxWidth: '300px', borderRadius: '8px' }}
+            />
+            <div style={{ marginTop: 16, color: '#666', fontSize: 14 }}>
+              扫描二维码加入微信群
+            </div>
+          </div>
+        </Modal>
       </div>
     </ConfigProvider>
   );
