@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Route, Routes } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, FloatButton } from 'antd';
+import { RedditOutlined, SlackOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 import SimulateDebugPage from '@/views/pages/simulate-debug';
 import httpRequest from '@/services/request';
@@ -104,6 +105,24 @@ function App() {
             </Routes>
           </div>
         </div>
+
+        {/* 社区快速访问浮动按钮 */}
+        <FloatButton
+          icon={<SlackOutlined />}
+          tooltip="Slack 社区"
+          type="primary"
+          style={{ right: 24, bottom: 96 }}
+          onClick={() =>
+            window.open('https://app.slack.com/client/T0A53FLT4R4/C0A4Q3SC2CF', '_blank')
+          }
+        />
+        <FloatButton
+          icon={<RedditOutlined />}
+          tooltip="Reddit 社区"
+          type="primary"
+          style={{ right: 24, bottom: 24 }}
+          onClick={() => window.open('https://www.reddit.com/r/warppase/', '_blank')}
+        />
       </div>
     </ConfigProvider>
   );
