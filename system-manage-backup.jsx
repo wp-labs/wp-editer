@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Menu, Table, Modal, message, Tree } from 'antd';
-import { fetchUsers } from '@/services/user';
+import React, { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Menu, Table, Modal, message, Tree } from "antd";
+import { fetchUsers } from "@/services/user";
 
 /**
  * 系统管理页面
@@ -13,26 +13,30 @@ import { fetchUsers } from '@/services/user';
  * 对应原型：pages/views/system-manage/user-list.html
  */
 function SystemManagePage() {
-  const [activeKey, setActiveKey] = useState('users');
+  const [activeKey, setActiveKey] = useState("users");
   const [loading, setLoading] = useState(false);
   const [dataSource, setDataSource] = useState([]);
-  const [searchForm, setSearchForm] = useState({ username: '', role: '', status: '' });
-  
+  const [searchForm, setSearchForm] = useState({
+    username: "",
+    role: "",
+    status: "",
+  });
+
   // 操作日志相关状态
   const [logLoading, setLogLoading] = useState(false);
   const [logDataSource, setLogDataSource] = useState([]);
   const [logSearchForm, setLogSearchForm] = useState({
-    operator: '',
-    operation: '',
-    startDate: '',
-    endDate: '',
+    operator: "",
+    operation: "",
+    startDate: "",
+    endDate: "",
   });
-  
+
   // 帮助中心相关状态
-  const [helpSearchText, setHelpSearchText] = useState('');
+  const [helpSearchText, setHelpSearchText] = useState("");
   const [docToc, setDocToc] = useState([]);
   const [activeDoc, setActiveDoc] = useState(null);
-  const [docContent, setDocContent] = useState('');
+  const [docContent, setDocContent] = useState("");
   const [docLoading, setDocLoading] = useState(false);
 
   /**
@@ -91,53 +95,53 @@ function SystemManagePage() {
       setLogDataSource([
         {
           id: 10001,
-          operator: 'admin',
-          operation: 'publish',
-          target: '版本 v1.2.0',
-          description: '发布系统版本到生产环境',
-          ip: '192.168.1.100',
-          time: '2024-11-06 14:30:25',
-          status: 'success',
+          operator: "admin",
+          operation: "publish",
+          target: "版本 v1.2.0",
+          description: "发布系统版本到生产环境",
+          ip: "192.168.1.100",
+          time: "2024-11-06 14:30:25",
+          status: "success",
         },
         {
           id: 10002,
-          operator: 'operator_01',
-          operation: 'update',
-          target: 'source 配置',
-          description: '更新 kafka 连接参数',
-          ip: '192.168.1.105',
-          time: '2024-11-06 13:15:10',
-          status: 'success',
+          operator: "operator_01",
+          operation: "update",
+          target: "source 配置",
+          description: "更新 kafka 连接参数",
+          ip: "192.168.1.105",
+          time: "2024-11-06 13:15:10",
+          status: "success",
         },
         {
           id: 10003,
-          operator: 'operator_02',
-          operation: 'delete',
-          target: 'wpl 规则',
-          description: '删除过期的解析规则',
-          ip: '192.168.1.110',
-          time: '2024-11-06 11:45:33',
-          status: 'success',
+          operator: "operator_02",
+          operation: "delete",
+          target: "wpl 规则",
+          description: "删除过期的解析规则",
+          ip: "192.168.1.110",
+          time: "2024-11-06 11:45:33",
+          status: "success",
         },
         {
           id: 10004,
-          operator: 'admin',
-          operation: 'create',
-          target: '用户 viewer_02',
-          description: '创建新用户账号',
-          ip: '192.168.1.100',
-          time: '2024-11-06 10:20:15',
-          status: 'success',
+          operator: "admin",
+          operation: "create",
+          target: "用户 viewer_02",
+          description: "创建新用户账号",
+          ip: "192.168.1.100",
+          time: "2024-11-06 10:20:15",
+          status: "success",
         },
         {
           id: 10005,
-          operator: 'operator_01',
-          operation: 'update',
-          target: 'sink 配置',
-          description: '更新文件输出路径',
-          ip: '192.168.1.105',
-          time: '2024-11-06 09:10:50',
-          status: 'error',
+          operator: "operator_01",
+          operation: "update",
+          target: "sink 配置",
+          description: "更新文件输出路径",
+          ip: "192.168.1.105",
+          time: "2024-11-06 09:10:50",
+          status: "error",
         },
       ]);
     } finally {
@@ -147,9 +151,9 @@ function SystemManagePage() {
 
   // 当切换到对应页面时加载数据
   useEffect(() => {
-    if (activeKey === 'users') {
+    if (activeKey === "users") {
       loadUsers();
-    } else if (activeKey === 'logs') {
+    } else if (activeKey === "logs") {
       loadLogs();
     }
   }, [activeKey]);
@@ -161,7 +165,7 @@ function SystemManagePage() {
     lines.forEach((line) => {
       const match = line.match(/^(\s*)- \[(.+?)\]\((.+?)\)/);
       if (match) {
-        const indent = match[1] || '';
+        const indent = match[1] || "";
         const title = match[2];
         const path = match[3];
         const level = Math.floor(indent.length / 2);
@@ -193,7 +197,7 @@ function SystemManagePage() {
   useEffect(() => {
     const loadSummary = async () => {
       try {
-        const response = await fetch('/doc/SUMMARY.md');
+        const response = await fetch("/doc/SUMMARY.md");
         if (!response.ok) {
           return;
         }
@@ -201,7 +205,9 @@ function SystemManagePage() {
         const items = parseSummary(text);
         setDocToc(items);
         if (!activeDoc && items.length > 0) {
-          const firstDoc = items.find((item) => item.path && item.path.endsWith('.md')) || items[0];
+          const firstDoc =
+            items.find((item) => item.path && item.path.endsWith(".md")) ||
+            items[0];
           setActiveDoc(firstDoc);
           loadDocContent(firstDoc.path);
         }
@@ -211,7 +217,7 @@ function SystemManagePage() {
       }
     };
 
-    if (activeKey === 'help' && docToc.length === 0) {
+    if (activeKey === "help" && docToc.length === 0) {
       loadSummary();
     }
   }, [activeKey, docToc.length, activeDoc]);
@@ -221,7 +227,7 @@ function SystemManagePage() {
    */
   const handleSearch = () => {
     loadUsers();
-    message.info('查询功能执行中...');
+    message.info("查询功能执行中...");
   };
 
   /**
@@ -229,7 +235,7 @@ function SystemManagePage() {
    * 清空搜索表单
    */
   const handleReset = () => {
-    setSearchForm({ username: '', role: '', status: '' });
+    setSearchForm({ username: "", role: "", status: "" });
   };
 
   /**
@@ -240,32 +246,33 @@ function SystemManagePage() {
   const handleAction = (action, userRecord) => {
     const actionMap = {
       edit: () => message.info(`编辑用户：${userRecord.username}`),
-      'reset-password': () => {
+      "reset-password": () => {
         Modal.confirm({
-          title: '重置密码',
+          title: "重置密码",
           content: `确定要重置用户 "${userRecord.username}" 的密码吗？新密码将发送到用户邮箱。`,
-          onOk: () => message.success(`用户 "${userRecord.username}" 的密码已重置`),
+          onOk: () =>
+            message.success(`用户 "${userRecord.username}" 的密码已重置`),
         });
       },
       disable: () => {
         Modal.confirm({
-          title: '禁用用户',
+          title: "禁用用户",
           content: `确定要禁用用户 "${userRecord.username}" 吗？禁用后该用户将无法登录系统。`,
           onOk: () => message.success(`用户 "${userRecord.username}" 已禁用`),
         });
       },
       enable: () => {
         Modal.confirm({
-          title: '启用用户',
+          title: "启用用户",
           content: `确定要启用用户 "${userRecord.username}" 吗？`,
           onOk: () => message.success(`用户 "${userRecord.username}" 已启用`),
         });
       },
       delete: () => {
         Modal.confirm({
-          title: '删除用户',
+          title: "删除用户",
           content: `确定要删除用户 "${userRecord.username}" 吗？此操作不可恢复！`,
-          okType: 'danger',
+          okType: "danger",
           onOk: () => message.success(`用户 "${userRecord.username}" 已删除`),
         });
       },
@@ -280,11 +287,14 @@ function SystemManagePage() {
    */
   const getRoleBadge = (role) => {
     const roleMap = {
-      admin: { label: '管理员', className: 'badge--primary' },
-      operator: { label: '运维人员', className: 'badge--info' },
-      viewer: { label: '访客', className: 'badge--secondary' },
+      admin: { label: "管理员", className: "badge--primary" },
+      operator: { label: "运维人员", className: "badge--info" },
+      viewer: { label: "访客", className: "badge--secondary" },
     };
-    const config = roleMap[role] || { label: role, className: 'badge--secondary' };
+    const config = roleMap[role] || {
+      label: role,
+      className: "badge--secondary",
+    };
     return <span className={`badge ${config.className}`}>{config.label}</span>;
   };
 
@@ -295,48 +305,83 @@ function SystemManagePage() {
    */
   const getStatusTag = (status) => {
     const statusMap = {
-      active: { label: '启用', className: 'status-tag--success' },
-      inactive: { label: '禁用', className: 'status-tag--inactive' },
+      active: { label: "启用", className: "status-tag--success" },
+      inactive: { label: "禁用", className: "status-tag--inactive" },
     };
-    const config = statusMap[status] || { label: status, className: 'status-tag--inactive' };
-    return <span className={`status-tag ${config.className}`}>{config.label}</span>;
+    const config = statusMap[status] || {
+      label: status,
+      className: "status-tag--inactive",
+    };
+    return (
+      <span className={`status-tag ${config.className}`}>{config.label}</span>
+    );
   };
 
   const columns = [
-    { title: '用户ID', dataIndex: 'id', key: 'id', width: 100 },
-    { title: '用户名', dataIndex: 'username', key: 'username', width: 120 },
-    { title: '角色', dataIndex: 'role', key: 'role', width: 120, render: getRoleBadge },
-    { title: '邮箱', dataIndex: 'email', key: 'email', width: 200 },
-    { title: '状态', dataIndex: 'status', key: 'status', width: 100, render: getStatusTag },
-    { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 180 },
+    { title: "用户ID", dataIndex: "id", key: "id", width: 100 },
+    { title: "用户名", dataIndex: "username", key: "username", width: 120 },
     {
-      title: '操作',
-      key: 'actions',
+      title: "角色",
+      dataIndex: "role",
+      key: "role",
+      width: 120,
+      render: getRoleBadge,
+    },
+    { title: "邮箱", dataIndex: "email", key: "email", width: 200 },
+    {
+      title: "状态",
+      dataIndex: "status",
+      key: "status",
+      width: 100,
+      render: getStatusTag,
+    },
+    { title: "创建时间", dataIndex: "createdAt", key: "createdAt", width: 180 },
+    {
+      title: "操作",
+      key: "actions",
       width: 360,
       render: (_, record) => (
-        <div className="btn-group" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        <div
+          className="btn-group"
+          style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}
+        >
           <button
             type="button"
             className="btn btn-sm"
-            style={{ background: '#e8f4fd', color: 'var(--primary)', padding: '4px 10px', fontSize: '13px' }}
-            onClick={() => handleAction('edit', record)}
+            style={{
+              background: "#e8f4fd",
+              color: "var(--primary)",
+              padding: "4px 10px",
+              fontSize: "13px",
+            }}
+            onClick={() => handleAction("edit", record)}
           >
             编辑
           </button>
           <button
             type="button"
             className="btn btn-sm"
-            style={{ background: '#fff4e6', color: 'var(--warning)', padding: '4px 10px', fontSize: '13px' }}
-            onClick={() => handleAction('reset-password', record)}
+            style={{
+              background: "#fff4e6",
+              color: "var(--warning)",
+              padding: "4px 10px",
+              fontSize: "13px",
+            }}
+            onClick={() => handleAction("reset-password", record)}
           >
             重置密码
           </button>
-          {record.status === 'active' ? (
+          {record.status === "active" ? (
             <button
               type="button"
               className="btn btn-sm"
-              style={{ background: '#fef3f2', color: 'var(--danger)', padding: '4px 10px', fontSize: '13px' }}
-              onClick={() => handleAction('disable', record)}
+              style={{
+                background: "#fef3f2",
+                color: "var(--danger)",
+                padding: "4px 10px",
+                fontSize: "13px",
+              }}
+              onClick={() => handleAction("disable", record)}
             >
               禁用
             </button>
@@ -344,8 +389,13 @@ function SystemManagePage() {
             <button
               type="button"
               className="btn btn-sm"
-              style={{ background: '#e6f7ed', color: 'var(--success)', padding: '4px 10px', fontSize: '13px' }}
-              onClick={() => handleAction('enable', record)}
+              style={{
+                background: "#e6f7ed",
+                color: "var(--success)",
+                padding: "4px 10px",
+                fontSize: "13px",
+              }}
+              onClick={() => handleAction("enable", record)}
             >
               启用
             </button>
@@ -353,8 +403,13 @@ function SystemManagePage() {
           <button
             type="button"
             className="btn btn-sm"
-            style={{ background: '#fef3f2', color: 'var(--danger)', padding: '4px 10px', fontSize: '13px' }}
-            onClick={() => handleAction('delete', record)}
+            style={{
+              background: "#fef3f2",
+              color: "var(--danger)",
+              padding: "4px 10px",
+              fontSize: "13px",
+            }}
+            onClick={() => handleAction("delete", record)}
           >
             删除
           </button>
@@ -364,19 +419,19 @@ function SystemManagePage() {
   ];
 
   const menuItems = [
-    { key: 'users', label: '用户管理' },
-    { key: 'logs', label: '操作日志' },
-    { key: 'help', label: '帮助中心' },
+    { key: "users", label: "用户管理" },
+    { key: "logs", label: "操作日志" },
+    { key: "help", label: "帮助中心" },
   ];
 
   // 获取页面标题（与旧版本一致）
   const getPageTitle = () => {
     const titles = {
-      users: '用户列表',
-      logs: '操作日志',
-      help: '帮助中心',
+      users: "用户列表",
+      logs: "操作日志",
+      help: "帮助中心",
     };
-    return titles[activeKey] || '系统管理';
+    return titles[activeKey] || "系统管理";
   };
 
   return (
@@ -385,22 +440,22 @@ function SystemManagePage() {
         <h2>系统管理</h2>
         <button
           type="button"
-          className={`side-item ${activeKey === 'users' ? 'is-active' : ''}`}
-          onClick={() => setActiveKey('users')}
+          className={`side-item ${activeKey === "users" ? "is-active" : ""}`}
+          onClick={() => setActiveKey("users")}
         >
           用户列表
         </button>
         <button
           type="button"
-          className={`side-item ${activeKey === 'logs' ? 'is-active' : ''}`}
-          onClick={() => setActiveKey('logs')}
+          className={`side-item ${activeKey === "logs" ? "is-active" : ""}`}
+          onClick={() => setActiveKey("logs")}
         >
           操作日志
         </button>
         <button
           type="button"
-          className={`side-item ${activeKey === 'help' ? 'is-active' : ''}`}
-          onClick={() => setActiveKey('help')}
+          className={`side-item ${activeKey === "help" ? "is-active" : ""}`}
+          onClick={() => setActiveKey("help")}
         >
           帮助中心
         </button>
@@ -410,14 +465,18 @@ function SystemManagePage() {
         <article className="panel is-visible">
           <header className="panel-header">
             <h2>{getPageTitle()}</h2>
-            {activeKey === 'users' && (
-              <button type="button" className="btn primary" onClick={() => message.info('新增用户')}>
+            {activeKey === "users" && (
+              <button
+                type="button"
+                className="btn primary"
+                onClick={() => message.info("新增用户")}
+              >
                 新增用户
               </button>
             )}
           </header>
           <section className="panel-body">
-            {activeKey === 'users' && (
+            {activeKey === "users" && (
               <>
                 <form className="form-grid">
                   <div className="form-row">
@@ -426,14 +485,21 @@ function SystemManagePage() {
                       type="text"
                       placeholder="请输入用户名"
                       value={searchForm.username}
-                      onChange={(e) => setSearchForm({ ...searchForm, username: e.target.value })}
+                      onChange={(e) =>
+                        setSearchForm({
+                          ...searchForm,
+                          username: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div className="form-row">
                     <label>角色</label>
                     <select
                       value={searchForm.role}
-                      onChange={(e) => setSearchForm({ ...searchForm, role: e.target.value })}
+                      onChange={(e) =>
+                        setSearchForm({ ...searchForm, role: e.target.value })
+                      }
                     >
                       <option value="">全部</option>
                       <option value="admin">管理员</option>
@@ -445,7 +511,9 @@ function SystemManagePage() {
                     <label>状态</label>
                     <select
                       value={searchForm.status}
-                      onChange={(e) => setSearchForm({ ...searchForm, status: e.target.value })}
+                      onChange={(e) =>
+                        setSearchForm({ ...searchForm, status: e.target.value })
+                      }
                     >
                       <option value="">全部</option>
                       <option value="active">启用</option>
@@ -453,10 +521,18 @@ function SystemManagePage() {
                     </select>
                   </div>
                   <div className="form-row-actions">
-                    <button type="button" className="btn primary" onClick={handleSearch}>
+                    <button
+                      type="button"
+                      className="btn primary"
+                      onClick={handleSearch}
+                    >
                       查询
                     </button>
-                    <button type="button" className="btn ghost" onClick={handleReset}>
+                    <button
+                      type="button"
+                      className="btn ghost"
+                      onClick={handleReset}
+                    >
                       重置
                     </button>
                   </div>
@@ -482,7 +558,7 @@ function SystemManagePage() {
                 </div>
               </>
             )}
-            {activeKey === 'logs' && (
+            {activeKey === "logs" && (
               <>
                 <form className="form-grid">
                   <div className="form-row">
@@ -491,14 +567,24 @@ function SystemManagePage() {
                       type="text"
                       placeholder="请输入操作人"
                       value={logSearchForm.operator}
-                      onChange={(e) => setLogSearchForm({ ...logSearchForm, operator: e.target.value })}
+                      onChange={(e) =>
+                        setLogSearchForm({
+                          ...logSearchForm,
+                          operator: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div className="form-row">
                     <label>操作类型</label>
                     <select
                       value={logSearchForm.operation}
-                      onChange={(e) => setLogSearchForm({ ...logSearchForm, operation: e.target.value })}
+                      onChange={(e) =>
+                        setLogSearchForm({
+                          ...logSearchForm,
+                          operation: e.target.value,
+                        })
+                      }
                     >
                       <option value="">全部</option>
                       <option value="create">新增</option>
@@ -507,20 +593,36 @@ function SystemManagePage() {
                       <option value="publish">发布</option>
                     </select>
                   </div>
-                  <div className="form-row" style={{ gridColumn: 'span 2' }}>
+                  <div className="form-row" style={{ gridColumn: "span 2" }}>
                     <label>时间范围</label>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "10px",
+                        alignItems: "center",
+                      }}
+                    >
                       <input
                         type="date"
                         value={logSearchForm.startDate}
-                        onChange={(e) => setLogSearchForm({ ...logSearchForm, startDate: e.target.value })}
+                        onChange={(e) =>
+                          setLogSearchForm({
+                            ...logSearchForm,
+                            startDate: e.target.value,
+                          })
+                        }
                         style={{ flex: 1 }}
                       />
                       <span>-</span>
                       <input
                         type="date"
                         value={logSearchForm.endDate}
-                        onChange={(e) => setLogSearchForm({ ...logSearchForm, endDate: e.target.value })}
+                        onChange={(e) =>
+                          setLogSearchForm({
+                            ...logSearchForm,
+                            endDate: e.target.value,
+                          })
+                        }
                         style={{ flex: 1 }}
                       />
                     </div>
@@ -530,7 +632,7 @@ function SystemManagePage() {
                       type="button"
                       className="btn primary"
                       onClick={() => {
-                        message.info('查询功能执行中...');
+                        message.info("查询功能执行中...");
                       }}
                     >
                       查询
@@ -539,7 +641,12 @@ function SystemManagePage() {
                       type="button"
                       className="btn ghost"
                       onClick={() => {
-                        setLogSearchForm({ operator: '', operation: '', startDate: '', endDate: '' });
+                        setLogSearchForm({
+                          operator: "",
+                          operation: "",
+                          startDate: "",
+                          endDate: "",
+                        });
                       }}
                     >
                       重置
@@ -551,40 +658,89 @@ function SystemManagePage() {
                   rowKey="id"
                   loading={logLoading}
                   columns={[
-                    { title: '操作ID', dataIndex: 'id', key: 'id', width: 100 },
-                    { title: '操作人', dataIndex: 'operator', key: 'operator', width: 120 },
+                    { title: "操作ID", dataIndex: "id", key: "id", width: 100 },
                     {
-                      title: '操作类型',
-                      dataIndex: 'operation',
-                      key: 'operation',
+                      title: "操作人",
+                      dataIndex: "operator",
+                      key: "operator",
+                      width: 120,
+                    },
+                    {
+                      title: "操作类型",
+                      dataIndex: "operation",
+                      key: "operation",
                       width: 120,
                       render: (operation) => {
                         const operationMap = {
-                          publish: { label: '发布', className: 'badge--success' },
-                          update: { label: '修改', className: 'badge--info' },
-                          delete: { label: '删除', className: 'badge--warning' },
-                          create: { label: '新增', className: 'badge--primary' },
+                          publish: {
+                            label: "发布",
+                            className: "badge--success",
+                          },
+                          update: { label: "修改", className: "badge--info" },
+                          delete: {
+                            label: "删除",
+                            className: "badge--warning",
+                          },
+                          create: {
+                            label: "新增",
+                            className: "badge--primary",
+                          },
                         };
-                        const config = operationMap[operation] || { label: operation, className: 'badge--secondary' };
-                        return <span className={`badge ${config.className}`}>{config.label}</span>;
+                        const config = operationMap[operation] || {
+                          label: operation,
+                          className: "badge--secondary",
+                        };
+                        return (
+                          <span className={`badge ${config.className}`}>
+                            {config.label}
+                          </span>
+                        );
                       },
                     },
-                    { title: '操作对象', dataIndex: 'target', key: 'target', width: 150 },
-                    { title: '操作描述', dataIndex: 'description', key: 'description', ellipsis: true },
-                    { title: 'IP地址', dataIndex: 'ip', key: 'ip', width: 140 },
-                    { title: '操作时间', dataIndex: 'time', key: 'time', width: 180 },
                     {
-                      title: '状态',
-                      dataIndex: 'status',
-                      key: 'status',
+                      title: "操作对象",
+                      dataIndex: "target",
+                      key: "target",
+                      width: 150,
+                    },
+                    {
+                      title: "操作描述",
+                      dataIndex: "description",
+                      key: "description",
+                      ellipsis: true,
+                    },
+                    { title: "IP地址", dataIndex: "ip", key: "ip", width: 140 },
+                    {
+                      title: "操作时间",
+                      dataIndex: "time",
+                      key: "time",
+                      width: 180,
+                    },
+                    {
+                      title: "状态",
+                      dataIndex: "status",
+                      key: "status",
                       width: 100,
                       render: (status) => {
                         const statusMap = {
-                          success: { label: '成功', className: 'status-tag--success' },
-                          error: { label: '失败', className: 'status-tag--error' },
+                          success: {
+                            label: "成功",
+                            className: "status-tag--success",
+                          },
+                          error: {
+                            label: "失败",
+                            className: "status-tag--error",
+                          },
                         };
-                        const config = statusMap[status] || { label: status, className: 'status-tag--inactive' };
-                        return <span className={`status-tag ${config.className}`}>{config.label}</span>;
+                        const config = statusMap[status] || {
+                          label: status,
+                          className: "status-tag--inactive",
+                        };
+                        return (
+                          <span className={`status-tag ${config.className}`}>
+                            {config.label}
+                          </span>
+                        );
                       },
                     },
                   ]}
@@ -604,36 +760,36 @@ function SystemManagePage() {
                 </div>
               </>
             )}
-            {activeKey === 'help' && (
+            {activeKey === "help" && (
               <>
                 <div
                   className="docs-layout"
                   style={{
-                    display: 'flex',
-                    gap: '16px',
-                    alignItems: 'stretch',
+                    display: "flex",
+                    gap: "16px",
+                    alignItems: "stretch",
                   }}
                 >
                   <aside
                     className="docs-sidenav"
                     style={{
-                      width: '260px',
-                      padding: '16px 12px',
-                      borderRadius: '12px',
-                      border: '1px solid #e5e7eb',
-                      background: '#f9fafb',
-                      overflow: 'hidden',
-                      height: '100%',
+                      width: "260px",
+                      padding: "16px 12px",
+                      borderRadius: "12px",
+                      border: "1px solid #e5e7eb",
+                      background: "#f9fafb",
+                      overflow: "hidden",
+                      height: "100%",
                     }}
                   >
                     <div
                       style={{
-                        marginBottom: '12px',
-                        fontSize: '12px',
+                        marginBottom: "12px",
+                        fontSize: "12px",
                         fontWeight: 600,
-                        letterSpacing: '0.04em',
-                        textTransform: 'uppercase',
-                        color: '#6b7280',
+                        letterSpacing: "0.04em",
+                        textTransform: "uppercase",
+                        color: "#6b7280",
                       }}
                     >
                       文档目录
@@ -646,10 +802,10 @@ function SystemManagePage() {
                         titleRender={(node) => (
                           <span
                             style={{
-                              display: 'block',
-                              padding: '4px 8px',
+                              display: "block",
+                              padding: "4px 8px",
                               borderRadius: 8,
-                              color: '#1b2533',
+                              color: "#1b2533",
                               fontWeight: node.level === 0 ? 600 : 400,
                               fontSize: 14,
                             }}
@@ -664,22 +820,23 @@ function SystemManagePage() {
                             id: node.key,
                             title: node.title,
                             path: node.path,
-                            level: typeof node.level === 'number' ? node.level : 0,
+                            level:
+                              typeof node.level === "number" ? node.level : 0,
                           };
                           setActiveDoc(selected);
                           loadDocContent(node.path);
                         }}
                         style={{
-                          height: '100%',
-                          overflowY: 'auto',
-                          fontSize: '14px',
+                          height: "100%",
+                          overflowY: "auto",
+                          fontSize: "14px",
                           fontFamily:
                             '"PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif',
-                          background: '#f9fafb',
+                          background: "#f9fafb",
                         }}
                       />
                     ) : (
-                      <div style={{ fontSize: '13px', color: '#9ca3af' }}>
+                      <div style={{ fontSize: "13px", color: "#9ca3af" }}>
                         暂无文档目录或 SUMMARY.md 加载失败
                       </div>
                     )}
@@ -689,181 +846,189 @@ function SystemManagePage() {
                     className="docs-content"
                     style={{
                       flex: 1,
-                      borderRadius: '12px',
-                      border: '1px solid #e5e7eb',
-                      background: '#ffffff',
-                      padding: '20px 24px',
+                      borderRadius: "12px",
+                      border: "1px solid #e5e7eb",
+                      background: "#ffffff",
+                      padding: "20px 24px",
                       // 仅帮助中心内容区域滚动，顶部头部保持不动
-                      maxHeight: 'calc(100vh - 220px)',
-                      overflowY: 'auto',
+                      maxHeight: "calc(100vh - 220px)",
+                      overflowY: "auto",
                     }}
                   >
                     {docLoading ? (
-                      <p style={{ fontSize: '14px', color: '#6b7280' }}>文档加载中...</p>
+                      <p style={{ fontSize: "14px", color: "#6b7280" }}>
+                        文档加载中...
+                      </p>
                     ) : docContent && docContent.trim().length > 0 ? (
                       <div className="markdown-body">
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
                           components={{
-                          h1: ({ node, ...props }) => (
-                            <h1
-                              style={{
-                                fontSize: '26px',
-                                fontWeight: 700,
-                                margin: '0 0 18px',
-                                color: '#111827',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          h2: ({ node, ...props }) => (
-                            <h2
-                              style={{
-                                fontSize: '22px',
-                                fontWeight: 600,
-                                margin: '28px 0 14px',
-                                borderBottom: '1px solid #e5e7eb',
-                                paddingBottom: '6px',
-                                color: '#111827',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          h3: ({ node, ...props }) => (
-                            <h3
-                              style={{
-                                fontSize: '18px',
-                                fontWeight: 600,
-                                margin: '22px 0 10px',
-                                color: '#111827',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          p: ({ node, ...props }) => (
-                            <p
-                              style={{
-                                margin: '8px 0',
-                                fontSize: '14px',
-                                lineHeight: 1.7,
-                                color: '#374151',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          ul: ({ node, ...props }) => (
-                            <ul
-                              style={{
-                                paddingLeft: '1.5em',
-                                margin: '8px 0',
-                                fontSize: '14px',
-                                color: '#374151',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          ol: ({ node, ...props }) => (
-                            <ol
-                              style={{
-                                paddingLeft: '1.5em',
-                                margin: '8px 0',
-                                fontSize: '14px',
-                                color: '#374151',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          li: ({ node, ...props }) => (
-                            <li
-                              style={{
-                                margin: '4px 0',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          code: ({ inline, node, ...props }) => (
-                            inline ? (
-                              <code
+                            h1: ({ node, ...props }) => (
+                              <h1
                                 style={{
-                                  background: 'rgba(15,23,42,0.04)',
-                                  padding: '1px 4px',
-                                  borderRadius: '4px',
-                                  fontSize: '12px',
+                                  fontSize: "26px",
+                                  fontWeight: 700,
+                                  margin: "0 0 18px",
+                                  color: "#111827",
                                 }}
                                 {...props}
                               />
-                            ) : (
-                              <code
+                            ),
+                            h2: ({ node, ...props }) => (
+                              <h2
                                 style={{
-                                  display: 'block',
-                                  background: '#0b1020',
-                                  color: '#e5e7eb',
-                                  padding: '12px 14px',
-                                  borderRadius: '8px',
-                                  fontSize: '12px',
-                                  overflowX: 'auto',
-                                  fontFamily:
-                                    'Menlo, Monaco, Consolas, "Courier New", monospace',
+                                  fontSize: "22px",
+                                  fontWeight: 600,
+                                  margin: "28px 0 14px",
+                                  borderBottom: "1px solid #e5e7eb",
+                                  paddingBottom: "6px",
+                                  color: "#111827",
                                 }}
                                 {...props}
                               />
-                            )
-                          ),
-                          a: ({ node, ...props }) => (
-                            <a
-                              style={{ color: '#2563eb', textDecoration: 'none' }}
-                              {...props}
-                            />
-                          ),
-                          table: ({ node, ...props }) => (
-                            <div style={{ overflowX: 'auto', margin: '12px 0' }}>
-                              <table
+                            ),
+                            h3: ({ node, ...props }) => (
+                              <h3
                                 style={{
-                                  width: '100%',
-                                  borderCollapse: 'collapse',
-                                  fontSize: '13px',
-                                  color: '#374151',
+                                  fontSize: "18px",
+                                  fontWeight: 600,
+                                  margin: "22px 0 10px",
+                                  color: "#111827",
                                 }}
                                 {...props}
                               />
-                            </div>
-                          ),
-                          thead: ({ node, ...props }) => (
-                            <thead
-                              style={{
-                                background: 'rgba(17,24,39,0.03)',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          th: ({ node, ...props }) => (
-                            <th
-                              style={{
-                                border: '1px solid #e5e7eb',
-                                padding: '6px 10px',
-                                textAlign: 'left',
-                                fontWeight: 600,
-                              }}
-                              {...props}
-                            />
-                          ),
-                          td: ({ node, ...props }) => (
-                            <td
-                              style={{
-                                border: '1px solid #e5e7eb',
-                                padding: '6px 10px',
-                                verticalAlign: 'top',
-                              }}
-                              {...props}
-                            />
-                          ),
-                        }}
+                            ),
+                            p: ({ node, ...props }) => (
+                              <p
+                                style={{
+                                  margin: "8px 0",
+                                  fontSize: "14px",
+                                  lineHeight: 1.7,
+                                  color: "#374151",
+                                }}
+                                {...props}
+                              />
+                            ),
+                            ul: ({ node, ...props }) => (
+                              <ul
+                                style={{
+                                  paddingLeft: "1.5em",
+                                  margin: "8px 0",
+                                  fontSize: "14px",
+                                  color: "#374151",
+                                }}
+                                {...props}
+                              />
+                            ),
+                            ol: ({ node, ...props }) => (
+                              <ol
+                                style={{
+                                  paddingLeft: "1.5em",
+                                  margin: "8px 0",
+                                  fontSize: "14px",
+                                  color: "#374151",
+                                }}
+                                {...props}
+                              />
+                            ),
+                            li: ({ node, ...props }) => (
+                              <li
+                                style={{
+                                  margin: "4px 0",
+                                }}
+                                {...props}
+                              />
+                            ),
+                            code: ({ inline, node, ...props }) =>
+                              inline ? (
+                                <code
+                                  style={{
+                                    background: "rgba(15,23,42,0.04)",
+                                    padding: "1px 4px",
+                                    borderRadius: "4px",
+                                    fontSize: "12px",
+                                  }}
+                                  {...props}
+                                />
+                              ) : (
+                                <code
+                                  style={{
+                                    display: "block",
+                                    background: "#0b1020",
+                                    color: "#e5e7eb",
+                                    padding: "12px 14px",
+                                    borderRadius: "8px",
+                                    fontSize: "12px",
+                                    overflowX: "auto",
+                                    fontFamily:
+                                      'Menlo, Monaco, Consolas, "Courier New", monospace',
+                                  }}
+                                  {...props}
+                                />
+                              ),
+                            a: ({ node, ...props }) => (
+                              <a
+                                style={{
+                                  color: "#2563eb",
+                                  textDecoration: "none",
+                                }}
+                                {...props}
+                              />
+                            ),
+                            table: ({ node, ...props }) => (
+                              <div
+                                style={{ overflowX: "auto", margin: "12px 0" }}
+                              >
+                                <table
+                                  style={{
+                                    width: "100%",
+                                    borderCollapse: "collapse",
+                                    fontSize: "13px",
+                                    color: "#374151",
+                                  }}
+                                  {...props}
+                                />
+                              </div>
+                            ),
+                            thead: ({ node, ...props }) => (
+                              <thead
+                                style={{
+                                  background: "rgba(17,24,39,0.03)",
+                                }}
+                                {...props}
+                              />
+                            ),
+                            th: ({ node, ...props }) => (
+                              <th
+                                style={{
+                                  border: "1px solid #e5e7eb",
+                                  padding: "6px 10px",
+                                  textAlign: "left",
+                                  fontWeight: 600,
+                                }}
+                                {...props}
+                              />
+                            ),
+                            td: ({ node, ...props }) => (
+                              <td
+                                style={{
+                                  border: "1px solid #e5e7eb",
+                                  padding: "6px 10px",
+                                  verticalAlign: "top",
+                                }}
+                                {...props}
+                              />
+                            ),
+                          }}
                         >
                           {docContent}
                         </ReactMarkdown>
                       </div>
                     ) : (
-                      <p style={{ fontSize: '14px', color: '#6b7280' }}>请选择左侧目录中的文档进行查看。</p>
+                      <p style={{ fontSize: "14px", color: "#6b7280" }}>
+                        请选择左侧目录中的文档进行查看。
+                      </p>
                     )}
                   </main>
                 </div>
