@@ -1,6 +1,6 @@
 [package]
 name = "wp-editor"
-version = "0.2.0"
+version = "0.1.17"
 edition = "2024"
 build = "build.rs"
 
@@ -47,12 +47,12 @@ sea-orm = { version = "1.1", features = [
 ] }
 wp-editor-migrations = { path = "crates/migrations" }
 
-wp_wpl = { package = "wp-lang",git = "https://github.com/wp-labs/wp-engine", tag = "v1.6.0-alpha" }
-wp_oml = { package = "wp-oml", git = "https://github.com/wp-labs/wp-engine", tag = "v1.6.0-alpha" }
-wp_parser = { package = "wp-parser", git = "https://github.com/wp-labs/wp-engine", tag = "v1.6.0-alpha" }
-wp_proj = { package = "wp-proj", git = "https://github.com/wp-labs/wp-engine", tag = "v1.6.0-alpha" }
-wp_knowledge = { package = "wp-knowledge", git = "https://github.com/wp-labs/wp-engine", tag = "v1.6.0-alpha" }
-wp_data_utils = { package = "wp-data-utils", git = "https://github.com/wp-labs/wp-engine", tag = "v1.6.0-alpha" }
-wp_model_core = { package = "wp-model-core", git = "https://github.com/wp-labs/wp-open-api", tag = "v0.6.0-alpha"  }
-wp_parse_api = { package = "wp-parse-api", git = "https://github.com/wp-labs/wp-open-api", tag = "v0.6.0-alpha"  }
-wp_data_fmt = { package = "wp-data-fmt", git = "https://github.com/wp-labs/wp-infras", tag = "v0.6.0-alpha" }
+wp_wpl = { package = "wp-lang",git = "https://github.com/wp-labs/wp-engine", tag = "v1.7.0-alpha" }
+wp_oml = { package = "wp-oml", git = "https://github.com/wp-labs/wp-engine", tag = "v1.7.0-alpha" }
+wp_parser = { package = "wp-parser", git = "https://github.com/wp-labs/wp-engine", tag = "v1.7.0-alpha" }
+wp_proj = { package = "wp-proj", git = "https://github.com/wp-labs/wp-engine", tag = "v1.7.0-alpha" }
+wp_knowledge = { package = "wp-knowledge", git = "https://github.com/wp-labs/wp-engine", tag = "v1.7.0-alpha" }
+wp_data_utils = { package = "wp-data-utils", git = "https://github.com/wp-labs/wp-engine", tag = "v1.7.0-alpha" }
+wp_model_core = { package = "wp-model-core", git = "https://github.com/wp-labs/wp-open-api", tag = "v0.7.0-beta"  }
+wp_parse_api = { package = "wp-parse-api", git = "https://github.com/wp-labs/wp-open-api", tag = "v0.7.0-beta"  }
+wp_data_fmt = { package = "wp-data-fmt", git = "https://github.com/wp-labs/wp-infras", tag = "v0.7.0-beta" }
