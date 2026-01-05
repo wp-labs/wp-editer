@@ -16,8 +16,12 @@ function SystemManagePage() {
   const [activeKey, setActiveKey] = useState('users');
   const [loading, setLoading] = useState(false);
   const [dataSource, setDataSource] = useState([]);
-  const [searchForm, setSearchForm] = useState({ username: '', role: '', status: '' });
-  
+  const [searchForm, setSearchForm] = useState({
+    username: '',
+    role: '',
+    status: '',
+  });
+
   // 操作日志相关状态
   const [logLoading, setLogLoading] = useState(false);
   const [logDataSource, setLogDataSource] = useState([]);
@@ -27,7 +31,7 @@ function SystemManagePage() {
     startDate: '',
     endDate: '',
   });
-  
+
   // 帮助中心相关状态
   const [helpSearchText, setHelpSearchText] = useState('');
   const [docToc, setDocToc] = useState([]);
@@ -50,11 +54,11 @@ function SystemManagePage() {
   };
 
   // 将 docToc（带 level 的扁平数组）转换为 antd Tree 所需的树形结构
-  const buildDocTree = (items) => {
+  const buildDocTree = items => {
     const roots = [];
     const stack = [];
 
-    items.forEach((item) => {
+    items.forEach(item => {
       const node = {
         title: item.title,
         key: item.id,
@@ -87,7 +91,7 @@ function SystemManagePage() {
     setLogLoading(true);
     try {
       // 模拟加载操作日志
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 500));
       setLogDataSource([
         {
           id: 10001,
@@ -155,10 +159,10 @@ function SystemManagePage() {
   }, [activeKey]);
 
   // 解析 SUMMARY.md 为简单的文档目录
-  const parseSummary = (markdownText) => {
+  const parseSummary = markdownText => {
     const lines = markdownText.split(/\r?\n/);
     const items = [];
-    lines.forEach((line) => {
+    lines.forEach(line => {
       const match = line.match(/^(\s*)- \[(.+?)\]\((.+?)\)/);
       if (match) {
         const indent = match[1] || '';
@@ -171,7 +175,7 @@ function SystemManagePage() {
     return items;
   };
 
-  const loadDocContent = async (docPath) => {
+  const loadDocContent = async docPath => {
     if (!docPath) return;
     setDocLoading(true);
     try {
@@ -201,7 +205,7 @@ function SystemManagePage() {
         const items = parseSummary(text);
         setDocToc(items);
         if (!activeDoc && items.length > 0) {
-          const firstDoc = items.find((item) => item.path && item.path.endsWith('.md')) || items[0];
+          const firstDoc = items.find(item => item.path && item.path.endsWith('.md')) || items[0];
           setActiveDoc(firstDoc);
           loadDocContent(firstDoc.path);
         }
@@ -278,13 +282,16 @@ function SystemManagePage() {
    * @param {string} role - 角色
    * @returns {JSX.Element} 徽章元素
    */
-  const getRoleBadge = (role) => {
+  const getRoleBadge = role => {
     const roleMap = {
       admin: { label: '管理员', className: 'badge--primary' },
       operator: { label: '运维人员', className: 'badge--info' },
       viewer: { label: '访客', className: 'badge--secondary' },
     };
-    const config = roleMap[role] || { label: role, className: 'badge--secondary' };
+    const config = roleMap[role] || {
+      label: role,
+      className: 'badge--secondary',
+    };
     return <span className={`badge ${config.className}`}>{config.label}</span>;
   };
 
@@ -293,21 +300,36 @@ function SystemManagePage() {
    * @param {string} status - 状态
    * @returns {JSX.Element} 标签元素
    */
-  const getStatusTag = (status) => {
+  const getStatusTag = status => {
     const statusMap = {
       active: { label: '启用', className: 'status-tag--success' },
       inactive: { label: '禁用', className: 'status-tag--inactive' },
     };
-    const config = statusMap[status] || { label: status, className: 'status-tag--inactive' };
+    const config = statusMap[status] || {
+      label: status,
+      className: 'status-tag--inactive',
+    };
     return <span className={`status-tag ${config.className}`}>{config.label}</span>;
   };
 
   const columns = [
     { title: '用户ID', dataIndex: 'id', key: 'id', width: 100 },
     { title: '用户名', dataIndex: 'username', key: 'username', width: 120 },
-    { title: '角色', dataIndex: 'role', key: 'role', width: 120, render: getRoleBadge },
+    {
+      title: '角色',
+      dataIndex: 'role',
+      key: 'role',
+      width: 120,
+      render: getRoleBadge,
+    },
     { title: '邮箱', dataIndex: 'email', key: 'email', width: 200 },
-    { title: '状态', dataIndex: 'status', key: 'status', width: 100, render: getStatusTag },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      width: 100,
+      render: getStatusTag,
+    },
     { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 180 },
     {
       title: '操作',
@@ -318,7 +340,12 @@ function SystemManagePage() {
           <button
             type="button"
             className="btn btn-sm"
-            style={{ background: '#e8f4fd', color: 'var(--primary)', padding: '4px 10px', fontSize: '13px' }}
+            style={{
+              background: '#e8f4fd',
+              color: 'var(--primary)',
+              padding: '4px 10px',
+              fontSize: '13px',
+            }}
             onClick={() => handleAction('edit', record)}
           >
             编辑
@@ -326,7 +353,12 @@ function SystemManagePage() {
           <button
             type="button"
             className="btn btn-sm"
-            style={{ background: '#fff4e6', color: 'var(--warning)', padding: '4px 10px', fontSize: '13px' }}
+            style={{
+              background: '#fff4e6',
+              color: 'var(--warning)',
+              padding: '4px 10px',
+              fontSize: '13px',
+            }}
             onClick={() => handleAction('reset-password', record)}
           >
             重置密码
@@ -335,7 +367,12 @@ function SystemManagePage() {
             <button
               type="button"
               className="btn btn-sm"
-              style={{ background: '#fef3f2', color: 'var(--danger)', padding: '4px 10px', fontSize: '13px' }}
+              style={{
+                background: '#fef3f2',
+                color: 'var(--danger)',
+                padding: '4px 10px',
+                fontSize: '13px',
+              }}
               onClick={() => handleAction('disable', record)}
             >
               禁用
@@ -344,7 +381,12 @@ function SystemManagePage() {
             <button
               type="button"
               className="btn btn-sm"
-              style={{ background: '#e6f7ed', color: 'var(--success)', padding: '4px 10px', fontSize: '13px' }}
+              style={{
+                background: '#e6f7ed',
+                color: 'var(--success)',
+                padding: '4px 10px',
+                fontSize: '13px',
+              }}
               onClick={() => handleAction('enable', record)}
             >
               启用
@@ -353,7 +395,12 @@ function SystemManagePage() {
           <button
             type="button"
             className="btn btn-sm"
-            style={{ background: '#fef3f2', color: 'var(--danger)', padding: '4px 10px', fontSize: '13px' }}
+            style={{
+              background: '#fef3f2',
+              color: 'var(--danger)',
+              padding: '4px 10px',
+              fontSize: '13px',
+            }}
             onClick={() => handleAction('delete', record)}
           >
             删除
@@ -411,7 +458,11 @@ function SystemManagePage() {
           <header className="panel-header">
             <h2>{getPageTitle()}</h2>
             {activeKey === 'users' && (
-              <button type="button" className="btn primary" onClick={() => message.info('新增用户')}>
+              <button
+                type="button"
+                className="btn primary"
+                onClick={() => message.info('新增用户')}
+              >
                 新增用户
               </button>
             )}
@@ -426,14 +477,19 @@ function SystemManagePage() {
                       type="text"
                       placeholder="请输入用户名"
                       value={searchForm.username}
-                      onChange={(e) => setSearchForm({ ...searchForm, username: e.target.value })}
+                      onChange={e =>
+                        setSearchForm({
+                          ...searchForm,
+                          username: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div className="form-row">
                     <label>角色</label>
                     <select
                       value={searchForm.role}
-                      onChange={(e) => setSearchForm({ ...searchForm, role: e.target.value })}
+                      onChange={e => setSearchForm({ ...searchForm, role: e.target.value })}
                     >
                       <option value="">全部</option>
                       <option value="admin">管理员</option>
@@ -445,7 +501,7 @@ function SystemManagePage() {
                     <label>状态</label>
                     <select
                       value={searchForm.status}
-                      onChange={(e) => setSearchForm({ ...searchForm, status: e.target.value })}
+                      onChange={e => setSearchForm({ ...searchForm, status: e.target.value })}
                     >
                       <option value="">全部</option>
                       <option value="active">启用</option>
@@ -491,14 +547,24 @@ function SystemManagePage() {
                       type="text"
                       placeholder="请输入操作人"
                       value={logSearchForm.operator}
-                      onChange={(e) => setLogSearchForm({ ...logSearchForm, operator: e.target.value })}
+                      onChange={e =>
+                        setLogSearchForm({
+                          ...logSearchForm,
+                          operator: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div className="form-row">
                     <label>操作类型</label>
                     <select
                       value={logSearchForm.operation}
-                      onChange={(e) => setLogSearchForm({ ...logSearchForm, operation: e.target.value })}
+                      onChange={e =>
+                        setLogSearchForm({
+                          ...logSearchForm,
+                          operation: e.target.value,
+                        })
+                      }
                     >
                       <option value="">全部</option>
                       <option value="create">新增</option>
@@ -509,18 +575,34 @@ function SystemManagePage() {
                   </div>
                   <div className="form-row" style={{ gridColumn: 'span 2' }}>
                     <label>时间范围</label>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: '10px',
+                        alignItems: 'center',
+                      }}
+                    >
                       <input
                         type="date"
                         value={logSearchForm.startDate}
-                        onChange={(e) => setLogSearchForm({ ...logSearchForm, startDate: e.target.value })}
+                        onChange={e =>
+                          setLogSearchForm({
+                            ...logSearchForm,
+                            startDate: e.target.value,
+                          })
+                        }
                         style={{ flex: 1 }}
                       />
                       <span>-</span>
                       <input
                         type="date"
                         value={logSearchForm.endDate}
-                        onChange={(e) => setLogSearchForm({ ...logSearchForm, endDate: e.target.value })}
+                        onChange={e =>
+                          setLogSearchForm({
+                            ...logSearchForm,
+                            endDate: e.target.value,
+                          })
+                        }
                         style={{ flex: 1 }}
                       />
                     </div>
@@ -539,7 +621,12 @@ function SystemManagePage() {
                       type="button"
                       className="btn ghost"
                       onClick={() => {
-                        setLogSearchForm({ operator: '', operation: '', startDate: '', endDate: '' });
+                        setLogSearchForm({
+                          operator: '',
+                          operation: '',
+                          startDate: '',
+                          endDate: '',
+                        });
                       }}
                     >
                       重置
@@ -552,39 +639,82 @@ function SystemManagePage() {
                   loading={logLoading}
                   columns={[
                     { title: '操作ID', dataIndex: 'id', key: 'id', width: 100 },
-                    { title: '操作人', dataIndex: 'operator', key: 'operator', width: 120 },
+                    {
+                      title: '操作人',
+                      dataIndex: 'operator',
+                      key: 'operator',
+                      width: 120,
+                    },
                     {
                       title: '操作类型',
                       dataIndex: 'operation',
                       key: 'operation',
                       width: 120,
-                      render: (operation) => {
+                      render: operation => {
                         const operationMap = {
-                          publish: { label: '发布', className: 'badge--success' },
+                          publish: {
+                            label: '发布',
+                            className: 'badge--success',
+                          },
                           update: { label: '修改', className: 'badge--info' },
-                          delete: { label: '删除', className: 'badge--warning' },
-                          create: { label: '新增', className: 'badge--primary' },
+                          delete: {
+                            label: '删除',
+                            className: 'badge--warning',
+                          },
+                          create: {
+                            label: '新增',
+                            className: 'badge--primary',
+                          },
                         };
-                        const config = operationMap[operation] || { label: operation, className: 'badge--secondary' };
+                        const config = operationMap[operation] || {
+                          label: operation,
+                          className: 'badge--secondary',
+                        };
                         return <span className={`badge ${config.className}`}>{config.label}</span>;
                       },
                     },
-                    { title: '操作对象', dataIndex: 'target', key: 'target', width: 150 },
-                    { title: '操作描述', dataIndex: 'description', key: 'description', ellipsis: true },
+                    {
+                      title: '操作对象',
+                      dataIndex: 'target',
+                      key: 'target',
+                      width: 150,
+                    },
+                    {
+                      title: '操作描述',
+                      dataIndex: 'description',
+                      key: 'description',
+                      ellipsis: true,
+                    },
                     { title: 'IP地址', dataIndex: 'ip', key: 'ip', width: 140 },
-                    { title: '操作时间', dataIndex: 'time', key: 'time', width: 180 },
+                    {
+                      title: '操作时间',
+                      dataIndex: 'time',
+                      key: 'time',
+                      width: 180,
+                    },
                     {
                       title: '状态',
                       dataIndex: 'status',
                       key: 'status',
                       width: 100,
-                      render: (status) => {
+                      render: status => {
                         const statusMap = {
-                          success: { label: '成功', className: 'status-tag--success' },
-                          error: { label: '失败', className: 'status-tag--error' },
+                          success: {
+                            label: '成功',
+                            className: 'status-tag--success',
+                          },
+                          error: {
+                            label: '失败',
+                            className: 'status-tag--error',
+                          },
                         };
-                        const config = statusMap[status] || { label: status, className: 'status-tag--inactive' };
-                        return <span className={`status-tag ${config.className}`}>{config.label}</span>;
+                        const config = statusMap[status] || {
+                          label: status,
+                          className: 'status-tag--inactive',
+                        };
+                        return (
+                          <span className={`status-tag ${config.className}`}>{config.label}</span>
+                        );
                       },
                     },
                   ]}
@@ -643,7 +773,7 @@ function SystemManagePage() {
                         treeData={buildDocTree(docToc)}
                         selectedKeys={activeDoc ? [activeDoc.id] : []}
                         blockNode
-                        titleRender={(node) => (
+                        titleRender={node => (
                           <span
                             style={{
                               display: 'block',
@@ -673,8 +803,7 @@ function SystemManagePage() {
                           height: '100%',
                           overflowY: 'auto',
                           fontSize: '14px',
-                          fontFamily:
-                            '"PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif',
+                          fontFamily: '"PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif',
                           background: '#f9fafb',
                         }}
                       />
@@ -705,165 +834,168 @@ function SystemManagePage() {
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
                           components={{
-                          h1: ({ node, ...props }) => (
-                            <h1
-                              style={{
-                                fontSize: '26px',
-                                fontWeight: 700,
-                                margin: '0 0 18px',
-                                color: '#111827',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          h2: ({ node, ...props }) => (
-                            <h2
-                              style={{
-                                fontSize: '22px',
-                                fontWeight: 600,
-                                margin: '28px 0 14px',
-                                borderBottom: '1px solid #e5e7eb',
-                                paddingBottom: '6px',
-                                color: '#111827',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          h3: ({ node, ...props }) => (
-                            <h3
-                              style={{
-                                fontSize: '18px',
-                                fontWeight: 600,
-                                margin: '22px 0 10px',
-                                color: '#111827',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          p: ({ node, ...props }) => (
-                            <p
-                              style={{
-                                margin: '8px 0',
-                                fontSize: '14px',
-                                lineHeight: 1.7,
-                                color: '#374151',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          ul: ({ node, ...props }) => (
-                            <ul
-                              style={{
-                                paddingLeft: '1.5em',
-                                margin: '8px 0',
-                                fontSize: '14px',
-                                color: '#374151',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          ol: ({ node, ...props }) => (
-                            <ol
-                              style={{
-                                paddingLeft: '1.5em',
-                                margin: '8px 0',
-                                fontSize: '14px',
-                                color: '#374151',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          li: ({ node, ...props }) => (
-                            <li
-                              style={{
-                                margin: '4px 0',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          code: ({ inline, node, ...props }) => (
-                            inline ? (
-                              <code
+                            h1: ({ node, ...props }) => (
+                              <h1
                                 style={{
-                                  background: 'rgba(15,23,42,0.04)',
-                                  padding: '1px 4px',
-                                  borderRadius: '4px',
-                                  fontSize: '12px',
+                                  fontSize: '26px',
+                                  fontWeight: 700,
+                                  margin: '0 0 18px',
+                                  color: '#111827',
                                 }}
                                 {...props}
                               />
-                            ) : (
-                              <code
+                            ),
+                            h2: ({ node, ...props }) => (
+                              <h2
                                 style={{
-                                  display: 'block',
-                                  background: '#0b1020',
-                                  color: '#e5e7eb',
-                                  padding: '12px 14px',
-                                  borderRadius: '8px',
-                                  fontSize: '12px',
-                                  overflowX: 'auto',
-                                  fontFamily:
-                                    'Menlo, Monaco, Consolas, "Courier New", monospace',
+                                  fontSize: '22px',
+                                  fontWeight: 600,
+                                  margin: '28px 0 14px',
+                                  borderBottom: '1px solid #e5e7eb',
+                                  paddingBottom: '6px',
+                                  color: '#111827',
                                 }}
                                 {...props}
                               />
-                            )
-                          ),
-                          a: ({ node, ...props }) => (
-                            <a
-                              style={{ color: '#2563eb', textDecoration: 'none' }}
-                              {...props}
-                            />
-                          ),
-                          table: ({ node, ...props }) => (
-                            <div style={{ overflowX: 'auto', margin: '12px 0' }}>
-                              <table
+                            ),
+                            h3: ({ node, ...props }) => (
+                              <h3
                                 style={{
-                                  width: '100%',
-                                  borderCollapse: 'collapse',
-                                  fontSize: '13px',
+                                  fontSize: '18px',
+                                  fontWeight: 600,
+                                  margin: '22px 0 10px',
+                                  color: '#111827',
+                                }}
+                                {...props}
+                              />
+                            ),
+                            p: ({ node, ...props }) => (
+                              <p
+                                style={{
+                                  margin: '8px 0',
+                                  fontSize: '14px',
+                                  lineHeight: 1.7,
                                   color: '#374151',
                                 }}
                                 {...props}
                               />
-                            </div>
-                          ),
-                          thead: ({ node, ...props }) => (
-                            <thead
-                              style={{
-                                background: 'rgba(17,24,39,0.03)',
-                              }}
-                              {...props}
-                            />
-                          ),
-                          th: ({ node, ...props }) => (
-                            <th
-                              style={{
-                                border: '1px solid #e5e7eb',
-                                padding: '6px 10px',
-                                textAlign: 'left',
-                                fontWeight: 600,
-                              }}
-                              {...props}
-                            />
-                          ),
-                          td: ({ node, ...props }) => (
-                            <td
-                              style={{
-                                border: '1px solid #e5e7eb',
-                                padding: '6px 10px',
-                                verticalAlign: 'top',
-                              }}
-                              {...props}
-                            />
-                          ),
-                        }}
+                            ),
+                            ul: ({ node, ...props }) => (
+                              <ul
+                                style={{
+                                  paddingLeft: '1.5em',
+                                  margin: '8px 0',
+                                  fontSize: '14px',
+                                  color: '#374151',
+                                }}
+                                {...props}
+                              />
+                            ),
+                            ol: ({ node, ...props }) => (
+                              <ol
+                                style={{
+                                  paddingLeft: '1.5em',
+                                  margin: '8px 0',
+                                  fontSize: '14px',
+                                  color: '#374151',
+                                }}
+                                {...props}
+                              />
+                            ),
+                            li: ({ node, ...props }) => (
+                              <li
+                                style={{
+                                  margin: '4px 0',
+                                }}
+                                {...props}
+                              />
+                            ),
+                            code: ({ inline, node, ...props }) =>
+                              inline ? (
+                                <code
+                                  style={{
+                                    background: 'rgba(15,23,42,0.04)',
+                                    padding: '1px 4px',
+                                    borderRadius: '4px',
+                                    fontSize: '12px',
+                                  }}
+                                  {...props}
+                                />
+                              ) : (
+                                <code
+                                  style={{
+                                    display: 'block',
+                                    background: '#0b1020',
+                                    color: '#e5e7eb',
+                                    padding: '12px 14px',
+                                    borderRadius: '8px',
+                                    fontSize: '12px',
+                                    overflowX: 'auto',
+                                    fontFamily: 'Menlo, Monaco, Consolas, "Courier New", monospace',
+                                  }}
+                                  {...props}
+                                />
+                              ),
+                            a: ({ node, ...props }) => (
+                              <a
+                                style={{
+                                  color: '#2563eb',
+                                  textDecoration: 'none',
+                                }}
+                                {...props}
+                              />
+                            ),
+                            table: ({ node, ...props }) => (
+                              <div style={{ overflowX: 'auto', margin: '12px 0' }}>
+                                <table
+                                  style={{
+                                    width: '100%',
+                                    borderCollapse: 'collapse',
+                                    fontSize: '13px',
+                                    color: '#374151',
+                                  }}
+                                  {...props}
+                                />
+                              </div>
+                            ),
+                            thead: ({ node, ...props }) => (
+                              <thead
+                                style={{
+                                  background: 'rgba(17,24,39,0.03)',
+                                }}
+                                {...props}
+                              />
+                            ),
+                            th: ({ node, ...props }) => (
+                              <th
+                                style={{
+                                  border: '1px solid #e5e7eb',
+                                  padding: '6px 10px',
+                                  textAlign: 'left',
+                                  fontWeight: 600,
+                                }}
+                                {...props}
+                              />
+                            ),
+                            td: ({ node, ...props }) => (
+                              <td
+                                style={{
+                                  border: '1px solid #e5e7eb',
+                                  padding: '6px 10px',
+                                  verticalAlign: 'top',
+                                }}
+                                {...props}
+                              />
+                            ),
+                          }}
                         >
                           {docContent}
                         </ReactMarkdown>
                       </div>
                     ) : (
-                      <p style={{ fontSize: '14px', color: '#6b7280' }}>请选择左侧目录中的文档进行查看。</p>
+                      <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                        请选择左侧目录中的文档进行查看。
+                      </p>
                     )}
                   </main>
                 </div>
