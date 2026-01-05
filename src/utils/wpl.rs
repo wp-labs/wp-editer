@@ -25,7 +25,7 @@ pub fn record_to_fields(record: &DataRecord) -> Vec<ParsedField> {
         .map(|(index, field)| ParsedField {
             no: index as i32 + 1,
             meta: field.meta.to_string(),
-            name: field.name.clone(),
+            name: field.name.to_string(),
             value: field.value.to_string(),
         })
         .collect()
