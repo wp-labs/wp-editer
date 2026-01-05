@@ -21,7 +21,7 @@ const EXAMPLE_RULE = `package /example/simple {
         (ip:sip,2*_,time:recv_time<[,]>,http/request",http/status,digit,chars",http/agent",_")
   }
 }`;
-// 帮助中心在线文档地址，使用 iframe 内嵌以保持当前界面
+// 帮助中心在线文档地址
 const HELP_CENTER_URL = 'https://wp-labs.github.io/wp-docs/';
 
 function SimulateDebugPage() {
@@ -161,7 +161,6 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
   const menuItems = [
     { key: 'parse', label: '解析' },
     { key: 'convert', label: '转换' },
-    { key: 'knowledge', label: '帮助中心' },
   ];
 
   const resultColumns = [
@@ -256,7 +255,6 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
     const titles = {
       parse: '解析',
       convert: '转换',
-      knowledge: '帮助中心',
     };
     return titles[activeKey] || 'Wp Editor';
   };
@@ -280,8 +278,8 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
         </button>
         <button
           type="button"
-          className={`side-item ${activeKey === 'knowledge' ? 'is-active' : ''}`}
-          onClick={() => setActiveKey('knowledge')}
+          className="side-item"
+          onClick={() => window.open(HELP_CENTER_URL, '_blank')}
         >
           <h2>帮助中心</h2>
         </button>
@@ -664,34 +662,6 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-
-            {/* 帮助中心页面 */}
-            {activeKey === 'knowledge' && (
-              <div
-                className="docs-layout"
-                style={{
-                  display: 'flex',
-                  alignItems: 'stretch',
-                  minHeight: 0,
-                }}
-              >
-                <iframe
-                  title="帮助中心"
-                  src={HELP_CENTER_URL}
-                  style={{
-                    flex: 1,
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '12px',
-                    width: '100%',
-                    height: 'calc(100vh - 220px)',
-                    background: '#fff',
-                  }}
-                  allow="clipboard-read; clipboard-write; fullscreen"
-                  allowFullScreen
-                  loading="lazy"
-                />
               </div>
             )}
           </section>
