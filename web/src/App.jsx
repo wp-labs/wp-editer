@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { ConfigProvider, Button, Modal } from 'antd';
-import { RedditOutlined, SlackOutlined, GithubOutlined, WechatOutlined } from '@ant-design/icons';
+import { RedditOutlined, SlackOutlined, GithubOutlined, WechatOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 import SimulateDebugPage from '@/views/pages/simulate-debug';
 import httpRequest from '@/services/request';
@@ -120,6 +120,18 @@ function SimpleHeader({ onWechatClick }) {
           onClick={() => window.open('https://juejin.cn/user/239030525498106', '_blank')}
         >
           掘金
+        </Button>
+        <Button
+          type="primary"
+          icon={<QuestionCircleOutlined style={{ fontSize: '18px' }} />}
+          size="large"
+          style={{
+            fontWeight: 600,
+            fontSize: '15px',
+          }}
+          onClick={() => window.open('https://wp-labs.github.io/wp-docs/', '_blank')}
+        >
+          帮助中心
         </Button>
         <Button
           type="primary"

@@ -21,8 +21,6 @@ const EXAMPLE_RULE = `package /example/simple {
         (ip:sip,2*_,time:recv_time<[,]>,http/request",http/status,digit,chars",http/agent",_")
   }
 }`;
-// 帮助中心在线文档地址
-const HELP_CENTER_URL = 'https://wp-labs.github.io/wp-docs/';
 
 function SimulateDebugPage() {
   const [activeKey, setActiveKey] = useState('parse');
@@ -275,13 +273,6 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
           onClick={() => setActiveKey('convert')}
         >
           <h2>转换</h2>
-        </button>
-        <button
-          type="button"
-          className="side-item"
-          onClick={() => window.open(HELP_CENTER_URL, '_blank')}
-        >
-          <h2>帮助中心</h2>
         </button>
       </aside>
 

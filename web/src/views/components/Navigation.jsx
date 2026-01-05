@@ -115,6 +115,7 @@ function Navigation({ children }) {
 
   const menuItems = [
     { path: '/simulate-debug', name: '模拟调试', page: 'simulate-debug' },
+    { name: '帮助中心', url: 'https://wp-labs.github.io/wp-docs/', external: true },
   ];
 
   /**
@@ -202,11 +203,11 @@ function Navigation({ children }) {
         <nav className="top-nav">
           {menuItems.map((menuItem) => (
             <button
-              key={menuItem.path}
+              key={menuItem.path || menuItem.name}
               type="button"
-              className={`nav-item ${isActive(menuItem.path) ? 'is-active' : ''}`}
+              className={`nav-item ${menuItem.path ? (isActive(menuItem.path) ? 'is-active' : '') : ''}`}
               data-page={menuItem.page}
-              onClick={() => navigate(menuItem.path)}
+              onClick={() => menuItem.external ? window.open(menuItem.url, '_blank') : navigate(menuItem.path)}
             >
               {menuItem.name}
             </button>
