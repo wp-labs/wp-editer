@@ -1,6 +1,6 @@
-/// WPL 代码格式化器：仅通过调整空格与换行实现可读性，不改动任何标记内容。
+/// WPL 代码格式化器：通过轻量词法扫描与缩进规则生成稳定输出。
 pub struct WplFormatter {
-    indent: &'static str,
+    indent: usize,
 }
 
 impl Default for WplFormatter {
@@ -10,359 +10,328 @@ impl Default for WplFormatter {
 }
 
 impl WplFormatter {
+    /// 默认 4 空格缩进。
     pub fn new() -> Self {
-        Self { indent: "    " }
+        Self { indent: 4 }
     }
 
-    /// 仅进行空格/换行的规整：规范换行符，并将行内或跨行的 json/csv/kv 调用按逗号拆行。
+    /// 自定义缩进宽度（单位：空格）。
+    pub fn with_indent(indent: usize) -> Self {
+        Self {
+            indent: indent.max(1),
+        }
+    }
+
+    /// 出错时返回原文，避免影响调用方。
     pub fn format_content(&self, content: &str) -> String {
-        let normalized = normalize_newlines(content);
-        let collapsed = collapse_tag_blocks(&normalized);
-        let calls = reflow_calls(&collapsed, self.indent);
-        reflow_tuples(&calls, self.indent)
+        match self.format(content) {
+            Ok(v) => v,
+            Err(_) => content.to_string(),
+        }
     }
-}
 
-fn normalize_newlines(input: &str) -> String {
-    input.replace("\r\n", "\n").replace('\r', "\n")
-}
+    fn format(&self, content: &str) -> Result<String, WplFormatError> {
+        let normalized = content.replace("\r\n", "\n").replace('\r', "\n");
+        let mut out = String::with_capacity(normalized.len() + 64);
+        let chars: Vec<char> = normalized.chars().collect();
 
-/// 将多行的属性块（#[... ]）折叠为单行展示，仅调整空白。
-fn collapse_tag_blocks(content: &str) -> String {
-    let mut out = String::with_capacity(content.len());
-    let mut lines = content.lines().peekable();
+        let mut i = 0usize;
+        let mut indent = 0usize;
+        let mut start_of_line = true;
 
-    while let Some(line) = lines.next() {
-        let trimmed = line.trim_start();
-        if !trimmed.starts_with("#[") {
-            out.push_str(line);
-            out.push('\n');
-            continue;
+        while i < chars.len() {
+            let c = chars[i];
+            let escaped = i > 0 && chars[i - 1] == '\\';
+
+            // 处理字符串与原始字符串，内部内容保持不变
+            if c == '"' {
+                let (literal, consumed) = self.read_string(&chars[i..])?;
+                self.write_indent_if_needed(start_of_line, indent, &mut out)?;
+                out.push_str(&literal);
+                i += consumed;
+                start_of_line = false;
+                continue;
+            }
+            if c == 'r' && i + 1 < chars.len() && chars[i + 1] == '#' {
+                let (literal, consumed) = self.read_raw_string(&chars[i..])?;
+                self.write_indent_if_needed(start_of_line, indent, &mut out)?;
+                out.push_str(&literal);
+                i += consumed;
+                start_of_line = false;
+                continue;
+            }
+
+            // 注解块 #[...] 直接压缩为单行
+            if c == '#' && i + 1 < chars.len() && chars[i + 1] == '[' {
+                let (ann, consumed) = self.read_bracket_block(&chars[i..], '[', ']')?;
+                self.write_indent_if_needed(start_of_line, indent, &mut out)?;
+                out.push_str(
+                    &ann.replace('\n', " ")
+                        .split_whitespace()
+                        .collect::<Vec<_>>()
+                        .join(" "),
+                );
+                out.push('\n');
+                i += consumed;
+                start_of_line = true;
+                continue;
+            }
+
+            // 格式占位（如 <[,]>) 保持内部逗号不拆分
+            if c == '<' {
+                let (fmt_block, consumed) = self.read_bracket_block(&chars[i..], '<', '>')?;
+                self.write_indent_if_needed(start_of_line, indent, &mut out)?;
+                out.push_str(&fmt_block);
+                i += consumed;
+                start_of_line = false;
+                continue;
+            }
+
+            // 空白合并
+            if c.is_whitespace() {
+                // 连续空白折叠为单空格，行首跳过
+                if c == '\n' {
+                    if !start_of_line {
+                        out.push('\n');
+                    }
+                    start_of_line = true;
+                } else if !start_of_line {
+                    out.push(' ');
+                }
+                i += 1;
+                continue;
+            }
+
+            // 对已转义的结构字符，按普通字符处理，避免误触发缩进/折行。
+            if escaped && (c == '(' || c == ')' || c == '{' || c == '}' || c == '|') {
+                self.write_indent_if_needed(start_of_line, indent, &mut out)?;
+                out.push(c);
+                start_of_line = false;
+                i += 1;
+                continue;
+            }
+
+            match c {
+                '{' => {
+                    self.write_indent_if_needed(start_of_line, indent, &mut out)?;
+                    out.push('{');
+                    out.push('\n');
+                    indent += 1;
+                    start_of_line = true;
+                    i += 1;
+                }
+                '}' => {
+                    indent = indent.saturating_sub(1);
+                    if !start_of_line {
+                        out.push('\n');
+                    }
+                    self.write_indent_if_needed(true, indent, &mut out)?;
+                    out.push('}');
+                    out.push('\n');
+                    start_of_line = true;
+                    i += 1;
+                }
+                '(' => {
+                    if let Some((inner, consumed)) = self.peek_block(&chars[i..], '(', ')')
+                        && !inner.contains(',')
+                        && !inner.contains('|')
+                    {
+                        self.write_indent_if_needed(start_of_line, indent, &mut out)?;
+                        out.push('(');
+                        out.push_str(inner.trim());
+                        out.push(')');
+                        start_of_line = false;
+                        i += consumed;
+                        continue;
+                    }
+                    self.write_indent_if_needed(start_of_line, indent, &mut out)?;
+                    out.push('(');
+                    out.push('\n');
+                    indent += 1;
+                    start_of_line = true;
+                    i += 1;
+                }
+                ')' => {
+                    indent = indent.saturating_sub(1);
+                    if !start_of_line {
+                        out.push('\n');
+                    }
+                    self.write_indent_if_needed(true, indent, &mut out)?;
+                    out.push(')');
+                    start_of_line = false;
+                    i += 1;
+                }
+                ',' => {
+                    out.push(',');
+                    out.push('\n');
+                    start_of_line = true;
+                    i += 1;
+                }
+                '|' => {
+                    self.write_indent_if_needed(start_of_line, indent, &mut out)?;
+                    if !start_of_line && !matches!(out.chars().last(), Some(' ' | '\n')) {
+                        out.push(' ');
+                    }
+                    out.push('|');
+                    out.push(' ');
+                    while i + 1 < chars.len() && chars[i + 1].is_whitespace() {
+                        i += 1;
+                    }
+                    start_of_line = false;
+                    i += 1;
+                }
+                _ => {
+                    self.write_indent_if_needed(start_of_line, indent, &mut out)?;
+                    out.push(c);
+                    start_of_line = false;
+                    i += 1;
+                }
+            }
         }
 
-        let leading_ws: String = line.chars().take_while(|c| c.is_whitespace()).collect();
-        let mut collected = String::new();
-
-        // 去掉首行的 "#[" 前缀
-        let mut remainder = trimmed.trim_start_matches("#[").trim();
-        let mut found = remainder.contains(']');
-
-        if let Some(pos) = remainder.find(']') {
-            collected.push_str(remainder[..pos].trim());
-            remainder = remainder[(pos + 1)..].trim();
-            found = true;
-        } else {
-            collected.push_str(remainder);
+        // 折叠多余空行
+        let mut final_out = String::new();
+        let mut last_blank = false;
+        for line in out.trim_end().lines() {
+            let blank = line.trim().is_empty();
+            if blank && last_blank {
+                continue;
+            }
+            last_blank = blank;
+            final_out.push_str(line);
+            final_out.push('\n');
         }
 
-        while !found {
-            match lines.next() {
-                Some(next_line) => {
-                    let part = next_line.trim();
-                    if let Some(pos) = part.find(']') {
-                        collected.push(' ');
-                        collected.push_str(part[..pos].trim());
-                        remainder = part[(pos + 1)..].trim();
-                        found = true;
-                    } else {
-                        collected.push(' ');
-                        collected.push_str(part);
+        if !final_out.ends_with('\n') {
+            final_out.push('\n');
+        }
+        Ok(final_out)
+    }
+
+    fn write_indent_if_needed(
+        &self,
+        start_of_line: bool,
+        indent: usize,
+        buf: &mut String,
+    ) -> Result<(), WplFormatError> {
+        if start_of_line {
+            for _ in 0..indent {
+                buf.push_str(&" ".repeat(self.indent));
+            }
+        }
+        Ok(())
+    }
+
+    fn read_string(&self, input: &[char]) -> Result<(String, usize), WplFormatError> {
+        let mut out = String::new();
+        let mut escaped = false;
+        for (idx, ch) in input.iter().enumerate() {
+            out.push(*ch);
+            if escaped {
+                escaped = false;
+                continue;
+            }
+            if *ch == '\\' {
+                escaped = true;
+            } else if *ch == '"' && idx > 0 {
+                return Ok((out, idx + 1));
+            }
+        }
+        Err(WplFormatError::UnclosedLiteral)
+    }
+
+    fn read_raw_string(&self, input: &[char]) -> Result<(String, usize), WplFormatError> {
+        let mut out = String::new();
+        let mut hash_count = 0usize;
+        let mut idx = 0usize;
+
+        if input.get(idx) != Some(&'r') {
+            return Err(WplFormatError::UnclosedLiteral);
+        }
+        out.push('r');
+        idx += 1;
+
+        while idx < input.len() && input[idx] == '#' {
+            out.push('#');
+            hash_count += 1;
+            idx += 1;
+        }
+        if idx >= input.len() || input[idx] != '"' {
+            return Err(WplFormatError::UnclosedLiteral);
+        }
+        out.push('"');
+        idx += 1;
+
+        while idx < input.len() {
+            let ch = input[idx];
+            out.push(ch);
+            if ch == '"' {
+                let mut matched = true;
+                for h in 0..hash_count {
+                    if idx + 1 + h >= input.len() || input[idx + 1 + h] != '#' {
+                        matched = false;
+                        break;
                     }
                 }
-                None => break,
+                if matched {
+                    for _ in 0..hash_count {
+                        out.push('#');
+                    }
+                    return Ok((out, idx + 1 + hash_count));
+                }
             }
+            idx += 1;
         }
-
-        let collapsed_inner = collected.split_whitespace().collect::<Vec<_>>().join(" ");
-        out.push_str(&leading_ws);
-        out.push_str("#[");
-        out.push_str(&collapsed_inner);
-        out.push(']');
-        if !remainder.is_empty() {
-            out.push(' ');
-            out.push_str(remainder);
-        }
-        out.push('\n');
+        Err(WplFormatError::UnclosedLiteral)
     }
 
-    out
-}
-
-/// 在全文中查找 json/csv/kv 调用并拆行（支持跨行），保持标记顺序不变。
-fn reflow_calls(content: &str, indent: &str) -> String {
-    let targets = ["json(", "csv(", "kv("];
-    let bytes = content.as_bytes();
-    let mut out = String::with_capacity(content.len() + 128);
-    let mut idx = 0usize;
-    let len = bytes.len();
-
-    while idx < len {
-        let slice = &content[idx..];
-        let (target, offset) = match targets
-            .iter()
-            .filter_map(|t| slice.find(t).map(|pos| (*t, pos)))
-            .min_by_key(|(_, pos)| *pos)
-        {
-            Some(v) => v,
-            None => {
-                out.push_str(slice);
-                break;
-            }
-        };
-
-        let start = idx + offset;
-        let open_idx = start + target.len() - 1;
-        let close_idx = match find_matching_paren(bytes, open_idx) {
-            Some(c) => c,
-            None => {
-                out.push_str(&content[idx..]);
-                break;
-            }
-        };
-
-        let line_start = content[..start].rfind('\n').map(|p| p + 1).unwrap_or(0);
-        let line_end = content[close_idx..]
-            .find('\n')
-            .map(|p| close_idx + p)
-            .unwrap_or(len);
-
-        let prefix = &content[line_start..start];
-        let leading_ws: String = prefix.chars().take_while(|c| c.is_whitespace()).collect();
-        let prefix_has_token = !prefix.trim().is_empty();
-
-        let body = &content[(open_idx + 1)..close_idx];
-        let suffix = &content[(close_idx + 1)..line_end];
-
-        let (args, trailing_comma) = split_args_preserve_trailing(body);
-        if args.is_empty() {
-            out.push_str(&content[idx..line_end]);
-            idx = line_end.saturating_add(1);
-            continue;
-        }
-
-        out.push_str(&content[idx..line_start]);
-
-        if prefix_has_token {
-            out.push_str(prefix);
-            out.push('\n');
-        }
-
-        let func_indent = if prefix_has_token {
-            format!("{}{}", leading_ws, indent)
-        } else {
-            leading_ws.clone()
-        };
-        let arg_indent = format!("{}{}", func_indent, indent);
-
-        out.push_str(&func_indent);
-        out.push_str(target.trim_end_matches('('));
-        out.push('(');
-        out.push('\n');
-
-        let last_idx = args.len().saturating_sub(1);
-        for (idx_arg, arg) in args.iter().enumerate() {
-            out.push_str(&arg_indent);
-            out.push_str(arg.trim());
-            if idx_arg != last_idx || trailing_comma {
-                out.push(',');
-            }
-            out.push('\n');
-        }
-
-        out.push_str(&func_indent);
-        out.push(')');
-
-        let suffix_trim = suffix.trim();
-        if !suffix_trim.is_empty() {
-            out.push('\n');
-            out.push_str(&leading_ws);
-            out.push_str(suffix_trim);
-        }
-        out.push('\n');
-
-        if line_end < len {
-            idx = line_end + 1;
-        } else {
-            break;
-        }
-    }
-
-    out
-}
-
-fn find_matching_paren(bytes: &[u8], open_idx: usize) -> Option<usize> {
-    let mut depth = 0i32;
-    let mut in_string = false;
-    let mut i = open_idx;
-    while i < bytes.len() {
-        let b = bytes[i];
-        if b == b'"' {
-            in_string = !in_string;
-            i += 1;
-            continue;
-        }
-        if in_string {
-            i += 1;
-            continue;
-        }
-        if b == b'(' {
-            depth += 1;
-        } else if b == b')' {
-            depth -= 1;
-            if depth == 0 {
-                return Some(i);
-            }
-        }
-        i += 1;
-    }
-    None
-}
-
-fn split_args_preserve_trailing(body: &str) -> (Vec<String>, bool) {
-    let mut res = Vec::new();
-    let mut buf = String::new();
-    let mut depth = 0i32;
-    let mut in_string = false;
-
-    for ch in body.chars() {
-        if ch == '"' {
-            in_string = !in_string;
-            buf.push(ch);
-            continue;
-        }
-        if in_string {
-            buf.push(ch);
-            continue;
-        }
-        match ch {
-            '(' | '{' | '[' | '<' => {
+    fn read_bracket_block(
+        &self,
+        input: &[char],
+        open: char,
+        close: char,
+    ) -> Result<(String, usize), WplFormatError> {
+        let mut out = String::new();
+        let mut depth = 0usize;
+        for (idx, ch) in input.iter().enumerate() {
+            out.push(*ch);
+            if *ch == open {
                 depth += 1;
-                buf.push(ch);
+            } else if *ch == close {
+                depth = depth.saturating_sub(1);
+                if depth == 0 {
+                    return Ok((out, idx + 1));
+                }
             }
-            ')' | '}' | ']' | '>' => {
-                depth = (depth - 1).max(0);
-                buf.push(ch);
-            }
-            ',' if depth == 0 => {
-                res.push(buf.trim().to_string());
-                buf.clear();
-            }
-            _ => buf.push(ch),
         }
+        Err(WplFormatError::UnclosedLiteral)
     }
 
-    let trailing_comma = body.trim_end().ends_with(',');
-    let tail = buf.trim();
-    if !tail.is_empty() {
-        res.push(tail.to_string());
+    fn peek_block(&self, input: &[char], open: char, close: char) -> Option<(String, usize)> {
+        let mut out = String::new();
+        let mut depth = 0usize;
+        for (idx, ch) in input.iter().enumerate() {
+            if *ch == open {
+                depth += 1;
+                if depth == 1 {
+                    continue;
+                }
+            }
+            if depth > 0 {
+                if *ch == close {
+                    depth -= 1;
+                    if depth == 0 {
+                        return Some((out, idx + 1));
+                    }
+                }
+                out.push(*ch);
+            }
+        }
+        None
     }
-
-    let has_items = !res.is_empty();
-    (res, trailing_comma && has_items)
 }
 
-/// 拆分元组块 (a,b,...)，无论是否跨行，保证每个字段单独一行，逗号紧随字段。
-fn reflow_tuples(content: &str, indent: &str) -> String {
-    let mut out = String::with_capacity(content.len() + 64);
-    let mut lines = content.lines().peekable();
-
-    while let Some(line) = lines.next() {
-        let trimmed = line.trim_start();
-        if !trimmed.starts_with('(')
-            || trimmed.starts_with("(json(")
-            || trimmed.starts_with("(csv(")
-            || trimmed.starts_with("(kv(")
-        {
-            out.push_str(line);
-            out.push('\n');
-            continue;
-        }
-
-        // 收集完整的元组块，直到括号平衡
-        let mut block = String::from(line);
-        while !paren_balanced(&block) {
-            if let Some(next) = lines.next() {
-                block.push('\n');
-                block.push_str(next);
-            } else {
-                break;
-            }
-        }
-
-        if let Some(formatted) = format_tuple_block(&block, indent) {
-            out.push_str(&formatted);
-        } else {
-            out.push_str(&block);
-            out.push('\n');
-        }
-    }
-
-    out
-}
-
-fn paren_balanced(text: &str) -> bool {
-    let mut depth = 0i32;
-    let mut in_string = false;
-    for b in text.as_bytes() {
-        if *b == b'"' {
-            in_string = !in_string;
-            continue;
-        }
-        if in_string {
-            continue;
-        }
-        match *b {
-            b'(' => depth += 1,
-            b')' => depth -= 1,
-            _ => {}
-        }
-    }
-    depth == 0
-}
-
-fn format_tuple_block(block: &str, indent: &str) -> Option<String> {
-    let open_idx = block.find('(')?;
-    let close_idx = find_matching_paren(block.as_bytes(), open_idx)?;
-
-    let body = &block[(open_idx + 1)..close_idx];
-    let suffix = &block[(close_idx + 1)..];
-
-    let (args, trailing_comma) = split_args_preserve_trailing(body);
-    if args.is_empty() {
-        return None;
-    }
-
-    let leading_ws: String = block
-        .lines()
-        .next()
-        .unwrap_or_default()
-        .chars()
-        .take_while(|c| c.is_whitespace())
-        .collect();
-
-    let mut out = String::new();
-    out.push_str(&leading_ws);
-    out.push('(');
-    out.push('\n');
-
-    let item_indent = format!("{}{}", leading_ws, indent);
-    let last_idx = args.len().saturating_sub(1);
-    for (idx, arg) in args.iter().enumerate() {
-        out.push_str(&item_indent);
-        out.push_str(arg.trim());
-        if idx != last_idx || trailing_comma {
-            out.push(',');
-        }
-        out.push('\n');
-    }
-
-    out.push_str(&leading_ws);
-    out.push(')');
-    let suffix_trim = suffix.trim();
-    if !suffix_trim.is_empty() {
-        out.push_str(suffix_trim);
-    }
-    out.push('\n');
-
-    Some(out)
+#[derive(Debug)]
+pub enum WplFormatError {
+    UnclosedLiteral,
 }

@@ -4,70 +4,13 @@ import { convertRecord, fetchDebugExamples, parseLogs, wplCodeFormat, omlCodeFor
 import CodeJarEditor from '@/views/components/CodeJarEditor';
 
 /**
- * 从新格式的 value 中提取实际值
- * @param {Object} value - 值对象 { "IpAddr": "...", "Chars": "...", "Ignore": {} }
- * @returns {string} 提取的字符串值
+ * Wp Editor
+ * 功能：
+ * 1. 日志解析
+ * 2. 记录转换
+ * 3. 知识库状态查询
+ * 对应原型：pages/views/simulate-debug/simulate-parse.html
  */
-const extractFieldValue = (value) => {
-  if (value === null || value === undefined) {
-    return '';
-  }
-  if (typeof value === 'string') {
-    return value;
-  }
-  if (typeof value === 'object') {
-    const keys = Object.keys(value);
-    if (keys.length === 0) {
-      return '';
-    }
-    const firstKey = keys[0];
-    const firstValue = value[firstKey];
-    if (typeof firstValue === 'object' && firstValue !== null) {
-      return JSON.stringify(firstValue);
-    }
-    return String(firstValue);
-  }
-  return String(value);
-};
-
-/**
- * 兼容新旧格式的字段列表
- * 新格式: { fields: { items: [...] } }
- * 旧格式: { fields: [...] }
- * @param {Object} response - API 响应
- * @returns {Array} 字段数组
- */
-const getFieldsFromResponse = (response) => {
-  if (!response || !response.fields) {
-    return [];
-  }
-  if (Array.isArray(response.fields)) {
-    return response.fields;
-  }
-  if (Array.isArray(response.fields.items)) {
-    return response.fields.items;
-  }
-  return [];
-};
-
-/**
- * 从转换页的解析结果中获取字段数组
- * 转换页的 transformParseResult 格式为 { fields: { items: [...] } }
- * @param {Object} transformParseResult - 转换页的解析结果
- * @returns {Array} 字段数组
- */
-const getFieldsFromTransformParseResult = (data) => {
-  if (!data || !data.fields) {
-    return [];
-  }
-  if (Array.isArray(data.fields)) {
-    return data.fields;
-  }
-  if (Array.isArray(data.fields.items)) {
-    return data.fields.items;
-  }
-  return [];
-};
 
 // 默认示例列表，保存在前端，便于无网络或后端无数据时直接展示
 const DEFAULT_EXAMPLES = [
@@ -127,11 +70,10 @@ function SimulateDebugPage() {
         rules: ruleValue,
       });
       setResult(response);
-      // 同步更新转换页的解析结果
-      const fields = getFieldsFromResponse(response);
-      if (fields.length > 0) {
-        console.log('转换页解析结果:', fields);
-        setTransformParseResult({ fields: { items: fields } });
+      // 同步更新转换页的解析结果（使用原始数据用于转换，展示数据用于显示）
+      if (response?.fields && response?.rawFields) {
+        console.log('转换页解析结果:', response.rawFields);
+        setTransformParseResult({ fields: response.rawFields, formatJson: response.formatJson });
       }
     } catch (error) {
       setParseError(error); // 将错误存储到状态中
@@ -204,9 +146,8 @@ function SimulateDebugPage() {
         rules: wplCode,
       });
       setResult(response);
-      const fields = getFieldsFromResponse(response);
-      if (fields.length > 0) {
-        setTransformParseResult({ fields: { items: fields } });
+      if (response?.fields && response?.rawFields) {
+        setTransformParseResult({ fields: response.rawFields, formatJson: response.formatJson });
       }
     } catch (error) {
       setParseError(error);
@@ -253,7 +194,17 @@ function SimulateDebugPage() {
     try {
       console.log('转换页解析结果:', transformParseResult);
       const response = await convertRecord({ oml: transformOml, parseResult: transformParseResult });
-      setTransformResult(response);
+      // 新 API 直接返回 { fields: [...] } 格式
+      let fieldsData = [];
+      if (Array.isArray(response?.fields)) {
+        fieldsData = response.fields;
+      } else if (response?.fields && Array.isArray(response?.fields?.items)) {
+        fieldsData = response.fields.items;
+      }
+      setTransformResult({
+        fields: fieldsData,
+        formatJson: response.formatJson || '',
+      });
       setTransformError(null);
     } catch (error) {
       message.error(`执行转换失败：${error?.message || error}`);
@@ -280,21 +231,20 @@ function SimulateDebugPage() {
   ];
 
   const resultColumns = [
-    { title: 'no', dataIndex: 'no', key: 'no', width: 60, render: (val) => val ?? '-' },
-    { title: 'meta', dataIndex: 'meta', key: 'meta', width: 120, render: (val) => val ?? '-' },
-    { title: 'name', dataIndex: 'name', key: 'name', width: 150, render: (val) => val ?? '-' },
+    { title: 'no', dataIndex: 'no', key: 'no', width: 60 },
+    { title: 'meta', dataIndex: 'meta', key: 'meta', width: 120 },
+    { title: 'name', dataIndex: 'name', key: 'name', width: 150 },
     {
       title: 'value',
       dataIndex: 'value',
       key: 'value',
       style: { wordWrap: 'break-word', wordBreak: 'break-all', maxWidth: 300 },
-      render: (val) => extractFieldValue(val),
     },
   ];
 
   /**
    * 按"显示空值"开关过滤字段列表
-   * showEmptyFlag=false 时，过滤掉 value 为空的对象
+   * showEmptyFlag=false 时，过滤掉 value 为空字符串/null/undefined 的行
    */
   const filterFieldsByShowEmpty = (fields, showEmptyFlag) => {
     const list = Array.isArray(fields) ? fields : [];
@@ -305,9 +255,39 @@ function SimulateDebugPage() {
       if (!fieldItem || typeof fieldItem !== 'object') {
         return false;
       }
-      const fieldValue = extractFieldValue(fieldItem.value);
-      return fieldValue !== '';
+      const fieldValue = fieldItem.value;
+      return fieldValue !== '' && fieldValue !== null && fieldValue !== undefined;
     });
+  };
+
+  /**
+   * 从 value 对象中提取值
+   * @param {Object} valueObj - value 对象，如 { "IpAddr": "..." } 或 { "Chars": "..." }
+   * @returns {string} 提取的值字符串
+   */
+  const extractValueFromObj = (valueObj) => {
+    if (!valueObj || typeof valueObj !== 'object') {
+      return '';
+    }
+    const keys = Object.keys(valueObj);
+    if (keys.length > 0 && valueObj[keys[0]] !== undefined) {
+      return String(valueObj[keys[0]]);
+    }
+    return '';
+  };
+
+  /**
+   * 处理转换页解析结果，添加 no 序号并提取 value 值
+   * @param {Array} fields - 原始字段数组
+   * @returns {Array} 处理后的字段数组
+   */
+  const processTransformParseFields = (fields) => {
+    const list = Array.isArray(fields) ? fields : [];
+    return list.map((field, index) => ({
+      ...field,
+      no: index + 1,
+      value: extractValueFromObj(field?.value),
+    }));
   };
 
   // 统一渲染解析错误内容，仅保留错误标题和错误码提示
@@ -668,7 +648,7 @@ function SimulateDebugPage() {
                           size="small"
                           columns={resultColumns}
                           dataSource={filterFieldsByShowEmpty(
-                            getFieldsFromTransformParseResult(transformParseResult),
+                            processTransformParseFields(transformParseResult.fields),
                             transformParseShowEmpty
                           )}
                           pagination={false}
@@ -691,17 +671,27 @@ function SimulateDebugPage() {
                           className="code-block"
                           style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}
                         >
-                          {JSON.stringify(
-                            {
-                              ...transformParseResult,
-                              fields: filterFieldsByShowEmpty(
-                                getFieldsFromTransformParseResult(transformParseResult),
-                                transformParseShowEmpty
-                              ),
-                            },
-                            null,
-                            2
-                          )}
+                          {(() => {
+                            if (transformParseResult.formatJson) {
+                              try {
+                                const parsed = JSON.parse(transformParseResult.formatJson);
+                                return JSON.stringify(parsed, null, 2);
+                              } catch (_e) {
+                                return transformParseResult.formatJson;
+                              }
+                            }
+                            return JSON.stringify(
+                              {
+                                ...transformParseResult,
+                                fields: filterFieldsByShowEmpty(
+                                  processTransformParseFields(transformParseResult.fields),
+                                  transformParseShowEmpty
+                                ),
+                              },
+                              null,
+                              2
+                            );
+                          })()}
                         </pre>
                       ) : (
                         <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>

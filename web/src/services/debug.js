@@ -119,13 +119,38 @@ export async function fetchDebugExamples() {
 }
 
 /**
- * 解析日志
- * @param {Object} options - 解析选项
- * @param {string} options.logs - 日志内容
- * @param {string} options.rules - 解析规则
- * @param {number} [options.connectionId] - 连接 ID（可选）
- * @returns {Promise<Object>} 解析结果
+ * 从 value 对象中提取值
+ * @param {Object} valueObj - value 对象，如 { "IpAddr": "..." } 或 { "Chars": "..." }
+ * @returns {string} 提取的值字符串
  */
+const extractValueFromObj = (valueObj) => {
+  if (!valueObj || typeof valueObj !== 'object') {
+    return '';
+  }
+  // 取对象的第一个属性的值
+  const keys = Object.keys(valueObj);
+  if (keys.length > 0 && valueObj[keys[0]] !== undefined) {
+    return String(valueObj[keys[0]]);
+  }
+  return '';
+};
+
+/**
+ * 处理字段列表，添加 no 序号并提取 value 值
+ * @param {Array} fields - 字段数组
+ * @returns {Array} 处理后的字段数组
+ */
+const processFields = (fields) => {
+  if (!Array.isArray(fields)) {
+    return [];
+  }
+  return fields.map((field, index) => ({
+    ...field,
+    no: index + 1,
+    value: extractValueFromObj(field?.value),
+  }));
+};
+
 export async function parseLogs(options) {
   const { logs, rules, connectionId } = options;
 
@@ -177,16 +202,19 @@ export async function parseLogs(options) {
     }
 
     // 后端返回 RecordResponse 结构，包含 fields 和 format_json
+    // fields 可能是数组或 { items: [...] } 结构
     const payload = data;
 
-    const items = Array.isArray(payload?.fields?.items) ? payload.fields.items : [];
-    const fieldsWithNo = items.map((item, index) => ({
-      ...item,
-      no: index + 1,
-    }));
+    let fieldsData = [];
+    if (Array.isArray(payload?.fields)) {
+      fieldsData = payload.fields;
+    } else if (payload?.fields && Array.isArray(payload?.fields?.items)) {
+      fieldsData = payload.fields.items;
+    }
 
     return {
-      fields: fieldsWithNo,
+      fields: processFields(fieldsData),
+      rawFields: fieldsData,
       formatJson: typeof payload?.format_json === 'string' ? payload.format_json : '',
     };
   } catch (error) {
@@ -276,18 +304,20 @@ export async function convertRecord(options) {
     }
 
     // 后端返回 DebugTransformResponse 结构，包含 fields 和 format_json
+    // fields 可能是数组或 { items: [...] } 结构
     const payload = data;
 
-    const items = Array.isArray(payload?.fields) ? payload.fields : [];
-    const fieldsWithNo = items.map((item, index) => ({
-      ...item,
-      no: index + 1,
-    }));
+    let fieldsData = [];
+    if (Array.isArray(payload?.fields)) {
+      fieldsData = payload.fields;
+    } else if (payload?.fields && Array.isArray(payload?.fields?.items)) {
+      fieldsData = payload.fields.items;
+    }
 
     return {
-      fields: fieldsWithNo,
-      // 提供给前端 JSON 模式直接展示的标准 JSON 字符串
-      formatJson: typeof payload?.format_json === 'string' ? payload.format_json : '',
+      fields: fieldsData,
+      rawFields: fieldsData,
+      formatJson: typeof payload?.format_json === 'string' ? payload?.format_json : '',
     };
   } catch (error) {
     const responseData = error?.response?.data || error?.data;

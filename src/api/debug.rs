@@ -9,6 +9,7 @@ use crate::{OmlFormatter, ParsedField, Setting, WplFormatter};
 use actix_web::{HttpResponse, get, post, web};
 use base64::Engine;
 use base64::engine::general_purpose;
+use sea_orm::sqlx::decode;
 use serde::{Deserialize, Serialize};
 use wp_data_fmt::{DataFormat, FormatType, Json};
 use wp_model_core::model::data::Record;
@@ -46,17 +47,12 @@ pub struct DebugTransformRequest {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct ParseResultWrapper {
-    pub fields: ItemsWrapper,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ItemsWrapper {
-    pub items: Vec<DataField>,
+    pub fields: Vec<DataField>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct RecordResponse {
-    pub fields: ItemsWrapper,
+    pub fields: Vec<DataField>,
     pub format_json: String,
 }
 
@@ -82,7 +78,7 @@ pub async fn debug_transform(
         parse_result,
         oml,
     } = req.into_inner();
-    let parse_result = parse_result.fields.items.clone();
+    let parse_result = parse_result.fields.clone();
     let res = Record::from(parse_result);
     let transformed = convert_record(&oml, res)?;
 
@@ -139,7 +135,12 @@ pub async fn debug_knowledge_query(
 pub async fn debug_examples() -> HttpResponse {
     let setting = Setting::load();
     let mut rule_map = HashMap::new();
-    match examples::wpl_examples(PathBuf::from(&setting.wpl_rule_repo), &mut rule_map) {
+
+    match examples::wpl_examples(
+        PathBuf::from(&setting.wpl_rule_repo),
+        PathBuf::from(&setting.oml_rule_repo),
+        &mut rule_map,
+    ) {
         Ok(_) => HttpResponse::Ok().json(rule_map),
         Err(e) => {
             println!("加载 WPL 规则失败: {:?}", e);
@@ -171,19 +172,18 @@ pub async fn oml_format(req: String) -> HttpResponse {
 
 #[post("/api/debug/decode/base64")]
 pub async fn decode_base64(req: String) -> HttpResponse {
-    let decoded = match general_purpose::STANDARD.decode(req) {
-        Ok(v) => v,
-        Err(_) => {
+    let cleaned = req.replace(|c: char| c.is_whitespace(), "");
+    match general_purpose::STANDARD.decode(cleaned) {
+        Ok(decoded) => HttpResponse::Ok().json(String::from_utf8_lossy(&decoded)),
+        Err(e) => {
             return HttpResponse::BadRequest().json(serde_json::json!({
                 "success": false,
                 "error": {
                     "code": "BASE64_DECODE_ERROR",
-                    "message": "Base64 解码失败"
+                    "message": "Base64 解码失败",
+                    "detail": e.to_string()
                 }
             }));
         }
-    };
-
-    let hex_str = hex::encode(&decoded);
-    HttpResponse::Ok().json(hex_str)
+    }
 }

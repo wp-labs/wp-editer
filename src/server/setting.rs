@@ -41,6 +41,12 @@ pub struct Setting {
     pub web: WebConf,
     #[serde(default = "default_project_root")]
     pub wpl_rule_repo: String,
+    #[serde(default = "default_oml_rule_repo")]
+    pub oml_rule_repo: String,
+}
+
+fn default_oml_rule_repo() -> String {
+    "./rules/models/oml".to_string()
 }
 
 fn default_project_root() -> String {
@@ -53,6 +59,7 @@ impl Default for Setting {
             log: LogConf::default(),
             web: WebConf::default(),
             wpl_rule_repo: default_project_root(),
+            oml_rule_repo: default_oml_rule_repo(),
         }
     }
 }

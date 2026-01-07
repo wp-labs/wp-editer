@@ -5403,7 +5403,7 @@ dependencies = [
 
 [[package]]
 name = "wp-editor"
-version = "0.2.3"
+version = "1.0.0"
 dependencies = [
  "actix-files",
  "actix-multipart",
@@ -5415,7 +5415,6 @@ dependencies = [
  "clap",
  "config",
  "futures-util",
- "hex",
  "mime_guess",
  "regex",
  "rust-embed",
@@ -5434,6 +5433,7 @@ dependencies = [
  "wp-data-fmt",
  "wp-data-utils",
  "wp-editor-migrations",
+ "wp-engine",
  "wp-knowledge",
  "wp-lang",
  "wp-model-core 0.7.0",

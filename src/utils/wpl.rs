@@ -1,6 +1,7 @@
 use crate::error::AppError;
 use serde::{Deserialize, Serialize};
-use wp_model_core::model::DataRecord;
+use wp_engine::sources::event_id::next_event_id;
+use wp_model_core::model::{DataField, DataRecord};
 use wp_parse_api::RawData;
 use wp_parser::comment::CommentParser;
 
@@ -50,7 +51,6 @@ pub fn warp_check_record(wpl: &str, data: &str) -> Result<DataRecord, AppError> 
     if rule_items.is_empty() {
         return Err(AppError::wpl_parse("WPL 中未找到任何规则"));
     }
-
     try_parse_with_rules(rule_items, data)
 }
 
@@ -60,7 +60,15 @@ fn try_parse_with_rules(rule_items: Vec<RunParseProc>, data: &str) -> Result<Dat
         let evaluator = WplEvaluator::from(vm_unit, None).map_err(AppError::wpl_parse)?;
         let raw = RawData::from_string(data.to_string());
         match evaluator.proc(raw, 0) {
-            Ok((tdc, _pipeline)) => return Ok(tdc),
+            Ok((mut tdc, _pipeline)) => {
+                if let Some(tags) = vm_unit.tags.clone() {
+                    for tag in tags.export_tags() {
+                        tdc.append(DataField::from_chars(tag.key.clone(), tag.val.clone()));
+                    }
+                }
+                tdc.append(DataField::from_digit("wp_event_id", next_event_id() as i64));
+                return Ok(tdc);
+            }
             Err(err) => {
                 if index >= rule_items.len() - 1 {
                     return Err(AppError::wpl_parse(err));

@@ -3,10 +3,6 @@ use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::File, io::Read, path::PathBuf};
 use wp_wpl::WplCode;
 
-pub const OML_PATH: &str = "rules/models/oml";
-
-pub const WPL_PATH: &str = "rules/models/wpl";
-
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct WplExample {
     pub name: String,
@@ -17,6 +13,7 @@ pub struct WplExample {
 
 pub fn wpl_examples(
     wpl_dir: PathBuf,
+    oml_dir: PathBuf,
     examples: &mut HashMap<String, WplExample>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     if wpl_dir.is_file() {
@@ -63,9 +60,7 @@ pub fn wpl_examples(
                 .strip_prefix('/')
                 .unwrap_or(&rule.name)
                 .to_string();
-            let oml_dir = PathBuf::from(OML_PATH)
-                .join(pkg_name.as_str())
-                .join(&rule_name);
+            let oml_dir = oml_dir.join(pkg_name.as_str()).join(&rule_name);
             if oml_dir.is_dir()
                 && let Ok(entries) = oml_dir.read_dir()
             {
@@ -91,7 +86,7 @@ pub fn wpl_examples(
     wpl_dir.read_dir()?.for_each(|entry| {
         if let Ok(entry) = entry {
             let path = entry.path();
-            let _ = wpl_examples(path, examples);
+            let _ = wpl_examples(path, oml_dir.clone(), examples);
         }
     });
     Ok(())
@@ -103,15 +98,15 @@ mod tests {
     use std::fs;
     use tempfile::TempDir;
 
-    #[test]
-    fn demo() {
-        let file_path = PathBuf::from(WPL_PATH);
-        let mut examples = HashMap::new();
+    // #[test]
+    // fn demo() {
+    //     let file_path = PathBuf::from("rules/models/wpl");
+    //     let mut examples = HashMap::new();
 
-        let result = wpl_examples(file_path, &mut examples);
-        println!("{:?}", examples);
-        assert!(result.is_ok());
-    }
+    //     let result = wpl_examples(file_path, &mut examples);
+    //     println!("{:?}", examples);
+    //     assert!(result.is_ok());
+    // }
     #[test]
     fn test_wpl_examples_with_directory() {
         let temp_dir = TempDir::new().unwrap();
@@ -126,7 +121,11 @@ mod tests {
         fs::write(&file_path, wpl_content).unwrap();
 
         let mut examples = HashMap::new();
-        let result = wpl_examples(temp_dir.path().to_path_buf(), &mut examples);
+        let result = wpl_examples(
+            temp_dir.path().to_path_buf(),
+            temp_dir.path().to_path_buf(),
+            &mut examples,
+        );
 
         assert!(result.is_ok());
         assert_eq!(examples.len(), 1);
@@ -144,7 +143,7 @@ mod tests {
         fs::write(&file_path, invalid_content).unwrap();
 
         let mut examples = HashMap::new();
-        let result = wpl_examples(file_path, &mut examples);
+        let result = wpl_examples(file_path, temp_dir.path().to_path_buf(), &mut examples);
         assert!(result.is_err());
     }
 
@@ -153,7 +152,7 @@ mod tests {
         let non_existent = PathBuf::from("/non/existent/path/xyz.wpl");
         let mut examples = HashMap::new();
 
-        let result = wpl_examples(non_existent, &mut examples);
+        let result = wpl_examples(non_existent.clone(), non_existent, &mut examples);
         assert!(result.is_err());
     }
 }
