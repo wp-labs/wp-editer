@@ -134,10 +134,9 @@ pub async fn debug_knowledge_query(
 pub async fn debug_examples() -> HttpResponse {
     let setting = Setting::load();
     let mut rule_map = HashMap::new();
-
     match examples::wpl_examples(
-        PathBuf::from(&setting.wpl_rule_repo),
-        PathBuf::from(&setting.oml_rule_repo),
+        PathBuf::from(&setting.repo.wpl_rule_repo),
+        PathBuf::from(&setting.repo.oml_rule_repo),
         &mut rule_map,
     ) {
         Ok(_) => HttpResponse::Ok().json(rule_map),

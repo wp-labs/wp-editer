@@ -7,6 +7,6 @@ output_path = "./logs/"
 host = "0.0.0.0"
 port = 8080
 
-wpl_rule_repo = "./rules/models/wpl"
-
-oml_rule_repo = "./rules/models/oml"
+[repo]
+wpl_rule_repo = "/Users/tangxiangyan/Documents/projects/wp/git/wp-rule/models/wpl"
+oml_rule_repo = "/Users/tangxiangyan/Documents/projects/wp/git/wp-rule/models/oml"

@@ -12,24 +12,24 @@ pub struct WplExample {
 }
 
 pub fn wpl_examples(
-    wpl_dir: PathBuf,
-    oml_dir: PathBuf,
+    wpl_path: PathBuf,
+    oml_path: PathBuf,
     examples: &mut HashMap<String, WplExample>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    if wpl_dir.is_file() {
-        if wpl_dir.extension().and_then(|ext| ext.to_str()) != Some("wpl") {
+    if wpl_path.is_file() {
+        if wpl_path.extension().and_then(|ext| ext.to_str()) != Some("wpl") {
             return Ok(());
         }
         let wpl_formatter = WplFormatter::new();
         let oml_formatter = OmlFormatter::new();
         let mut example = WplExample::default();
-        let mut file = File::open(&wpl_dir)?;
+        let mut file = File::open(&wpl_path)?;
         // 获取原始的wpl代码
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
         example.wpl_code = wpl_formatter.format_content(&contents);
         // 获取日志示例数据
-        let sample_data_dir = wpl_dir.parent().unwrap().join("sample.dat");
+        let sample_data_dir = wpl_path.parent().unwrap().join("sample.dat");
         let mut sample_data = String::new();
         if sample_data_dir.is_file() {
             let mut file = File::open(&sample_data_dir)?;
@@ -37,30 +37,29 @@ pub fn wpl_examples(
         }
         example.sample_data = sample_data.clone();
 
-        let code = WplCode::build(wpl_dir.clone(), &contents)
+        let code = WplCode::build(wpl_path.clone(), &contents)
             .map_err(|e| anyhow::anyhow!("build example wpl failed: {}", e))?;
 
         let pkg = code
             .parse_pkg()
             .map_err(|e| anyhow::anyhow!("parse example wpl failed: {}", e))?;
-        let pkg_name = pkg
-            .name()
-            .to_string()
+        let pkg_name_raw = pkg.name().to_string();
+        let mut pkg_name = pkg_name_raw
+            .trim()
             .strip_prefix('/')
-            .unwrap_or(&pkg.name)
-            .strip_suffix('/')
-            .unwrap_or(&pkg.name)
-            .to_string();
-        example.name = pkg_name.clone();
+            .unwrap_or(&pkg_name_raw);
+        pkg_name = pkg_name.strip_suffix('/').unwrap_or(pkg_name);
+        example.name = pkg_name.to_string();
 
         pkg.rules.iter().for_each(|rule| {
             let rule_name = rule
                 .name()
                 .to_string()
+                .trim()
                 .strip_prefix('/')
                 .unwrap_or(&rule.name)
                 .to_string();
-            let oml_dir = oml_dir.join(pkg_name.as_str()).join(&rule_name);
+            let oml_dir = oml_path.join(pkg_name).join(&rule_name);
             if oml_dir.is_dir()
                 && let Ok(entries) = oml_dir.read_dir()
             {
@@ -74,6 +73,8 @@ pub fn wpl_examples(
                             let res = file.read_to_string(&mut oml_contents);
                             if res.is_ok() {
                                 example.oml_code = oml_formatter.format_content(&oml_contents);
+                            } else {
+                                println!("read oml file failed: {:?}", res);
                             }
                         }
                     }
@@ -83,10 +84,10 @@ pub fn wpl_examples(
         examples.insert(example.name.clone(), example);
         return Ok(());
     }
-    wpl_dir.read_dir()?.for_each(|entry| {
+    wpl_path.read_dir()?.for_each(|entry| {
         if let Ok(entry) = entry {
             let path = entry.path();
-            let _ = wpl_examples(path, oml_dir.clone(), examples);
+            let _ = wpl_examples(path, oml_path.clone(), examples);
         }
     });
     Ok(())

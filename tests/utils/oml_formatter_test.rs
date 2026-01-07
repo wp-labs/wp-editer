@@ -10,13 +10,14 @@ fn format_content_should_keep_blocks_neat() {
 name : demo
 rule : demo/rule
 ---
+
 block = match read(kind) {
     chars(A) => {
         value = 1;
     }
 
     chars(B) => {
-        value=2;
+        value = 2;
     }
 }
 
@@ -48,6 +49,85 @@ access_ip: ip = read(access_ip);
 }
 
 #[test]
+fn format_content_should_remove_space_before_semicolon() {
+    let formatter = OmlFormatter::new();
+    let raw = "value = 1 \n ; another = 2\t ;";
+
+    let formatted = formatter.format_content(raw);
+    let expected = "\
+value = 1;
+another = 2;
+
+";
+
+    assert_eq!(
+        formatted, expected,
+        "分号前不应存在空格或换行，语句需收敛到同一行"
+    );
+}
+
+#[test]
+fn format_content_should_follow_supplement_examples() {
+    let formatter = OmlFormatter::new();
+    let raw = "\
+name : flow_ssl
+rule : skyeye/flow_ssl_kafka
+---
+vlan_id: digit = match read(vlan_id) {
+    in ( digit(0), digit(4095) ) => read(vlan_id) ;
+    _ => digit(0) ;
+}
+;
+vxlan_id: digit = match read(option:[vxlan_id]) {
+    in ( digit(0), digit(16777215) ) => read(vxlan_id) ;
+    _ => digit(0) ;
+}
+;
+gre_key: digit = match read(option:[gre_key]) {
+    in ( digit(0), digit(4294967295) ) => read(gre_key) ;
+    _ => digit(0) ;
+}
+;
+extend_fields = object {
+    backrule_id, priv_info = read();
+}
+;
+data_src_system = digit(13);
+
+";
+
+    let formatted = formatter.format_content(raw);
+    let expected = "\
+name : flow_ssl
+rule : skyeye/flow_ssl_kafka
+---
+
+vlan_id: digit = match read(vlan_id) {
+    in ( digit(0), digit(4095) ) => read(vlan_id);
+    _ => digit(0);
+};
+vxlan_id: digit = match read(option:[vxlan_id]) {
+    in ( digit(0), digit(16777215) ) => read(vxlan_id);
+    _ => digit(0);
+};
+gre_key: digit = match read(option:[gre_key]) {
+    in ( digit(0), digit(4294967295) ) => read(gre_key);
+    _ => digit(0);
+};
+extend_fields = object {
+    backrule_id, priv_info = read();
+};
+data_src_system = digit(13);
+
+";
+
+    assert_eq!(
+        formatted, expected,
+        "应与补充示例二一致：分号前无空格，普通等号两侧有空格且保持同一行"
+    );
+}
+
+#[test]
 fn format_content_should_keep_attribute_on_single_line() {
     let formatter = OmlFormatter::new();
     let raw = r#"#[tag(
@@ -67,6 +147,7 @@ block = {}
 #[tag(dev_vendor: \"青藤云\",dev_name: \"万相主机自适应安全平台\",dev_type: \"青藤云HIDS系统\"),copy_raw(name:\"raw_msg\")]
 rule : qingteng/host
 ---
+
 block = {}
 
 ";
@@ -80,6 +161,7 @@ fn format_content_should_collapse_multiple_blank_lines() {
     let raw = "\
 rule : test
 ---
+
 block = {}
 
 
@@ -94,6 +176,7 @@ value = 2;
     let expected = "\
 rule : test
 ---
+
 block = {}
 
 value = 1;
