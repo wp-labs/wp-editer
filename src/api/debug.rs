@@ -9,7 +9,6 @@ use crate::{OmlFormatter, ParsedField, Setting, WplFormatter};
 use actix_web::{HttpResponse, get, post, web};
 use base64::Engine;
 use base64::engine::general_purpose;
-use sea_orm::sqlx::decode;
 use serde::{Deserialize, Serialize};
 use wp_data_fmt::{DataFormat, FormatType, Json};
 use wp_model_core::model::data::Record;
@@ -175,15 +174,13 @@ pub async fn decode_base64(req: String) -> HttpResponse {
     let cleaned = req.replace(|c: char| c.is_whitespace(), "");
     match general_purpose::STANDARD.decode(cleaned) {
         Ok(decoded) => HttpResponse::Ok().json(String::from_utf8_lossy(&decoded)),
-        Err(e) => {
-            return HttpResponse::BadRequest().json(serde_json::json!({
-                "success": false,
-                "error": {
-                    "code": "BASE64_DECODE_ERROR",
-                    "message": "Base64 解码失败",
-                    "detail": e.to_string()
-                }
-            }));
-        }
+        Err(e) => HttpResponse::BadRequest().json(serde_json::json!({
+            "success": false,
+            "error": {
+                "code": "BASE64_DECODE_ERROR",
+                "message": "Base64 解码失败",
+                "detail": e.to_string()
+            }
+        })),
     }
 }
