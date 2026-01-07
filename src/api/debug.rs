@@ -24,9 +24,7 @@ pub struct DebugParseRequest {
 
 // 新版调试接口：解析日志并返回字段列表
 #[post("/api/debug/parse")]
-pub async fn debug_parse(
-    req: web::Json<DebugParseRequest>,
-) -> Result<HttpResponse, AppError> {
+pub async fn debug_parse(req: web::Json<DebugParseRequest>) -> Result<HttpResponse, AppError> {
     // 调用 warp_check_record 获取 DataRecord
     let record = warp_check_record(&req.rules, &req.logs)?;
 
@@ -145,14 +143,14 @@ pub async fn debug_examples() -> HttpResponse {
         Ok(_) => HttpResponse::Ok().json(rule_map),
         Err(e) => {
             println!("加载 WPL 规则失败: {:?}", e);
-            return HttpResponse::InternalServerError().json(serde_json::json!({
+            HttpResponse::InternalServerError().json(serde_json::json!({
                 "success": false,
                 "error": {
                     "code": "WPL_RULE_LOAD_ERROR",
                     "message": "加载 WPL 规则失败",
                     "detail": e.to_string()
                 }
-            }));
+            }))
         }
     }
 }
