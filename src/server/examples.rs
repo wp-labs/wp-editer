@@ -1,10 +1,7 @@
-use std::{collections::HashMap, fs::File, io::Read, path::PathBuf};
-
+use crate::{OmlFormatter, WplFormatter};
 use serde::{Deserialize, Serialize};
-use wp_proj::models::oml;
+use std::{collections::HashMap, fs::File, io::Read, path::PathBuf};
 use wp_wpl::WplCode;
-
-use crate::{OmlFormatter, WplFormatter, utils::oml_formatter};
 
 pub const OML_PATH: &str = "rules/models/oml";
 
@@ -67,32 +64,31 @@ pub fn wpl_examples(
                 .unwrap_or(&rule.name)
                 .to_string();
             let oml_dir = PathBuf::from(OML_PATH)
-                .join(&pkg_name.as_str())
+                .join(pkg_name.as_str())
                 .join(&rule_name);
-            if oml_dir.is_dir() {
-                if let Ok(entries) = oml_dir.read_dir() {
-                    entries.for_each(|entry| {
-                        if let Ok(entry) = entry {
-                            let path = entry.path();
-                            if path.extension().map(|ext| ext == "oml").unwrap_or(false) {
-                                if let Ok(mut file) = File::open(&path) {
-                                    let mut oml_contents = String::new();
-                                    let res = file.read_to_string(&mut oml_contents);
-                                    if let Ok(_) = res {
-                                        example.oml_code =
-                                            oml_formatter.format_content(&oml_contents);
-                                    }
-                                }
+            if oml_dir.is_dir()
+                && let Ok(entries) = oml_dir.read_dir()
+            {
+                entries.for_each(|entry| {
+                    if let Ok(entry) = entry {
+                        let path = entry.path();
+                        if path.extension().map(|ext| ext == "oml").unwrap_or(false)
+                            && let Ok(mut file) = File::open(&path)
+                        {
+                            let mut oml_contents = String::new();
+                            let res = file.read_to_string(&mut oml_contents);
+                            if res.is_ok() {
+                                example.oml_code = oml_formatter.format_content(&oml_contents);
                             }
                         }
-                    });
-                }
+                    }
+                });
             }
         });
         examples.insert(example.name.clone(), example);
         return Ok(());
     }
-    wpl_dir.read_dir()?.enumerate().for_each(|(_i, entry)| {
+    wpl_dir.read_dir()?.for_each(|entry| {
         if let Ok(entry) = entry {
             let path = entry.path();
             let _ = wpl_examples(path, examples);
@@ -134,7 +130,10 @@ mod tests {
 
         assert!(result.is_ok());
         assert_eq!(examples.len(), 1);
-        assert!(examples.contains_key("/nested/"));
+        assert!(
+            examples.contains_key("nested"),
+            "示例应以去除首尾斜杠的包名作为键"
+        );
     }
 
     #[test]

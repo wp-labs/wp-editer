@@ -3,6 +3,12 @@ pub struct OmlFormatter {
     indent: &'static str,
 }
 
+impl Default for OmlFormatter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OmlFormatter {
     /// 创建格式化器，不绑定路径，便于独立处理任意 OML 字符串
     pub fn new() -> Self {
@@ -28,7 +34,7 @@ impl OmlFormatter {
             // 将属性块（如 #[tag(...), copy_raw(...)]）合并为单行，避免多行格式化
             if trimmed.starts_with("#[") && !trimmed.contains(']') {
                 let mut attr_line = trimmed.to_string();
-                while let Some(next_line) = lines.next() {
+                for next_line in lines.by_ref() {
                     let next_trimmed = next_line.trim();
                     if next_trimmed.is_empty() {
                         continue;
@@ -161,10 +167,10 @@ fn normalize_inline_spacing(line: &str) -> String {
                 result.push(ch);
             }
             '{' if !in_string => {
-                if let Some(p) = prev {
-                    if !p.is_whitespace() {
-                        result.push(' ');
-                    }
+                if let Some(p) = prev
+                    && !p.is_whitespace()
+                {
+                    result.push(' ');
                 }
                 result.push(ch);
             }
@@ -204,18 +210,18 @@ fn normalize_arrow_spacing(line: &str) -> String {
                 in_string = !in_string;
             }
             '=' if !in_string && idx + 1 < chars.len() && chars[idx + 1] == '>' => {
-                if let Some(last) = result.chars().last() {
-                    if !last.is_whitespace() {
-                        result.push(' ');
-                    }
+                if let Some(last) = result.chars().last()
+                    && !last.is_whitespace()
+                {
+                    result.push(' ');
                 }
                 result.push('=');
                 result.push('>');
                 let next_char = chars.get(idx + 2).copied();
-                if let Some(nc) = next_char {
-                    if !nc.is_whitespace() {
-                        result.push(' ');
-                    }
+                if let Some(nc) = next_char
+                    && !nc.is_whitespace()
+                {
+                    result.push(' ');
                 }
                 idx += 2;
                 continue;
@@ -346,7 +352,7 @@ fn split_oml_segments(line: &str) -> Vec<String> {
     let mut escaped = false;
     let mut in_string = false;
 
-    let mut push_buf = |buffer: &mut String, list: &mut Vec<String>| {
+    let push_buf = |buffer: &mut String, list: &mut Vec<String>| {
         let trimmed = buffer.trim();
         if !trimmed.is_empty() {
             list.push(trimmed.to_string());

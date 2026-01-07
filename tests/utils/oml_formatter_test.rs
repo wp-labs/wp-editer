@@ -19,6 +19,7 @@ block = match read(kind) {
         value=2;
     }
 }
+
 ";
 
     assert_eq!(formatted, expected, "格式化后应统一缩进与换行");
@@ -37,6 +38,7 @@ fn format_content_should_split_by_semicolon_outside_string() {
     let expected = "\
 pos_sn = read(option:[serial_num]);
 access_ip: ip = read(access_ip);
+
 ";
 
     assert_eq!(
@@ -62,16 +64,14 @@ block = {}
 
     let formatted = formatter.format_content(raw);
     let expected = "\
-#[tag(dev_vendor: \"青藤云\", dev_name: \"万相主机自适应安全平台\", dev_type: \"青藤云HIDS系统\"), copy_raw(name:\"raw_msg\")]
+#[tag(dev_vendor: \"青藤云\",dev_name: \"万相主机自适应安全平台\",dev_type: \"青藤云HIDS系统\"),copy_raw(name:\"raw_msg\")]
 rule : qingteng/host
 ---
 block = {}
+
 ";
 
-    assert_eq!(
-        formatted, expected,
-        "属性块应折叠为单行，内容保持原有顺序"
-    );
+    assert_eq!(formatted, expected, "属性块应折叠为单行，内容保持原有顺序");
 }
 
 #[test]
@@ -99,6 +99,7 @@ block = {}
 value = 1;
 
 value = 2;
+
 ";
 
     assert_eq!(

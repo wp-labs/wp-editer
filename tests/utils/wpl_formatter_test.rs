@@ -196,10 +196,7 @@ package skyeye_platform {
 }
 ";
 
-    assert_eq!(
-        formatted, expected,
-        "跨行内联 json 也应被拆行且标记不丢失"
-    );
+    assert_eq!(formatted, expected, "跨行内联 json 也应被拆行且标记不丢失");
 }
 
 #[test]

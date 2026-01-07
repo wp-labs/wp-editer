@@ -37,8 +37,7 @@ pub async fn debug_parse(
     let mut record_guard = shared_record.lock().await;
     *record_guard = Some(record.clone());
 
-    // 直接返回 ParsedField 列表，由 Actix 负责序列化为 JSON
-    let parsed_fields: Vec<ParsedField> = record_to_fields(&record);
+    // 直接返回 DataField 列表，由 Actix 负责序列化为 JSON
     let formatter = FormatType::from(&TextFmt::Json);
     let json_string = formatter.format_record(&record);
     Ok(HttpResponse::Ok().json(RecordResponseRaw {
@@ -176,7 +175,7 @@ pub async fn decode_base64(req: String) -> HttpResponse {
                     "code": "BASE64_DECODE_ERROR",
                     "message": "Base64 解码失败"
                 }
-            }))
+            }));
         }
     };
 

@@ -3,6 +3,12 @@ pub struct WplFormatter {
     indent: &'static str,
 }
 
+impl Default for WplFormatter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WplFormatter {
     pub fn new() -> Self {
         Self { indent: "    " }
