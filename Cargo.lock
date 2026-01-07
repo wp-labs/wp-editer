@@ -5835,7 +5835,7 @@ dependencies = [
 [[package]]
 name = "wp_docs"
 version = "1.0.0"
-source = "git+https://github.com/wp-labs/wp-docs.git?branch=main#69012a1407c1a883327cdb26907df3c45417d8ea"
+source = "git+https://github.com/wp-labs/wp-docs.git?branch=main#805600da457bb0fcfd70e2d5ce70e7774105068b"
 
 [[package]]
 name = "writeable"
