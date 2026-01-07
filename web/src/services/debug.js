@@ -5,6 +5,119 @@
 
 import httpRequest from './request';
 
+export async function base64Decode(logValue) {
+  try {
+    const response = await httpRequest.post('/debug/decode/base64', logValue || '', {
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      // 禁用默认 JSON 序列化，保持原始字符串透传
+      transformRequest: [
+        data => data,
+      ],
+    });
+    const data = response && typeof response === 'object' && 'data' in response ? response.data : response;
+    if (data && data.success === false) {
+      const errorMessage = data.error?.message || 'Base64解码失败，请稍后重试';
+      const error = new Error(errorMessage);
+      error.code = data.error?.code;
+      error.responseData = data;
+      throw error;
+    }
+    return data || {};
+
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(typeof error === 'string' ? error : 'Base64解码失败，请稍后重试');
+  }
+}
+
+export async function wplCodeFormat(wplCode) {
+  try {
+    // 接口要求原始字符串入参，避免 JSON 序列化导致的类型不匹配
+    const response = await httpRequest.post('/debug/wpl/format', wplCode || '', {
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      // 禁用默认 JSON 序列化，保持原始字符串透传
+      transformRequest: [
+        data => data,
+      ],
+    });
+    const data = response && typeof response === 'object' && 'data' in response ? response.data : response;
+    if (data && data.success === false) {
+      const errorMessage = data.error?.message || '格式化 WPL 代码失败，请稍后重试';
+      const error = new Error(errorMessage);
+      error.code = data.error?.code;
+      error.responseData = data;
+      throw error;
+    }
+    // 后端可能直接返回格式化后的字符串，或返回 { wpl_code: '' }
+    if (typeof data === 'string') {
+      return { wpl_code: data };
+    }
+    return data || {};
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(typeof error === 'string' ? error : '格式化WPL代码失败，请稍后重试');
+  }
+}
+
+export async function omlCodeFormat(omlCode) {
+  try {
+    // 接口要求原始字符串入参，避免 JSON 序列化导致的类型不匹配
+    const response = await httpRequest.post('/debug/oml/format', omlCode || '', {
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      // 禁用默认 JSON 序列化，保持原始字符串透传
+      transformRequest: [
+        data => data,
+      ],
+    });
+    const data = response && typeof response === 'object' && 'data' in response ? response.data : response;
+    if (data && data.success === false) {
+      const errorMessage = data.error?.message || '格式化 OML 代码失败，请稍后重试';
+      const error = new Error(errorMessage);
+      error.code = data.error?.code;
+      error.responseData = data;
+      throw error;
+    }
+    // 后端可能直接返回格式化后的字符串，或返回 { oml_code: '' }
+    if (typeof data === 'string') {
+      return { oml_code: data };
+    }
+    return data || {};
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(typeof error === 'string' ? error : '格式化WPL代码失败，请稍后重试');
+  }
+}
+
+/**
+ * 获取调试示例列表
+ * @returns {Promise<Record<string, {name: string, wpl_code: string, oml_code: string, sample_data: string}>>}
+ */
+export async function fetchDebugExamples() {
+  try {
+    const response = await httpRequest.get('/debug/examples');
+    const data = response && typeof response === 'object' && 'data' in response ? response.data : response;
+    if (data && data.success === false) {
+      const errorMessage = data.error?.message || '获取示例失败，请稍后重试';
+      const error = new Error(errorMessage);
+      error.code = data.error?.code;
+      error.responseData = data;
+      throw error;
+    }
+    return data || {};
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(typeof error === 'string' ? error : '获取示例失败，请稍后重试');
+  }
+}
+
 /**
  * 解析日志
  * @param {Object} options - 解析选项
@@ -66,8 +179,14 @@ export async function parseLogs(options) {
     // 后端返回 RecordResponse 结构，包含 fields 和 format_json
     const payload = data;
 
+    const items = Array.isArray(payload?.fields?.items) ? payload.fields.items : [];
+    const fieldsWithNo = items.map((item, index) => ({
+      ...item,
+      no: index + 1,
+    }));
+
     return {
-      fields: Array.isArray(payload?.fields) ? payload.fields : [],
+      fields: fieldsWithNo,
       formatJson: typeof payload?.format_json === 'string' ? payload.format_json : '',
     };
   } catch (error) {
@@ -110,7 +229,8 @@ export async function parseLogs(options) {
  * @returns {Promise<Object>} 转换结果
  */
 export async function convertRecord(options) {
-  const { oml, connectionId } = options;
+  const { oml, connectionId, parseResult } = options;
+  console.log('convertRecord', { oml, connectionId, parseResult });
 
   /**
    * 构造转换错误对象，携带后端响应内容，便于前端展示
@@ -137,7 +257,7 @@ export async function convertRecord(options) {
     // parse_result 参数保留但后端实际使用 SharedRecord
     const response = await httpRequest.post('/debug/transform', {
       connection_id: connectionId,
-      parse_result: {}, // 占位，后端使用 SharedRecord
+      parse_result: parseResult || {}, // 占位，后端使用 SharedRecord
       oml,
     });
 
@@ -158,8 +278,14 @@ export async function convertRecord(options) {
     // 后端返回 DebugTransformResponse 结构，包含 fields 和 format_json
     const payload = data;
 
+    const items = Array.isArray(payload?.fields) ? payload.fields : [];
+    const fieldsWithNo = items.map((item, index) => ({
+      ...item,
+      no: index + 1,
+    }));
+
     return {
-      fields: Array.isArray(payload?.fields) ? payload.fields : [],
+      fields: fieldsWithNo,
       // 提供给前端 JSON 模式直接展示的标准 JSON 字符串
       formatJson: typeof payload?.format_json === 'string' ? payload.format_json : '',
     };
@@ -199,13 +325,13 @@ export async function convertRecord(options) {
  */
 export async function runPerformanceTest(options) {
   const { testType, config } = options;
-  
+
   // 调用后端性能测试接口：POST /api/debug/performance/run
   const response = await httpRequest.post('/debug/performance/run', {
     test_type: testType,
     config,
   });
-  
+
   // 后端返回测试任务信息
   return response || {
     taskId: `perf-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-001`,

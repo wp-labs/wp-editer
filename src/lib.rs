@@ -12,4 +12,6 @@ pub mod utils;
 // 重新导出常用模块
 pub use db::DbPool;
 pub use server::{Setting, WebConf};
-pub use utils::{ParsedField, convert_record, record_to_fields, warp_check_record};
+pub use utils::{
+    OmlFormatter, ParsedField, WplFormatter, convert_record, record_to_fields, warp_check_record,
+};

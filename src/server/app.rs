@@ -1,15 +1,29 @@
 // 应用启动逻辑
 
-use crate::{api, server::Setting};
+use crate::{
+    api,
+    server::{
+        Setting,
+        examples::{self, WplExample, wpl_examples},
+    },
+};
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Result, middleware::Logger, web};
 use mime_guess::from_path;
 use rust_embed::RustEmbed;
-use std::sync::Arc;
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 use tokio::sync::Mutex;
 use wp_model_core::model::DataRecord;
 
 // SharedRecord 类型定义
 pub type SharedRecord = Arc<Mutex<Option<DataRecord>>>;
+
+use std::sync::LazyLock;
+
+pub static EXAMPLES: LazyLock<HashMap<String, WplExample>> = LazyLock::new(|| {
+    let mut examples = HashMap::new();
+    let _ = wpl_examples(PathBuf::from(examples::WPL_PATH), &mut examples);
+    examples
+});
 
 #[derive(RustEmbed)]
 #[folder = "web/dist"]
@@ -63,6 +77,10 @@ pub async fn start() -> std::io::Result<()> {
             // 调试 API
             .service(api::debug_parse)
             .service(api::debug_transform)
+            .service(api::debug::debug_examples)
+            .service(api::wpl_format)
+            .service(api::oml_format)
+            .service(api::decode_base64)
             // 默认路由：未匹配的 /api/* 返回 JSON 404，其余走静态文件（前端 SPA）
             .default_service(web::to(|req: HttpRequest| async move {
                 if req.path().starts_with("/api/") {

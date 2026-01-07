@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { ConfigProvider, Button, Modal } from 'antd';
 import { RedditOutlined, SlackOutlined, GithubOutlined, WechatOutlined, QuestionCircleOutlined } from '@ant-design/icons';
@@ -24,6 +24,7 @@ const theme = {
 // 简化版导航栏组件，只包含logo展示
 function SimpleHeader({ onWechatClick }) {
   const [versionInfo, setVersionInfo] = useState({ wpEditor: '', warpParse: '', warpEngine: '' });
+  const versionFetchedRef = useRef(false); // 防止严格模式导致的重复请求
 
   // 获取版本信息：wp-editor 与 warp-parse/warp-engine
   useEffect(() => {
@@ -40,6 +41,10 @@ function SimpleHeader({ onWechatClick }) {
       }
     };
 
+    if (versionFetchedRef.current) {
+      return;
+    }
+    versionFetchedRef.current = true;
     fetchVersion();
   }, []);
 

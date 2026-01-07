@@ -59,6 +59,9 @@ pub enum AppError {
 
     #[error("Git Token 无效: {reason}")]
     InvalidGitToken { reason: String },
+
+    #[error("Base64 解码失败: {0}")]
+    InvalidBase64(String),
 }
 
 impl AppError {
@@ -120,6 +123,7 @@ impl AppError {
             AppError::NoParseResult => "NO_PARSE_RESULT",
             AppError::PortUnreachable { .. } => "PORT_UNREACHABLE",
             AppError::InvalidGitToken { .. } => "INVALID_GIT_TOKEN",
+            AppError::InvalidBase64(_) => "INVALID_BASE64",
         }
     }
 }
@@ -146,6 +150,9 @@ impl ResponseError for AppError {
 
             // 500 Internal Server Error - 服务器内部错误
             AppError::Internal(_) | AppError::Git(_) => StatusCode::INTERNAL_SERVER_ERROR,
+
+            // 500 Bad Request - Base64 解码错误
+            AppError::InvalidBase64(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
         let details = match self {
