@@ -1,29 +1,15 @@
 // 应用启动逻辑
 
-use crate::{
-    api,
-    server::{
-        Setting,
-        examples::{self, WplExample, wpl_examples},
-    },
-};
+use crate::{api, server::Setting};
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Result, middleware::Logger, web};
 use mime_guess::from_path;
 use rust_embed::RustEmbed;
-use std::{collections::HashMap, path::PathBuf, sync::Arc};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 use wp_model_core::model::DataRecord;
 
 // SharedRecord 类型定义
 pub type SharedRecord = Arc<Mutex<Option<DataRecord>>>;
-
-use std::sync::LazyLock;
-
-pub static EXAMPLES: LazyLock<HashMap<String, WplExample>> = LazyLock::new(|| {
-    let mut examples = HashMap::new();
-    let _ = wpl_examples(PathBuf::from(examples::WPL_PATH), &mut examples);
-    examples
-});
 
 #[derive(RustEmbed)]
 #[folder = "web/dist"]

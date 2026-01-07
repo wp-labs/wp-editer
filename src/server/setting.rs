@@ -40,11 +40,11 @@ pub struct Setting {
     pub log: LogConf,
     pub web: WebConf,
     #[serde(default = "default_project_root")]
-    pub project_root: String,
+    pub wpl_rule_repo: String,
 }
 
 fn default_project_root() -> String {
-    "./project_root".to_string()
+    "./rules".to_string()
 }
 
 impl Default for Setting {
@@ -52,7 +52,7 @@ impl Default for Setting {
         Setting {
             log: LogConf::default(),
             web: WebConf::default(),
-            project_root: default_project_root(),
+            wpl_rule_repo: default_project_root(),
         }
     }
 }

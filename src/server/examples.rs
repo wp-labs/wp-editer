@@ -20,7 +20,7 @@ pub fn wpl_examples(
     examples: &mut HashMap<String, WplExample>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     if wpl_dir.is_file() {
-        if wpl_dir.extension().unwrap() != "wpl" {
+        if wpl_dir.extension().and_then(|ext| ext.to_str()) != Some("wpl") {
             return Ok(());
         }
         let wpl_formatter = WplFormatter::new();

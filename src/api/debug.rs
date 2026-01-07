@@ -1,21 +1,19 @@
+use std::collections::HashMap;
+use std::path::PathBuf;
+
 // 模拟调试 API
 use crate::error::AppError;
-use crate::server::app::EXAMPLES;
+use crate::server::examples;
 use crate::utils::{convert_record, record_to_fields, warp_check_record};
-use crate::{OmlFormatter, ParsedField, WplFormatter};
+use crate::{OmlFormatter, ParsedField, Setting, WplFormatter};
 use actix_web::{HttpResponse, get, post, web};
 use base64::Engine;
 use base64::engine::general_purpose;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
-use tokio::sync::Mutex;
 use wp_data_fmt::{DataFormat, FormatType, Json};
 use wp_model_core::model::data::Record;
 use wp_model_core::model::fmt_def::TextFmt;
 use wp_model_core::model::{DataField, DataRecord};
-
-// SharedRecord 类型定义：用于在 API 之间共享解析结果
-pub type SharedRecord = Arc<Mutex<Option<DataRecord>>>;
 
 #[derive(Deserialize)]
 pub struct DebugParseRequest {
@@ -27,15 +25,10 @@ pub struct DebugParseRequest {
 // 新版调试接口：解析日志并返回字段列表
 #[post("/api/debug/parse")]
 pub async fn debug_parse(
-    shared_record: web::Data<SharedRecord>,
     req: web::Json<DebugParseRequest>,
 ) -> Result<HttpResponse, AppError> {
     // 调用 warp_check_record 获取 DataRecord
     let record = warp_check_record(&req.rules, &req.logs)?;
-
-    // 存入 SharedRecord，供后续转换使用
-    let mut record_guard = shared_record.lock().await;
-    *record_guard = Some(record.clone());
 
     // 直接返回 DataField 列表，由 Actix 负责序列化为 JSON
     let formatter = FormatType::from(&TextFmt::Json);
@@ -146,8 +139,22 @@ pub async fn debug_knowledge_query(
 
 #[get("/api/debug/examples")]
 pub async fn debug_examples() -> HttpResponse {
-    let examples = EXAMPLES.clone();
-    HttpResponse::Ok().json(examples)
+    let setting = Setting::load();
+    let mut rule_map = HashMap::new();
+    match examples::wpl_examples(PathBuf::from(&setting.wpl_rule_repo), &mut rule_map) {
+        Ok(_) => HttpResponse::Ok().json(rule_map),
+        Err(e) => {
+            println!("加载 WPL 规则失败: {:?}", e);
+            return HttpResponse::InternalServerError().json(serde_json::json!({
+                "success": false,
+                "error": {
+                    "code": "WPL_RULE_LOAD_ERROR",
+                    "message": "加载 WPL 规则失败",
+                    "detail": e.to_string()
+                }
+            }));
+        }
+    }
 }
 
 #[post("/api/debug/wpl/format")]

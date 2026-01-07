@@ -7,4 +7,4 @@ output_path = "./logs/"
 host = "0.0.0.0"
 port = 8080
 
-project_root = "./project_root"
+wpl_rule_repo = ".rules/models/wpl"
