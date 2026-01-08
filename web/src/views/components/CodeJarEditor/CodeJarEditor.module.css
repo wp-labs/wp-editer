@@ -6,10 +6,27 @@
   border-radius: 16px;
   background: #0f172a;
   overflow: hidden;
+  display: flex;
+  font-family: "Fira Code", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+}
+
+.gutter {
+  width: 48px;
+  padding: 14px 12px 14px 10px;
+  margin: 0;
+  text-align: right;
+  color: #94a3b8;
+  background: #0b1224;
+  border-right: 1px solid rgba(226, 232, 240, 0.1);
+  line-height: 1.6;
+  overflow: hidden;
+  user-select: none;
+  white-space: pre;
 }
 
 .code {
-  width: 100%;
+  flex: 1;
   height: 100%;
   min-height: 160px;
   padding: 14px 16px;
@@ -19,6 +36,7 @@
   resize: none;
   white-space: pre-wrap;
   word-break: break-word;
+  overflow: auto;
 }
 
 .code:focus {

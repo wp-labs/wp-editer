@@ -304,8 +304,10 @@ function SimulateDebugPage() {
           margin: '10px',
         }}
       >
-        <h4 style={{ color: '#f5222d', marginBottom: '8px' }}>解析失败</h4>
-        <p>{parseError.message || '执行解析失败，请稍后重试'}</p>
+        <h4 style={{ color: '#f5222d', marginBottom: '8px', fontWeight: 'bold' }}>解析失败</h4>
+        <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', color: '#666', margin: '0 0 8px 0', fontSize: '14px', lineHeight: '1.5' }}>
+          {parseError.message || '执行解析失败，请稍后重试'}
+        </pre>
         {parseError.code && (
           <p style={{ color: '#f5222d', margin: '8px 0 0 0' }}>
             <span style={{ fontWeight: 'bold' }}>错误码：</span>
@@ -336,7 +338,9 @@ function SimulateDebugPage() {
         }}
       >
         <h4 style={{ color: '#f5222d', marginBottom: '8px' }}>转换失败</h4>
-        <p>{errorMessage}</p>
+        <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', color: '#666', margin: '0 0 8px 0', fontSize: '14px', lineHeight: '1.5' }}>
+          {errorMessage}
+        </pre>
         {transformError.code && (
           <p style={{ color: '#f5222d', margin: '8px 0 0 0' }}>
             <span style={{ fontWeight: 'bold' }}>错误码：</span>
