@@ -1,11 +1,15 @@
 use std::path::PathBuf;
 
 use crate::error::AppError;
+use orion_error::UvsReason;
 use serde::{Deserialize, Serialize};
 use wp_engine::sources::event_id::next_event_id;
 use wp_model_core::model::{DataField, DataRecord, DataType};
 use wp_parse_api::RawData;
-use wp_wpl::{AnnotationType, WplCode, WplEvaluator, WplExpress, WplPackage, WplStatementType};
+use wp_wpl::{
+    AnnotationType, WparseError, WparseReason, WplCode, WplEvaluator, WplExpress, WplPackage,
+    WplStatementType,
+};
 
 type RunParseProc = (WplExpress, Vec<AnnotationType>);
 
@@ -49,7 +53,12 @@ pub fn warp_check_record(wpl: &str, data: &str) -> Result<DataRecord, AppError> 
 
 /// 尝试用规则列表解析数据
 fn try_parse_with_rules(rule_items: Vec<RunParseProc>, data: &str) -> Result<DataRecord, AppError> {
+    let mut max_depth = 0;
+    let mut best_error = None;
+    let rule_cnt = rule_items.len();
+    let mut best_wpl = 1;
     for (index, (vm_unit, _funcs)) in rule_items.iter().enumerate() {
+        let is_last = index == rule_cnt - 1;
         let evaluator = WplEvaluator::from(vm_unit, None).map_err(AppError::wpl_parse)?;
         let raw = RawData::from_string(data.to_string());
         match evaluator.proc(raw, 0) {
@@ -63,15 +72,38 @@ fn try_parse_with_rules(rule_items: Vec<RunParseProc>, data: &str) -> Result<Dat
                 tdc.items.retain(|item| item.meta != DataType::Ignore);
                 return Ok(DataRecord { items: tdc.items });
             }
-            Err(err) => {
-                println!("WPL 规则 {} 执行失败: {:#?}", index + 1, err);
-                if index >= rule_items.len() - 1 {
-                    return Err(AppError::wpl_parse(err));
+            Err(e) => {
+                // 记录解析深度最高的错误
+                if let WparseReason::Uvs(UvsReason::DataError(_, Some(pos))) = e.reason() {
+                    if *pos > max_depth {
+                        max_depth = *pos;
+                        best_wpl = index + 1;
+                        best_error = Some(e.clone());
+                    }
+                } else if best_error.is_none() {
+                    // 如果不是 DataError，作为备选记录第一个错误
+                    best_wpl = index + 1;
+                    best_error = Some(e.clone());
+                    break;
+                }
+
+                if is_last {
+                    break;
                 }
             }
         }
     }
-    Err(AppError::wpl_parse_msg("所有 WPL 规则执行失败"))
+    let best_error: orion_error::StructError<WparseReason> = best_error.unwrap_or_else(|| {
+        WparseError::from(WparseReason::Uvs(UvsReason::SystemError(
+            "No matching rule".to_string(),
+        )))
+    });
+    let friendly_hint = build_best_match_hint(data, max_depth, best_wpl);
+    Err(AppError::wpl_best_error(
+        best_error,
+        max_depth,
+        friendly_hint,
+    ))
 }
 
 fn extract_rule_items(wpl_package: &WplPackage) -> anyhow::Result<Vec<RunParseProc>> {
@@ -86,3 +118,42 @@ fn extract_rule_items(wpl_package: &WplPackage) -> anyhow::Result<Vec<RunParsePr
     }
     Ok(rule_pairs)
 }
+
+/// 构造更友好的日志位置提示，帮助用户快速定位解析中断点
+fn build_best_match_hint(data: &str, depth: usize, rule_name: usize) -> String {
+    let chars: Vec<char> = data.chars().collect();
+    if chars.is_empty() {
+        return format!(
+            "rule {rule_name} Achieved the best match, but the log is empty and the location cannot be determined."
+        );
+    }
+
+    let bounded_depth = depth.min(chars.len().saturating_sub(1));
+
+    // 仅展示指针附近的片段，避免长行导致指针错位
+    let window_before = 20;
+    let window_after = 20;
+    let ctx_start = bounded_depth.saturating_sub(window_before);
+    let ctx_end = (bounded_depth + window_after + 1).min(chars.len());
+
+    let snippet: String = chars[ctx_start..ctx_end].iter().collect();
+    let prefix = if ctx_start > 0 { "…" } else { "" };
+    let suffix = if ctx_end < chars.len() {
+        "…"
+    } else {
+        ""
+    };
+    let snippet_line = format!("{prefix}{snippet}{suffix}");
+
+    let pointer_offset = prefix.chars().count() + bounded_depth.saturating_sub(ctx_start);
+    let pointer = format!(
+        "{}↑ This is the final matching position.",
+        " ".repeat(pointer_offset)
+    );
+
+    format!(
+        "规则 {rule_name} 最深匹配字符序号 {pos}。日志上下文:\n{snippet_line}\n{pointer}",
+        pos = bounded_depth + 1
+    )
+}
+

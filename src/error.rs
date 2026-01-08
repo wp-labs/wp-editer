@@ -1,5 +1,6 @@
 use actix_web::{HttpResponse, ResponseError};
 use serde::Serialize;
+use wp_wpl::WparseReason;
 use std::fmt::Display;
 
 #[derive(Debug, Serialize)]
@@ -82,6 +83,17 @@ impl AppError {
         E: std::error::Error + Send + Sync + 'static,
     {
         AppError::WplParse(anyhow::Error::new(e))
+    }
+
+    pub fn wpl_best_error(
+        error: orion_error::StructError<WparseReason>,
+        depth: usize,
+        hint: impl Into<String>,
+    ) -> Self {
+        let err = anyhow::Error::new(error)
+            .context(format!("解析深度: {depth}"))
+            .context(hint.into());
+        AppError::WplParse(err)
     }
 
     pub fn wpl_parse_msg(msg: impl Into<String>) -> Self {
