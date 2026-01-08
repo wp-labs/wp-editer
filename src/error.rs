@@ -43,11 +43,11 @@ pub enum AppError {
 
     // WPL 解析相关错误
     #[error("WPL 解析失败: {0}")]
-    WplParse(String),
+    WplParse(#[from] anyhow::Error),
 
     // OML 转换相关错误
     #[error("OML 转换失败: {0}")]
-    OmlTransform(String),
+    OmlTransform(anyhow::Error),
 
     // 调试相关错误
     #[error("未找到解析结果，请先执行日志解析")]
@@ -77,14 +77,27 @@ impl AppError {
         AppError::Git(e.to_string())
     }
 
-    pub fn wpl_parse<E: Display>(e: E) -> Self {
-        AppError::WplParse(e.to_string())
+    pub fn wpl_parse<E>(e: E) -> Self
+    where
+        E: std::error::Error + Send + Sync + 'static,
+    {
+        AppError::WplParse(anyhow::Error::new(e))
     }
 
-    pub fn oml_transform<E: Display>(e: E) -> Self {
-        AppError::OmlTransform(e.to_string())
+    pub fn wpl_parse_msg(msg: impl Into<String>) -> Self {
+        AppError::WplParse(anyhow::Error::msg(msg.into()))
     }
 
+    pub fn oml_transform<E>(e: E) -> Self
+    where
+        E: std::error::Error + Send + Sync + Display + 'static,
+    {
+        AppError::OmlTransform(anyhow::Error::new(e))
+    }
+
+    pub fn oml_transform_msg(msg: impl Into<String>) -> Self {
+        AppError::OmlTransform(anyhow::Error::msg(msg.into()))
+    }
     /// 创建 NotFound 错误
     pub fn not_found(msg: impl Into<String>) -> Self {
         AppError::NotFound(msg.into())

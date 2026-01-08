@@ -13,6 +13,23 @@ const highlight = (editor) => {
 const CodeJarEditor = forwardRef((props, ref) => {
   const editorRef = useRef(null);
   const jarRef = useRef(null);
+   const lineNumberRef = useRef(null);
+
+  const updateLineNumbers = (code = '') => {
+    const total = Math.max(1, code.split(/\r\n|\n/).length);
+    if (lineNumberRef.current) {
+      lineNumberRef.current.textContent = Array.from(
+        { length: total },
+        (_, idx) => `${idx + 1}`,
+      ).join('\n');
+    }
+  };
+
+  const syncScroll = () => {
+    if (lineNumberRef.current && editorRef.current) {
+      lineNumberRef.current.scrollTop = editorRef.current.scrollTop;
+    }
+  };
 
   useImperativeHandle(ref, () => ({
     getValue: () => jarRef.current?.toString() || '',
@@ -27,15 +44,19 @@ const CodeJarEditor = forwardRef((props, ref) => {
     if (!editorRef.current) return;
 
     const jar = CodeJar(editorRef.current, highlight);
+    editorRef.current.addEventListener('scroll', syncScroll);
 
     jar.updateCode(props.value || '');
+    updateLineNumbers(props.value || '');
     jar.onUpdate((code) => {
       props.onChange?.(code);
+      updateLineNumbers(code);
     });
 
     jarRef.current = jar;
 
     return () => {
+      editorRef.current?.removeEventListener('scroll', syncScroll);
       jar.destroy();
     };
   }, []);
@@ -53,11 +74,17 @@ const CodeJarEditor = forwardRef((props, ref) => {
       } catch (e) {
         jarRef.current.updateCode(props.value || '');
       }
+      updateLineNumbers(props.value || '');
     }
   }, [props.value]);
 
   return (
     <div className={`${styles.editor} ${props.className || ''}`}>
+      <pre
+        className={styles.gutter}
+        aria-hidden
+        ref={lineNumberRef}
+      />
       <div
         ref={editorRef}
         className={styles.code}
