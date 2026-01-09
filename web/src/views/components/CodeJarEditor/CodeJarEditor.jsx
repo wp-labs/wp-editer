@@ -43,7 +43,7 @@ const CodeJarEditor = forwardRef((props, ref) => {
   useEffect(() => {
     if (!editorRef.current) return;
 
-    const jar = CodeJar(editorRef.current, highlight);
+    const jar = CodeJar(editorRef.current, highlight, { tab: '  ' });
     editorRef.current.addEventListener('scroll', syncScroll);
 
     jar.updateCode(props.value || '');

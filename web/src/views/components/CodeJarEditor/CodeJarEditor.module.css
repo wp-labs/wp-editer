@@ -37,6 +37,8 @@
   white-space: pre-wrap;
   word-break: break-word;
   overflow: auto;
+  tab-size: 2;
+  -moz-tab-size: 2;
 }
 
 .code:focus {
