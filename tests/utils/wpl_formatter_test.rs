@@ -241,3 +241,50 @@ package demo {
         "转义括号应保持原样，不应改变缩进或被视为结构括号"
     );
 }
+
+// 双引号后紧跟逗号（仅有空白插入）时视为普通字符，避免误判字符串导致格式化失败。
+#[test]
+fn format_should_keep_trailing_quote_before_comma_literal() {
+    let formatter = WplFormatter::new();
+    let raw = r#"
+package /raw/web {
+    rule nginx {
+        (
+            ip:sip,
+            _^2,
+            chars:timestamp<[,]>,
+            http/request"
+                ,chars:status,
+            chars:size,
+            chars:referer"
+                ,
+            http/agent"
+                ,   _"
+        )
+    }
+}
+"#;
+
+    let formatted = formatter.format_content(raw);
+    let expected = r#"package /raw/web {
+    rule nginx {
+        (
+            ip:sip,
+            _^2,
+            chars:timestamp<[,]>,
+            http/request",
+            chars:status,
+            chars:size,
+            chars:referer",
+            http/agent",
+            _"
+        )
+    }
+}
+"#;
+
+    assert_eq!(
+        formatted, expected,
+        "双引号后紧跟逗号的场景应按普通字符处理，保持换行与缩进"
+    );
+}
