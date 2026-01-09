@@ -62,9 +62,9 @@ function SimpleHeader({ onWechatClick }) {
         {/* 确保显示subtitle */}
         <span
           className="subtitle"
-          style={{ marginRight: 10, color: '#fff', fontSize: '20px', fontWeight: '600' }}
+          style={{ marginRight: 10, color: '#fff', fontSize: '20px', fontWeight: '600', paddingLeft: `16px` }}
         >
-          Wp Editor
+          Editor
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

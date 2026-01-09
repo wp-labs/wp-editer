@@ -52,18 +52,43 @@ impl OmlFormatter {
         }
 
         let mut out = String::new();
-        for line in &header {
+        let indent_unit = " ".repeat(self.indent);
+        let mut idx = 0usize;
+        while idx < header.len() {
+            let line = &header[idx];
             if line.trim_start().starts_with("#[") {
                 out.push_str(&format_attribute(line));
                 out.push('\n');
+                idx += 1;
                 continue;
             }
             if let Some((k, v)) = line.split_once(':') {
-                out.push_str(&format!("{} : {}\n", k.trim_end(), v.trim_start()));
+                let key = k.trim_end();
+                let val = v.trim_start();
+                if val.is_empty() && idx + 1 < header.len() {
+                    let next = &header[idx + 1];
+                    if !next.contains(':') {
+                        out.push_str(&format!("{} : \n", key));
+                        // 收集所有连续的值行，逐行缩进
+                        let mut val_idx = idx + 1;
+                        while val_idx < header.len() {
+                            let val_line = header[val_idx].as_str();
+                            if val_line.contains(':') || val_line.trim().is_empty() {
+                                break;
+                            }
+                            out.push_str(&format!("{}{}\n", indent_unit, val_line.trim_start()));
+                            val_idx += 1;
+                        }
+                        idx = val_idx;
+                        continue;
+                    }
+                }
+                out.push_str(&format!("{} : {}\n", key, val));
             } else {
                 out.push_str(line.trim());
                 out.push('\n');
             }
+            idx += 1;
         }
         let mut body_formatted = self.format_body(&body_lines.join("\n"));
 
@@ -93,6 +118,7 @@ impl OmlFormatter {
         let mut start_of_line = true;
         let mut pending_newlines = 0usize;
         let mut after_eq = false;
+        const RAW_FUNCS: &[&str] = &["chars"];
 
         while let Some(ch) = chars.next() {
             if ch.is_whitespace() {
@@ -104,11 +130,22 @@ impl OmlFormatter {
                 continue;
             }
 
+            // 自定义原样函数：内部内容保持原样，不拆分分号/管道
+            if let Some(name_len) = starts_with_raw_func(ch, &chars, RAW_FUNCS) {
+                self.write_indent_if_needed(start_of_line, indent, &indent_unit, &mut out);
+                if let Some(block) = read_raw_func_block(ch, &mut chars, name_len) {
+                    out.push_str(&block);
+                    start_of_line = false;
+                    continue;
+                }
+            }
+
             if pending_newlines > 0 {
                 if ch == ';' {
                     // 分号前不允许空格/换行，直接贴合上一 token
                     start_of_line = false;
-                } else if ch == '=' || after_eq {
+                } else if ch == '=' || ch == '|' || after_eq {
+                    // 等号/管道及其后的 token 统一保持同一行
                     if !start_of_line && !out.ends_with(' ') && !out.ends_with('\n') {
                         out.push(' ');
                     }
@@ -126,6 +163,28 @@ impl OmlFormatter {
                     start_of_line = true;
                 }
                 pending_newlines = 0;
+            }
+
+            // 单行注释（以 // 开头）：保持内容不变，仅顶格输出
+            if ch == '/' && matches!(chars.peek(), Some('/')) {
+                after_eq = false;
+                if !start_of_line && !out.ends_with('\n') {
+                    out.push('\n');
+                }
+                // 写入注释起始符
+                out.push_str("//");
+                chars.next();
+                // 复制注释剩余部分直到行尾
+                while let Some(c) = chars.peek() {
+                    if *c == '\n' {
+                        break;
+                    }
+                    out.push(*c);
+                    chars.next();
+                }
+                out.push('\n');
+                start_of_line = true;
+                continue;
             }
 
             // 属性块
@@ -187,6 +246,23 @@ impl OmlFormatter {
                 out.push(' ');
                 start_of_line = false;
                 after_eq = true;
+                continue;
+            }
+
+            // 管道：两侧补足空格，保证在同一行
+            if ch == '|' {
+                after_eq = false;
+                self.write_indent_if_needed(start_of_line, indent, &indent_unit, &mut out);
+                if !start_of_line && !out.ends_with(' ') && !out.ends_with('\n') {
+                    out.push(' ');
+                }
+                out.push('|');
+                // 吃掉管道后的所有空白，统一加 1 个空格
+                while matches!(chars.peek(), Some(c) if c.is_whitespace()) {
+                    chars.next();
+                }
+                out.push(' ');
+                start_of_line = false;
                 continue;
             }
 
@@ -488,4 +564,76 @@ fn collapse_blank_lines(text: &str) -> String {
     }
 
     result
+}
+
+/// 判断当前位置是否匹配需要原样保留的函数（名称后紧跟 '('）
+fn starts_with_raw_func(
+    first: char,
+    iter: &std::iter::Peekable<std::str::Chars<'_>>,
+    names: &[&str],
+) -> Option<usize> {
+    let max_len = names.iter().map(|n| n.len() + 1).max().unwrap_or(0);
+    let mut buf = String::new();
+    buf.push(first);
+    let mut clone_iter = iter.clone();
+    while buf.len() < max_len {
+        if let Some(c) = clone_iter.peek() {
+            buf.push(*c);
+            clone_iter.next();
+        } else {
+            break;
+        }
+    }
+    for name in names {
+        let pat = format!("{name}(");
+        if buf.starts_with(&pat) {
+            return Some(name.len());
+        }
+    }
+    None
+}
+
+/// 读取原样保留函数体，直到匹配到首层闭合 ')'
+fn read_raw_func_block(
+    first: char,
+    iter: &mut std::iter::Peekable<std::str::Chars<'_>>,
+    name_len: usize,
+) -> Option<String> {
+    let mut out = String::new();
+    out.push(first);
+    let mut depth = 0i32;
+    let mut in_str = false;
+    let mut escaped = false;
+    let mut seen_func = false;
+
+    while let Some(c) = iter.next() {
+        out.push(c);
+        if !seen_func && out.len() >= name_len + 1 && c == '(' {
+            seen_func = true;
+        }
+        if escaped {
+            escaped = false;
+            continue;
+        }
+        if c == '\\' {
+            escaped = true;
+            continue;
+        }
+        if c == '"' {
+            in_str = !in_str;
+            continue;
+        }
+        if in_str {
+            continue;
+        }
+        if c == '(' {
+            depth += 1;
+        } else if c == ')' {
+            depth -= 1;
+            if depth == 0 && seen_func {
+                return Some(out);
+            }
+        }
+    }
+    None
 }

@@ -128,6 +128,64 @@ data_src_system = digit(13);
 }
 
 #[test]
+fn format_content_should_insert_space_around_pipe() {
+    let formatter = OmlFormatter::new();
+    let raw = "\
+name : pipe_case
+rule : demo
+---
+collect_time=pipe @collect_time_tmp|Time::to_ts_ms;
+value = read(a)
+| Func::call;
+
+";
+
+    let formatted = formatter.format_content(raw);
+    let expected = "\
+name : pipe_case
+rule : demo
+---
+
+collect_time = pipe @collect_time_tmp | Time::to_ts_ms;
+value = read(a) | Func::call;
+
+";
+
+    assert_eq!(
+        formatted, expected,
+        "管道两侧应补 1 个空格，且换行符应收敛为同一行"
+    );
+}
+
+#[test]
+fn format_content_should_keep_comment_untouched() {
+    let formatter = OmlFormatter::new();
+    let raw = "\
+name : comment_case
+rule : demo
+---
+    // comment with ; and | should stay
+value = 1;
+";
+
+    let formatted = formatter.format_content(raw);
+    let expected = "\
+name : comment_case
+rule : demo
+---
+
+// comment with ; and | should stay
+value = 1;
+
+";
+
+    assert_eq!(
+        formatted, expected,
+        "注释行应保持原文，不应因分号或管道被拆开，并顶格输出"
+    );
+}
+
+#[test]
 fn format_content_should_keep_attribute_on_single_line() {
     let formatter = OmlFormatter::new();
     let raw = r#"#[tag(
@@ -188,5 +246,122 @@ value = 2;
     assert_eq!(
         formatted, expected,
         "连续空行应被折叠为单个空行，保持结构紧凑"
+    );
+}
+
+#[test]
+fn format_content_should_indent_header_value_on_next_line() {
+    let formatter = OmlFormatter::new();
+    let raw = "\
+name : atk_module_log
+rule :
+huawei/atk_module_log/FIREWALLATCK
+---
+
+pos_sn = read(dev_sn);
+";
+
+    let formatted = formatter.format_content(raw);
+    let expected = "\
+name : atk_module_log
+rule : 
+    huawei/atk_module_log/FIREWALLATCK
+---
+
+pos_sn = read(dev_sn);
+
+";
+
+    assert_eq!(
+        formatted, expected,
+        "头部 key:value 应收敛到同一行，值在下一行时需合并"
+    );
+}
+
+#[test]
+fn format_content_should_indent_multiple_header_values() {
+    let formatter = OmlFormatter::new();
+    let raw = "\
+name : nsf_probes_flow_log
+rule : 
+nsf/nsf_probes_flow_http_log
+nsf/nsf_probes_flow_ftp_log
+nsf/nsf_probes_flow_dns_log
+nsf/nsf_probes_flow_mail_log
+nsf/nsf_probes_flow_ssl_log
+nsf/nsf_probes_flow_telnet_log
+nsf/nsf_probes_flow_tcpudp_log
+    nsf/nsf_probes_flow_icmp_log
+nsf/nsf_probes_flow_dbop_log
+nsf/nsf_probes_flow_filetransfer_log
+nsf/nsf_probes_flow_login_log
+---
+
+pos_sn = read(dev_sn);
+";
+
+    let formatted = formatter.format_content(raw);
+    let expected = "\
+name : nsf_probes_flow_log
+rule : 
+    nsf/nsf_probes_flow_http_log
+    nsf/nsf_probes_flow_ftp_log
+    nsf/nsf_probes_flow_dns_log
+    nsf/nsf_probes_flow_mail_log
+    nsf/nsf_probes_flow_ssl_log
+    nsf/nsf_probes_flow_telnet_log
+    nsf/nsf_probes_flow_tcpudp_log
+    nsf/nsf_probes_flow_icmp_log
+    nsf/nsf_probes_flow_dbop_log
+    nsf/nsf_probes_flow_filetransfer_log
+    nsf/nsf_probes_flow_login_log
+---
+
+pos_sn = read(dev_sn);
+
+";
+
+    assert_eq!(
+        formatted, expected,
+        "rule 的多行值应逐行缩进 1 层，保持顺序与原文行数一致"
+    );
+}
+
+#[test]
+fn format_content_should_keep_chars_body_raw() {
+    let formatter = OmlFormatter::new();
+    let raw = "\
+name : skyeye_flow_td_ioc_kafka
+rule : skyeye/skyeye_flow_td_ioc_kafka
+---
+
+event_risk_level = match read(option:[judgeForTI]) {
+    digit(0) => chars(不告警;情报库未命中);
+    digit(1) => chars(告警;可拦截);
+    digit(2) => chars(告警;不拦截);
+    digit(3) => chars(不告警;不拦截);
+    digit(4) => chars(不告警;可拦截);
+};
+";
+
+    let formatted = formatter.format_content(raw);
+    let expected = "\
+name : skyeye_flow_td_ioc_kafka
+rule : skyeye/skyeye_flow_td_ioc_kafka
+---
+
+event_risk_level = match read(option:[judgeForTI]) {
+    digit(0) => chars(不告警;情报库未命中);
+    digit(1) => chars(告警;可拦截);
+    digit(2) => chars(告警;不拦截);
+    digit(3) => chars(不告警;不拦截);
+    digit(4) => chars(不告警;可拦截);
+};
+
+";
+
+    assert_eq!(
+        formatted, expected,
+        "chars(...) 内部内容应保持原样，不因分号被拆分"
     );
 }

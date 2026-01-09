@@ -108,3 +108,136 @@ package huawei {
         formatted
     );
 }
+
+// symbol(...) 自定义函数内的管道与内容不应被拆分，仅格式化周边缩进/换行。
+#[test]
+fn format_should_keep_symbol_block_raw() {
+    let formatter = WplFormatter::new();
+    let raw = r#"
+#[tag(dev_vendor: "天眼分析平台", dev_name: "天眼分析平台", dev_type: "syslog"), copy_raw(name:"raw_msg")]
+package skyeye_platform {
+    #[tag(log_desc: "告警日志", log_type: "skyeye_platform_sensor_alert", alert_src: "52")]
+    rule skyeye_platform_sensor_alert {
+        (
+            _:pri<<,>>,
+            5*_
+        ),
+        (
+            time:update_time\|\!,
+            ip:access_ip\|\!,
+            symbol(alarm|!)
+        )
+    }
+}
+"#;
+
+    let formatted = formatter.format_content(raw);
+    let expected = r#"#[tag(dev_vendor: "天眼分析平台", dev_name: "天眼分析平台", dev_type: "syslog"), copy_raw(name:"raw_msg")]
+package skyeye_platform {
+    #[tag(log_desc: "告警日志", log_type: "skyeye_platform_sensor_alert", alert_src: "52")]
+    rule skyeye_platform_sensor_alert {
+        (
+            _:pri<<,>>,
+            5*_
+        ),
+        (
+            time:update_time\|\!,
+            ip:access_ip\|\!,
+            symbol(alarm|!)
+        )
+    }
+}
+"#;
+
+    assert_eq!(
+        formatted, expected,
+        "symbol(alarm|!) 内部管道应保持原样，不被拆分或加空格"
+    );
+}
+
+// f_chars_not_has/f_chars_has 函数内部不应被拆分，仍需保留行内内容。
+#[test]
+fn format_should_keep_f_chars_raw() {
+    let formatter = WplFormatter::new();
+    let raw = r#"
+package demo {
+    rule r {
+        f_chars_not_has(a|b|c),
+        f_chars_has(x|y|z),
+        symbol(alarm|!)
+    }
+}
+"#;
+
+    let formatted = formatter.format_content(raw);
+    let expected = r#"package demo {
+    rule r {
+        f_chars_not_has(a|b|c),
+        f_chars_has(x|y|z),
+        symbol(alarm|!)
+    }
+}
+"#;
+
+    assert_eq!(
+        formatted, expected,
+        "自定义 raw 函数内容应保持原样，仅调整缩进换行"
+    );
+}
+
+// 被转义的逗号应视为普通字符，不触发换行。
+#[test]
+fn format_should_keep_escaped_comma_inline() {
+    let formatter = WplFormatter::new();
+    let raw = r#"
+package demo {
+    rule r {
+        chars\,literal, chars\,literal2
+    }
+}
+"#;
+
+    let formatted = formatter.format_content(raw);
+    let expected = r#"package demo {
+    rule r {
+        chars\,literal,
+        chars\,literal2
+    }
+}
+"#;
+
+    assert_eq!(
+        formatted, expected,
+        "转义逗号不应触发折行，换行只由未转义逗号决定"
+    );
+}
+
+// 转义括号应被视为普通字符，不触发缩进或闭合匹配。
+#[test]
+fn format_should_keep_escaped_parens_literal() {
+    let formatter = WplFormatter::new();
+    let raw = r#"
+package demo {
+    rule r {
+        symbol(LOGONFAIL)\(,
+        chars:Description\&\*,
+        kv(chars@ruleId)\.,
+    }
+}
+"#;
+
+    let formatted = formatter.format_content(raw);
+    let expected = r#"package demo {
+    rule r {
+        symbol(LOGONFAIL)\(,
+        chars:Description\&\*,
+        kv(chars@ruleId)\.,
+    }
+}
+"#;
+
+    assert_eq!(
+        formatted, expected,
+        "转义括号应保持原样，不应改变缩进或被视为结构括号"
+    );
+}

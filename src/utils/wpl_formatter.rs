@@ -35,6 +35,8 @@ impl WplFormatter {
         let mut out = String::with_capacity(normalized.len() + 64);
         let chars: Vec<char> = normalized.chars().collect();
 
+        const RAW_FUNCS: &[&str] = &["symbol", "f_chars_not_has", "f_chars_has", "kv","f_chars_in"];
+
         let mut i = 0usize;
         let mut indent = 0usize;
         let mut start_of_line = true;
@@ -102,8 +104,20 @@ impl WplFormatter {
                 continue;
             }
 
+            // 自定义 raw 函数：内部内容按原样保留，不解析管道/逗号
+            if let Some(name_len) = self.starts_with_raw_func(&chars, i, RAW_FUNCS) {
+                if let Some((block, consumed)) = self.read_raw_func_block(&chars[i..], name_len) {
+                    self.write_indent_if_needed(start_of_line, indent, &mut out)?;
+                    out.push_str(&block);
+                    start_of_line = false;
+                    i += consumed;
+                    continue;
+                }
+            }
+
             // 对已转义的结构字符，按普通字符处理，避免误触发缩进/折行。
-            if escaped && (c == '(' || c == ')' || c == '{' || c == '}' || c == '|') {
+            if escaped && (c == '(' || c == ')' || c == '{' || c == '}' || c == '|' || c == ',')
+            {
                 self.write_indent_if_needed(start_of_line, indent, &mut out)?;
                 out.push(c);
                 start_of_line = false;
@@ -310,21 +324,98 @@ impl WplFormatter {
     fn peek_block(&self, input: &[char], open: char, close: char) -> Option<(String, usize)> {
         let mut out = String::new();
         let mut depth = 0usize;
+        let mut escaped = false;
+        let mut in_str = false;
         for (idx, ch) in input.iter().enumerate() {
-            if *ch == open {
-                depth += 1;
-                if depth == 1 {
-                    continue;
-                }
+            if escaped {
+                out.push(*ch);
+                escaped = false;
+                continue;
             }
-            if depth > 0 {
-                if *ch == close {
-                    depth -= 1;
+            match ch {
+                '\\' => {
+                    out.push(*ch);
+                    escaped = true;
+                }
+                '"' => {
+                    out.push(*ch);
+                    in_str = !in_str;
+                }
+                _ if in_str => out.push(*ch),
+                _ if *ch == open => {
+                    depth += 1;
+                    if depth == 1 {
+                        continue;
+                    }
+                    out.push(*ch);
+                }
+                _ if *ch == close => {
+                    depth = depth.saturating_sub(1);
                     if depth == 0 {
                         return Some((out, idx + 1));
                     }
+                    out.push(*ch);
                 }
-                out.push(*ch);
+                _ => out.push(*ch),
+            }
+        }
+        None
+    }
+
+    /// 检测是否匹配 raw 函数名并紧跟 '('，返回函数名长度。
+    fn starts_with_raw_func(&self, input: &[char], idx: usize, names: &[&str]) -> Option<usize> {
+        for name in names {
+            let pat: Vec<char> = name.chars().chain(['(']).collect();
+            if idx + pat.len() > input.len() {
+                continue;
+            }
+            if input[idx..idx + pat.len()]
+                .iter()
+                .zip(pat.iter())
+                .all(|(a, b)| a == b)
+            {
+                return Some(name.len());
+            }
+        }
+        None
+    }
+
+    /// 读取 raw 函数块（如 symbol/自定义函数），内部内容原样保留（含管道/逗号/转义）。
+    fn read_raw_func_block(&self, input: &[char], name_len: usize) -> Option<(String, usize)> {
+        let mut out = String::new();
+        let mut depth = 0i32;
+        let mut in_str = false;
+        let mut escaped = false;
+        let mut seen_func = false;
+
+        for (idx, ch) in input.iter().enumerate() {
+            out.push(*ch);
+            // 首个 '(' 之前确保匹配函数名，避免误读相似前缀
+            if !seen_func && idx + 1 == name_len {
+                seen_func = true;
+            }
+            if escaped {
+                escaped = false;
+                continue;
+            }
+            if *ch == '\\' {
+                escaped = true;
+                continue;
+            }
+            if *ch == '"' {
+                in_str = !in_str;
+                continue;
+            }
+            if in_str {
+                continue;
+            }
+            if *ch == '(' {
+                depth += 1;
+            } else if *ch == ')' {
+                depth -= 1;
+                if depth == 0 {
+                    return Some((out, idx + 1));
+                }
             }
         }
         None
