@@ -53,6 +53,16 @@ impl WplFormatter {
 
             // 处理字符串与原始字符串，内部内容保持不变
             if c == '"' {
+                let next_non_ws = self.next_non_whitespace_pos(&chars, i + 1);
+                let comma_follows = next_non_ws.is_some_and(|idx| chars[idx] == ',');
+                let has_closing_quote = self.has_closing_quote(&chars, i + 1);
+                if comma_follows || !has_closing_quote {
+                    self.write_indent_if_needed(start_of_line, indent, &mut out)?;
+                    out.push('"');
+                    i = next_non_ws.unwrap_or(i + 1);
+                    start_of_line = false;
+                    continue;
+                }
                 let (literal, consumed) = self.read_string(&chars[i..])?;
                 self.write_indent_if_needed(start_of_line, indent, &mut out)?;
                 out.push_str(&literal);
@@ -365,6 +375,33 @@ impl WplFormatter {
             }
         }
         None
+    }
+
+    /// 获取从指定位置开始首个非空白字符的下标。
+    fn next_non_whitespace_pos(&self, input: &[char], start: usize) -> Option<usize> {
+        input
+            .iter()
+            .enumerate()
+            .skip(start)
+            .find(|(_, ch)| !ch.is_whitespace())
+            .map(|(idx, _)| idx)
+    }
+
+    /// 判断后续是否存在未被转义的双引号，用于区分字符串与行尾残留引号。
+    fn has_closing_quote(&self, input: &[char], start: usize) -> bool {
+        let mut escaped = false;
+        for ch in input.iter().skip(start) {
+            if escaped {
+                escaped = false;
+                continue;
+            }
+            match ch {
+                '\\' => escaped = true,
+                '"' => return true,
+                _ => {}
+            }
+        }
+        false
     }
 
     /// 检测是否匹配 raw 函数名并紧跟 '('，返回函数名长度。
