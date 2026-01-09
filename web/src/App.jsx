@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { ConfigProvider, Button, Modal } from 'antd';
-import { RedditOutlined, SlackOutlined, GithubOutlined, WechatOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { RedditOutlined, SlackOutlined, GithubOutlined, WechatOutlined, QuestionCircleOutlined, StarOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 import SimulateDebugPage from '@/views/pages/simulate-debug';
 import httpRequest from '@/services/request';
+import { useGitHubStarReminder } from '@/hooks/useGitHubStarReminder';
 
 // Ant Design 自定义主题配置
 const theme = {
@@ -182,6 +183,7 @@ function SimpleHeader({ onWechatClick }) {
 
 function App() {
   const [wechatModalOpen, setWechatModalOpen] = useState(false);
+  const { showReminder, closeReminder, goToGitHub } = useGitHubStarReminder();
 
   return (
     <ConfigProvider locale={zhCN} theme={theme}>
@@ -215,6 +217,45 @@ function App() {
             <div style={{ marginTop: 16, color: '#666', fontSize: 14 }}>
               扫描二维码加入微信群
             </div>
+          </div>
+        </Modal>
+
+        {/* GitHub Star 提醒弹窗 */}
+        <Modal
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <StarOutlined style={{ color: '#faad14', fontSize: '20px' }} />
+              <span>支持我们的项目</span>
+            </div>
+          }
+          open={showReminder}
+          onCancel={closeReminder}
+          footer={[
+            <Button key="later" onClick={closeReminder}>
+              稍后再说
+            </Button>,
+            <Button
+              key="star"
+              type="primary"
+              icon={<GithubOutlined />}
+              onClick={goToGitHub}
+            >
+              前往 GitHub 点赞
+            </Button>,
+          ]}
+          centered
+          width={480}
+        >
+          <div style={{ padding: '20px 0' }}>
+            <p style={{ fontSize: '16px', lineHeight: '1.6', marginBottom: '16px' }}>
+              感谢您使用 <strong>WpEditor</strong>！
+            </p>
+            <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#666' }}>
+              如果您觉得我们的项目对您有帮助，请考虑在 GitHub 上给我们一个 Star ⭐️
+            </p>
+            <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#666', marginTop: '12px' }}>
+              您的支持是我们持续改进的动力！
+            </p>
           </div>
         </Modal>
       </div>
