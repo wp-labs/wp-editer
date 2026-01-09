@@ -138,11 +138,7 @@ fn build_best_match_hint(data: &str, depth: usize, rule_name: usize) -> String {
 
     let snippet: String = chars[ctx_start..ctx_end].iter().collect();
     let prefix = if ctx_start > 0 { "…" } else { "" };
-    let suffix = if ctx_end < chars.len() {
-        "…"
-    } else {
-        ""
-    };
+    let suffix = if ctx_end < chars.len() { "…" } else { "" };
     let snippet_line = format!("{prefix}{snippet}{suffix}");
 
     let pointer_offset = prefix.chars().count() + bounded_depth.saturating_sub(ctx_start);
@@ -156,4 +152,3 @@ fn build_best_match_hint(data: &str, depth: usize, rule_name: usize) -> String {
         pos = bounded_depth + 1
     )
 }
-

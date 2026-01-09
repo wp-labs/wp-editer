@@ -1,7 +1,7 @@
 use actix_web::{HttpResponse, ResponseError};
 use serde::Serialize;
-use wp_wpl::WparseReason;
 use std::fmt::Display;
+use wp_wpl::WparseReason;
 
 #[derive(Debug, Serialize)]
 pub struct ErrorBody<T = serde_json::Value> {

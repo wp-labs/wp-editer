@@ -15,7 +15,6 @@ block = match read(kind) {
     chars(A) => {
         value = 1;
     }
-
     chars(B) => {
         value = 2;
     }

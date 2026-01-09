@@ -606,9 +606,9 @@ fn read_raw_func_block(
     let mut escaped = false;
     let mut seen_func = false;
 
-    while let Some(c) = iter.next() {
+    for c in iter.by_ref() {
         out.push(c);
-        if !seen_func && out.len() >= name_len + 1 && c == '(' {
+        if !seen_func && out.len() > name_len && c == '(' {
             seen_func = true;
         }
         if escaped {

@@ -35,7 +35,13 @@ impl WplFormatter {
         let mut out = String::with_capacity(normalized.len() + 64);
         let chars: Vec<char> = normalized.chars().collect();
 
-        const RAW_FUNCS: &[&str] = &["symbol", "f_chars_not_has", "f_chars_has", "kv","f_chars_in"];
+        const RAW_FUNCS: &[&str] = &[
+            "symbol",
+            "f_chars_not_has",
+            "f_chars_has",
+            "kv",
+            "f_chars_in",
+        ];
 
         let mut i = 0usize;
         let mut indent = 0usize;
@@ -105,19 +111,18 @@ impl WplFormatter {
             }
 
             // 自定义 raw 函数：内部内容按原样保留，不解析管道/逗号
-            if let Some(name_len) = self.starts_with_raw_func(&chars, i, RAW_FUNCS) {
-                if let Some((block, consumed)) = self.read_raw_func_block(&chars[i..], name_len) {
-                    self.write_indent_if_needed(start_of_line, indent, &mut out)?;
-                    out.push_str(&block);
-                    start_of_line = false;
-                    i += consumed;
-                    continue;
-                }
+            if let Some(name_len) = self.starts_with_raw_func(&chars, i, RAW_FUNCS)
+                && let Some((block, consumed)) = self.read_raw_func_block(&chars[i..], name_len)
+            {
+                self.write_indent_if_needed(start_of_line, indent, &mut out)?;
+                out.push_str(&block);
+                start_of_line = false;
+                i += consumed;
+                continue;
             }
 
             // 对已转义的结构字符，按普通字符处理，避免误触发缩进/折行。
-            if escaped && (c == '(' || c == ')' || c == '{' || c == '}' || c == '|' || c == ',')
-            {
+            if escaped && (c == '(' || c == ')' || c == '{' || c == '}' || c == '|' || c == ',') {
                 self.write_indent_if_needed(start_of_line, indent, &mut out)?;
                 out.push(c);
                 start_of_line = false;
