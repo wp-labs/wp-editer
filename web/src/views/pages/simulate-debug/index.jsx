@@ -1,5 +1,6 @@
 import { Table, message } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { convertRecord, fetchDebugExamples, parseLogs, wplCodeFormat, omlCodeFormat, base64Decode } from '@/services/debug';
 import CodeJarEditor from '@/views/components/CodeJarEditor';
 
@@ -25,6 +26,7 @@ const DEFAULT_EXAMPLES = [
 ];
 
 function SimulateDebugPage() {
+  const { t } = useTranslation();
   const [activeKey, setActiveKey] = useState('parse');
   const [inputValue, setInputValue] = useState('');
   const [ruleValue, setRuleValue] = useState('');
@@ -99,10 +101,10 @@ function SimulateDebugPage() {
         setExamples(list);
         setExamplesLoaded(true);
       } else if (!examplesLoaded && (!list || list.length === 0)) {
-        message.info('暂无可用示例，已展示默认示例');
+        message.info(t('simulateDebug.examples.noAvailable'));
       }
     } catch (error) {
-      message.error(`获取示例失败：${error?.message || error}`);
+      message.error(`${t('simulateDebug.examples.fetchError')}：${error?.message || error}`);
     } finally {
       setExamplesLoading(false);
     }
@@ -114,7 +116,7 @@ function SimulateDebugPage() {
       console.log('格式化WPL代码响应:', response);
       setRuleValue(response?.wpl_code || '');
     } catch (error) {
-      message.error(`格式化WPL代码失败：${error?.message || error}`);
+      message.error(`${t('simulateDebug.parseRule.formatError')}：${error?.message || error}`);
     }
   };
 
@@ -180,13 +182,13 @@ function SimulateDebugPage() {
       console.log('Base64解码响应:', response);
       setInputValue(response || '');
     } catch (error) {
-      message.error(`Base64解码失败：${error?.message || error}`);
+      message.error(`${t('simulateDebug.logData.base64Error')}：${error?.message || error}`);
     }
   };
 
   const handleTransform = async () => {
     if (!transformOml) {
-      message.warning('请先填写 OML 转换规则');
+      message.warning(t('simulateDebug.omlInput.fillOmlWarning'));
       return;
     }
     setLoading(true);
@@ -207,7 +209,7 @@ function SimulateDebugPage() {
       });
       setTransformError(null);
     } catch (error) {
-      message.error(`执行转换失败：${error?.message || error}`);
+      message.error(`${t('simulateDebug.convertResult.convertError')}：${error?.message || error}`);
       setTransformError(error);
       setTransformResult(null);
     } finally {
@@ -221,21 +223,21 @@ function SimulateDebugPage() {
       const response = await omlCodeFormat(transformOml);
       setTransformOml(response?.oml_code || '');
     } catch (error) {
-      message.error(`格式化OML代码失败：${error?.message || error}`);
+      message.error(`${t('simulateDebug.omlInput.formatError')}：${error?.message || error}`);
     }
   };
 
   const menuItems = [
-    { key: 'parse', label: '解析' },
-    { key: 'convert', label: '转换' },
+    { key: 'parse', label: t('simulateDebug.tabs.parse') },
+    { key: 'convert', label: t('simulateDebug.tabs.convert') },
   ];
 
   const resultColumns = [
-    { title: 'no', dataIndex: 'no', key: 'no', width: 60 },
-    { title: 'meta', dataIndex: 'meta', key: 'meta', width: 120 },
-    { title: 'name', dataIndex: 'name', key: 'name', width: 150 },
+    { title: t('simulateDebug.table.no'), dataIndex: 'no', key: 'no', width: 60 },
+    { title: t('simulateDebug.table.meta'), dataIndex: 'meta', key: 'meta', width: 120 },
+    { title: t('simulateDebug.table.name'), dataIndex: 'name', key: 'name', width: 150 },
     {
-      title: 'value',
+      title: t('simulateDebug.table.value'),
       dataIndex: 'value',
       key: 'value',
       style: { wordWrap: 'break-word', wordBreak: 'break-all', maxWidth: 300 },
@@ -304,13 +306,13 @@ function SimulateDebugPage() {
           margin: '10px',
         }}
       >
-        <h4 style={{ color: '#f5222d', marginBottom: '8px', fontWeight: 'bold' }}>解析失败</h4>
+        <h4 style={{ color: '#f5222d', marginBottom: '8px', fontWeight: 'bold' }}>{t('simulateDebug.parseResult.parseFailed')}</h4>
         <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', color: '#666', margin: '0 0 8px 0', fontSize: '14px', lineHeight: '1.5' }}>
-          {parseError.message || '执行解析失败，请稍后重试'}
+          {parseError.message || t('simulateDebug.parseResult.parseError')}
         </pre>
         {parseError.code && (
           <p style={{ color: '#f5222d', margin: '8px 0 0 0' }}>
-            <span style={{ fontWeight: 'bold' }}>错误码：</span>
+            <span style={{ fontWeight: 'bold' }}>{t('simulateDebug.parseResult.errorCode')}：</span>
             {parseError.code}
           </p>
         )}
@@ -325,7 +327,7 @@ function SimulateDebugPage() {
       transformError.message ||
       transformError.responseData?.error?.message ||
       transformError.data?.error?.message ||
-      '执行转换失败，请稍后重试';
+      t('simulateDebug.convertResult.convertError');
 
     return (
       <div
@@ -337,11 +339,11 @@ function SimulateDebugPage() {
           margin: '10px',
         }}
       >
-        <h4 style={{ color: '#f5222d', marginBottom: '8px' }}>转换失败</h4>
+        <h4 style={{ color: '#f5222d', marginBottom: '8px' }}>{t('simulateDebug.convertResult.convertFailed')}</h4>
         <p>{errorMessage}</p>
         {transformError.code && (
           <p style={{ color: '#f5222d', margin: '8px 0 0 0' }}>
-            <span style={{ fontWeight: 'bold' }}>错误码：</span>
+            <span style={{ fontWeight: 'bold' }}>{t('simulateDebug.parseResult.errorCode')}：</span>
             {transformError.code}
           </p>
         )}
@@ -352,8 +354,8 @@ function SimulateDebugPage() {
   // 获取页面标题（与旧版本一致）
   const getPageTitle = () => {
     const titles = {
-      parse: '解析',
-      convert: '转换',
+      parse: t('simulateDebug.tabs.parse'),
+      convert: t('simulateDebug.tabs.convert'),
     };
     return titles[activeKey] || 'Wp Editor';
   };
@@ -367,26 +369,26 @@ function SimulateDebugPage() {
             className={`side-item ${activeKey === 'parse' ? 'is-active' : ''}`}
             onClick={() => setActiveKey('parse')}
           >
-            <h2>解析</h2>
+            <h2>{t('simulateDebug.tabs.parse')}</h2>
           </button>
           <button
             type="button"
             className={`side-item ${activeKey === 'convert' ? 'is-active' : ''}`}
             onClick={() => setActiveKey('convert')}
           >
-            <h2>转换</h2>
+            <h2>{t('simulateDebug.tabs.convert')}</h2>
           </button>
 
         </aside>
         <div className="example-list example-list--compact example-list--spaced">
           <div className="example-list__header">
             <div>
-              <h4 className="example-list__title">规则示例库</h4>
-              <p className="example-list__desc">点击示例，自动填充日志与规则</p>
+              <h4 className="example-list__title">{t('simulateDebug.examples.title')}</h4>
+              <p className="example-list__desc">{t('simulateDebug.examples.desc')}</p>
             </div>
           </div>
           {examplesLoading ? (
-            <div className="example-list__message">示例加载中...</div>
+            <div className="example-list__message">{t('simulateDebug.examples.loading')}</div>
           ) : examples && examples.length > 0 ? (
             <div className="example-list__grid example-list__grid--small">
               {examples.map(exampleItem => (
@@ -396,12 +398,12 @@ function SimulateDebugPage() {
                   className="example-list__item"
                   onClick={() => handleApplyExample(exampleItem)}
                 >
-                  {exampleItem.name || '未命名示例'}
+                  {exampleItem.name || t('simulateDebug.examples.unnamed')}
                 </button>
               ))}
             </div>
           ) : (
-            <div className="example-list__message">暂无示例数据</div>
+            <div className="example-list__message">{t('simulateDebug.examples.noData')}</div>
           )}
         </div>
       </div>
@@ -417,8 +419,8 @@ function SimulateDebugPage() {
                 <div className="panel-block">
                   <div className="block-header">
                     <div>
-                      <h3>日志数据</h3>
-                      <p className="block-desc">粘贴实时采集的原始日志，支持文本与文件导入。</p>
+                      <h3>{t('simulateDebug.logData.title')}</h3>
+                      <p className="block-desc">{t('simulateDebug.logData.desc')}</p>
                     </div>
                       <div className="block-actions" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
                         <div style={{ display: 'flex', gap: 8 }}>
@@ -427,10 +429,10 @@ function SimulateDebugPage() {
                             className="btn ghost"
                             onClick={handleBase64Decode}
                           >
-                            base64解码
+                            {t('simulateDebug.logData.base64Decode')}
                           </button>
                           <button type="button" className="btn ghost" onClick={handleClear}>
-                            一键清空
+                            {t('simulateDebug.logData.clearAll')}
                           </button>
                         </div>
                    
@@ -447,14 +449,14 @@ function SimulateDebugPage() {
                   <div className="split-col">
                     <div className="panel-block panel-block--fill">
                       <div className="block-header">
-                        <h3>解析规则</h3>
+                        <h3>{t('simulateDebug.parseRule.title')}</h3>
                         <div className="block-actions">
                           <button
                             type="button"
                             className="btn ghost"
                             onClick={wplFormat}
                           >
-                            格式化
+                            {t('simulateDebug.parseRule.format')}
                           </button>
                           <button
                             type="button"
@@ -462,7 +464,7 @@ function SimulateDebugPage() {
                             onClick={handleTest}
                             disabled={loading}
                           >
-                            {loading ? '解析中...' : '解析'}
+                            {loading ? t('simulateDebug.parseRule.parsing') : t('simulateDebug.parseRule.parse')}
                           </button>
                         </div>
                       </div>
@@ -478,21 +480,21 @@ function SimulateDebugPage() {
                     <div className="panel-block panel-block--stretch panel-block--scrollable">
                       <div className="block-header">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                          <h3>解析结果</h3>
+                          <h3>{t('simulateDebug.parseResult.title')}</h3>
                           <div className="mode-toggle">
                             <button
                               type="button"
                               className={`toggle-btn ${viewMode === 'table' ? 'is-active' : ''}`}
                               onClick={() => setViewMode('table')}
                             >
-                              表格模式
+                              {t('simulateDebug.parseResult.tableMode')}
                             </button>
                             <button
                               type="button"
                               className={`toggle-btn ${viewMode === 'json' ? 'is-active' : ''}`}
                               onClick={() => setViewMode('json')}
                             >
-                              JSON 模式
+                              {t('simulateDebug.parseResult.jsonMode')}
                             </button>
                           </div>
                         </div>
@@ -503,7 +505,7 @@ function SimulateDebugPage() {
                             onChange={e => setShowEmpty(e.target.checked)}
                           />
                           <span className="switch-slider"></span>
-                          <span className="switch-label">显示空值</span>
+                          <span className="switch-label">{t('simulateDebug.parseResult.showEmpty')}</span>
                         </label>
                       </div>
                       <div className={`mode-content ${viewMode === 'table' ? 'is-active' : ''}`}>
@@ -521,7 +523,7 @@ function SimulateDebugPage() {
                           />
                         ) : (
                           <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                            点击"解析"按钮查看结果
+                            {t('simulateDebug.parseResult.clickToParse')}
                           </div>
                         )}
                       </div>
@@ -555,7 +557,7 @@ function SimulateDebugPage() {
                           </pre>
                         ) : (
                           <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                            点击"解析"按钮查看结果
+                            {t('simulateDebug.parseResult.clickToParse')}
                           </div>
                         )}
                       </div>
@@ -572,8 +574,8 @@ function SimulateDebugPage() {
                   <div className="panel-block panel-block--stretch panel-block--fill">
                     <div className="block-header">
                       <div>
-                        <h3>OML 输入</h3>
-                        <p className="block-desc">根据解析结果补齐转换逻辑。</p>
+                        <h3>{t('simulateDebug.omlInput.title')}</h3>
+                        <p className="block-desc">{t('simulateDebug.omlInput.desc')}</p>
                       </div>
                       <div className="block-actions">
                         <button
@@ -581,7 +583,7 @@ function SimulateDebugPage() {
                           className="btn primary"
                           onClick={omlFormat}
                         >
-                          格式化
+                          {t('simulateDebug.omlInput.format')}
                         </button>
                         <button
                           type="button"
@@ -589,14 +591,14 @@ function SimulateDebugPage() {
                           onClick={handleTransform}
                           disabled={loading}
                         >
-                          {loading ? '转换中...' : '转换'}
+                          {loading ? t('simulateDebug.omlInput.converting') : t('simulateDebug.omlInput.convert')}
                         </button>
                         <button
                           type="button"
                           className="btn ghost"
                           onClick={() => setTransformOml('')}
                         >
-                          清空
+                          {t('simulateDebug.omlInput.clear')}
                         </button>
                       </div>
                     </div>
@@ -611,7 +613,7 @@ function SimulateDebugPage() {
                   <div className="panel-block panel-block--scrollable">
                     <div className="block-header">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <h3>解析结果</h3>
+                        <h3>{t('simulateDebug.parseResult.title')}</h3>
                         <div className="mode-toggle">
                           <button
                             type="button"
@@ -619,7 +621,7 @@ function SimulateDebugPage() {
                               }`}
                             onClick={() => setTransformParseViewMode('table')}
                           >
-                            表格模式
+                            {t('simulateDebug.parseResult.tableMode')}
                           </button>
                           <button
                             type="button"
@@ -627,7 +629,7 @@ function SimulateDebugPage() {
                               }`}
                             onClick={() => setTransformParseViewMode('json')}
                           >
-                            JSON 模式
+                            {t('simulateDebug.parseResult.jsonMode')}
                           </button>
                         </div>
                       </div>
@@ -638,7 +640,7 @@ function SimulateDebugPage() {
                           onChange={e => setTransformParseShowEmpty(e.target.checked)}
                         />
                         <span className="switch-slider"></span>
-                        <span className="switch-label">显示空值</span>
+                        <span className="switch-label">{t('simulateDebug.parseResult.showEmpty')}</span>
                       </label>
                     </div>
                     <div
@@ -660,7 +662,7 @@ function SimulateDebugPage() {
                         />
                       ) : (
                         <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                          解析结果将显示在这里
+                          {t('simulateDebug.parseResult.willShowHere')}
                         </div>
                       )}
                     </div>
@@ -697,7 +699,7 @@ function SimulateDebugPage() {
                         </pre>
                       ) : (
                         <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                          解析结果将显示在这里
+                          {t('simulateDebug.parseResult.willShowHere')}
                         </div>
                       )}
                     </div>
@@ -706,7 +708,7 @@ function SimulateDebugPage() {
                   <div className="panel-block panel-block--scrollable">
                     <div className="block-header">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <h3>转换结果</h3>
+                        <h3>{t('simulateDebug.convertResult.title')}</h3>
                         <div className="mode-toggle">
                           <button
                             type="button"
@@ -714,7 +716,7 @@ function SimulateDebugPage() {
                               }`}
                             onClick={() => setTransformResultViewMode('table')}
                           >
-                            表格模式
+                            {t('simulateDebug.parseResult.tableMode')}
                           </button>
                           <button
                             type="button"
@@ -722,7 +724,7 @@ function SimulateDebugPage() {
                               }`}
                             onClick={() => setTransformResultViewMode('json')}
                           >
-                            JSON 模式
+                            {t('simulateDebug.parseResult.jsonMode')}
                           </button>
                         </div>
                       </div>
@@ -733,7 +735,7 @@ function SimulateDebugPage() {
                           onChange={e => setTransformResultShowEmpty(e.target.checked)}
                         />
                         <span className="switch-slider"></span>
-                        <span className="switch-label">显示空值</span>
+                        <span className="switch-label">{t('simulateDebug.parseResult.showEmpty')}</span>
                       </label>
                     </div>
                     <div
@@ -757,7 +759,7 @@ function SimulateDebugPage() {
                         />
                       ) : (
                         <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                          转换结果将显示在这里
+                          {t('simulateDebug.convertResult.willShowHere')}
                         </div>
                       )}
                     </div>
@@ -799,7 +801,7 @@ function SimulateDebugPage() {
                         </pre>
                       ) : (
                         <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                          转换结果将显示在这里
+                          {t('simulateDebug.convertResult.willShowHere')}
                         </div>
                       )}
                     </div>

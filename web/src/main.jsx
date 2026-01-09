@@ -7,6 +7,7 @@ import App from '@/App';
 import '@/styles/theme.css';
 import { configureRequest } from '@/services/request';
 import 'github-markdown-css/github-markdown-light.css';
+import '@/i18n';
 
 // 禁用 React DevTools 下载提示（仅开发环境）
 if (typeof window !== 'undefined') {

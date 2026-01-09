@@ -1,0 +1,102 @@
+{
+  "header": {
+    "editor": "Editor",
+    "slack": "Slack",
+    "reddit": "Reddit",
+    "github": "GitHub",
+    "juejin": "掘金",
+    "helpCenter": "帮助中心",
+    "version": {
+      "wpEditor": "wp-editor",
+      "warpEngine": "warp-engine",
+      "warpParse": "warp-parse"
+    }
+  },
+  "modal": {
+    "wechat": {
+      "title": "加入 WarpPase 官方支持交流群",
+      "scanTip": "扫描二维码加入微信群"
+    },
+    "github": {
+      "title": "支持我们的项目",
+      "thanks": "感谢您使用",
+      "description": "如果您觉得我们的项目对您有帮助，请考虑在 GitHub 上给我们一个 Star ⭐️",
+      "support": "您的支持是我们持续改进的动力！",
+      "later": "稍后再说",
+      "goToGitHub": "前往 GitHub 点赞"
+    }
+  },
+  "common": {
+    "confirm": "确认",
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "close": "关闭",
+    "clear": "清空",
+    "loading": "加载中...",
+    "noData": "暂无数据"
+  },
+  "simulateDebug": {
+    "tabs": {
+      "parse": "解析",
+      "convert": "转换"
+    },
+    "examples": {
+      "title": "规则示例库",
+      "desc": "点击示例，自动填充日志与规则",
+      "loading": "示例加载中...",
+      "noData": "暂无示例数据",
+      "noAvailable": "暂无可用示例，已展示默认示例",
+      "fetchError": "获取示例失败",
+      "unnamed": "未命名示例"
+    },
+    "logData": {
+      "title": "日志数据",
+      "desc": "粘贴实时采集的原始日志，支持文本与文件导入。",
+      "base64Decode": "base64解码",
+      "clearAll": "一键清空",
+      "base64Error": "Base64解码失败"
+    },
+    "parseRule": {
+      "title": "解析规则",
+      "format": "格式化",
+      "parse": "解析",
+      "parsing": "解析中...",
+      "formatError": "格式化WPL代码失败"
+    },
+    "parseResult": {
+      "title": "解析结果",
+      "tableMode": "表格模式",
+      "jsonMode": "JSON 模式",
+      "showEmpty": "显示空值",
+      "clickToParse": "点击\"解析\"按钮查看结果",
+      "willShowHere": "解析结果将显示在这里",
+      "parseFailed": "解析失败",
+      "errorCode": "错误码",
+      "parseError": "执行解析失败，请稍后重试"
+    },
+    "omlInput": {
+      "title": "OML 输入",
+      "desc": "根据解析结果补齐转换逻辑。",
+      "format": "格式化",
+      "convert": "转换",
+      "converting": "转换中...",
+      "clear": "清空",
+      "formatError": "格式化OML代码失败",
+      "fillOmlWarning": "请先填写 OML 转换规则"
+    },
+    "convertResult": {
+      "title": "转换结果",
+      "willShowHere": "转换结果将显示在这里",
+      "convertFailed": "转换失败",
+      "convertError": "执行转换失败，请稍后重试"
+    },
+    "table": {
+      "no": "no",
+      "meta": "meta",
+      "name": "name",
+      "value": "value"
+    }
+  }
+}
