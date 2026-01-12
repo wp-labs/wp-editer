@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
+import enUS from 'antd/locale/en_US';
 import zhCN from 'antd/locale/zh_CN';
 import SimulateDebugPage from '@/views/pages/simulate-debug';
 import { useGitHubStarReminder } from '@/hooks/useGitHubStarReminder';
@@ -25,13 +26,13 @@ const theme = {
 
 function App() {
   const [wechatModalOpen, setWechatModalOpen] = useState(false);
-  const [antdLocale, setAntdLocale] = useState(zhCN);
+  const [antdLocale, setAntdLocale] = useState(enUS);
   const { showReminder, closeReminder, goToGitHub } = useGitHubStarReminder();
 
   // 初始化时根据保存的语言设置 Ant Design locale
   useEffect(() => {
-    const savedLang = localStorage.getItem('language') || 'zh-CN';
-    setAntdLocale(savedLang === 'zh-CN' ? zhCN : require('antd/locale/en_US').default);
+    const savedLang = localStorage.getItem('language') || 'en-US';
+    setAntdLocale(savedLang === 'zh-CN' ? zhCN : enUS);
   }, []);
 
   return (
