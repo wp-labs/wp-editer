@@ -56,7 +56,7 @@ export const useGitHubStarReminder = () => {
 
   // 跳转到 GitHub 并关闭提示
   const goToGitHub = () => {
-    window.open('https://github.com/wp-labs/wp-rule', '_blank');
+    window.open('https://github.com/wp-labs/warp-parse', '_blank');
     closeReminder();
   };
 
