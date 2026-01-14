@@ -1,6 +1,7 @@
 use actix_web::{HttpResponse, ResponseError};
 use serde::Serialize;
 use std::fmt::Display;
+use wp_error::OMLCodeError;
 use wp_lang::WparseReason;
 
 #[derive(Debug, Serialize)]
@@ -44,12 +45,17 @@ pub enum AppError {
 
     // WPL 解析相关错误
     #[error("WPL 解析失败: {0}")]
-    WplParse(#[from] anyhow::Error),
+    WplParse(String),
+
+    #[error("Wpl 解析失败: {0}")]
+    WplParseOrion(#[from] orion_error::StructError<WparseReason>),
 
     // OML 转换相关错误
     #[error("OML 转换失败: {0}")]
     OmlTransform(String),
     //OmlTransform(anyhow::Error),
+    #[error("OML 解析失败: {0}")]
+    OmlParseOrion(#[from] OMLCodeError),
 
     // 调试相关错误
     #[error("未找到解析结果，请先执行日志解析")]
@@ -81,9 +87,9 @@ impl AppError {
 
     pub fn wpl_parse<E>(e: E) -> Self
     where
-        E: std::error::Error + Send + Sync + 'static,
+        E: Display,
     {
-        AppError::WplParse(anyhow::Error::new(e))
+        AppError::WplParse(e.to_string())
     }
 
     pub fn wpl_best_error(
@@ -91,14 +97,13 @@ impl AppError {
         depth: usize,
         hint: impl Into<String>,
     ) -> Self {
-        let err = anyhow::Error::new(error)
-            .context(format!("解析深度: {depth}"))
-            .context(hint.into());
-        AppError::WplParse(err)
+        let hint_str = hint.into();
+        let err_msg = format!("{}\n解析深度: {depth}\n{hint_str}", error);
+        AppError::WplParse(err_msg)
     }
 
     pub fn wpl_parse_msg(msg: impl Into<String>) -> Self {
-        AppError::WplParse(anyhow::Error::msg(msg.into()))
+        AppError::WplParse(msg.into())
     }
 
     pub fn oml_transform<E>(e: E) -> Self
@@ -150,6 +155,8 @@ impl AppError {
             AppError::PortUnreachable { .. } => "PORT_UNREACHABLE",
             AppError::InvalidGitToken { .. } => "INVALID_GIT_TOKEN",
             AppError::InvalidBase64(_) => "INVALID_BASE64",
+            AppError::WplParseOrion(_) => "WPL_PARSE_ORION_ERROR",
+            AppError::OmlParseOrion(_) => "OML_PARSE_ORION_ERROR",
         }
     }
 }
@@ -166,6 +173,8 @@ impl ResponseError for AppError {
             | AppError::OmlTransform(_)
             | AppError::NoParseResult
             | AppError::PortUnreachable { .. }
+            | AppError::OmlParseOrion(_)
+            | AppError::WplParseOrion(_)
             | AppError::InvalidGitToken { .. } => StatusCode::BAD_REQUEST,
 
             // 403 Forbidden - 权限/关联错误

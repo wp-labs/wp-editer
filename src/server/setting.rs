@@ -58,11 +58,11 @@ pub struct Setting {
 }
 
 fn default_oml_rule_repo() -> String {
-    "./rules/models/oml".to_string()
+    "../wp-rule/models/oml".to_string()
 }
 
 fn default_project_root() -> String {
-    "./rules".to_string()
+    "../wp-rule/models/wpl".to_string()
 }
 
 impl Setting {

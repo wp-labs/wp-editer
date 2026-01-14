@@ -34,7 +34,6 @@ chrono = { version = "0.4", features = ["serde"] }
 thiserror = "2.0"
 strum = { version = "0.26", features = ["derive"] }
 regex = "1.12"
-anyhow = "1"
 base64 = "0.22"
 orion-error = "0.5"
 tempfile = "3.24"

@@ -339,8 +339,10 @@ function SimulateDebugPage() {
           margin: '10px',
         }}
       >
-        <h4 style={{ color: '#f5222d', marginBottom: '8px' }}>{t('simulateDebug.convertResult.convertFailed')}</h4>
-        <p>{errorMessage}</p>
+        <h4 style={{ color: '#f5222d', marginBottom: '8px', fontWeight: 'bold' }}>{t('simulateDebug.convertResult.convertFailed')}</h4>
+        <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', color: '#666', margin: '0 0 8px 0', fontSize: '14px', lineHeight: '1.5' }}>
+          {errorMessage}
+        </pre>
         {transformError.code && (
           <p style={{ color: '#f5222d', margin: '8px 0 0 0' }}>
             <span style={{ fontWeight: 'bold' }}>{t('simulateDebug.parseResult.errorCode')}：</span>

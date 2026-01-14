@@ -38,12 +38,9 @@ pub fn wpl_examples(
         }
         example.sample_data = sample_data.clone();
 
-        let code = WplCode::build(wpl_path.clone(), &contents)
-            .map_err(|e| anyhow::anyhow!("build example wpl failed: {}", e))?;
+        let code = WplCode::build(wpl_path.clone(), &contents)?;
 
-        let pkg = code
-            .parse_pkg()
-            .map_err(|e| anyhow::anyhow!("parse example wpl failed: {}", e))?;
+        let pkg = code.parse_pkg()?;
         let pkg_name_raw = pkg.name().to_string();
         let mut pkg_name = pkg_name_raw
             .trim()
@@ -61,7 +58,6 @@ pub fn wpl_examples(
                 .unwrap_or(&rule.name)
                 .to_string();
             let wpl_name = format!("{}/{}", pkg_name, rule_name);
-            println!("wpl_name: {}", wpl_name);
             // 在 OML 规则示例中查找与当前 WPL 规则匹配的 OML 代码
             if let Some((_, oml_code)) = oml_examples
                 .iter()
@@ -97,8 +93,7 @@ pub fn oml_examples(
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
         let oml_fmt = oml_formatter.format_content(&contents);
-        let code = oml_parse(&mut contents.as_str(), "")
-            .map_err(|e| anyhow::anyhow!("parse example oml failed: {}", e))?;
+        let code = oml_parse(&mut contents.as_str(), "")?;
         results.push((code.rules().clone(), oml_fmt));
         return Ok(results);
     }

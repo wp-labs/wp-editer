@@ -69,7 +69,34 @@ output_path = "./logs/"
 [web]
 host = "0.0.0.0"
 port = 8080
+
+[repo]
+wpl_rule_repo = "./rules"
+oml_rule_repo = "./rules/models/oml"
 ```
+
+### 处理个人Rule库路径
+
+由于每个人都可能有自己的Rule库路径，为了避免提交冲突，我们提供了以下解决方案：
+
+#### 方案：使用软链接（推荐）
+
+1. 创建软链接指向个人配置文件：
+
+   ```bash
+   ln -sf your/path/to/warp-rules/models/wpl ../wp-rule/models/wpl
+   ln -sf your/path/to/warp-rules/models/oml ../wp-rule/models/oml
+   ```
+
+2. 这样每次运行程序时都会使用个人配置，而不会影响团队共享的配置文件
+
+### 注意事项
+
+- `wpl_rule_repo`和`oml_rule_repo`可以是绝对路径或相对路径
+- 相对路径是相对于项目根目录的路径
+- 如果不指定这些路径，程序会使用默认路径：
+  - `wpl_rule_repo`: `../wp-rule/models/wpl`
+  - `oml_rule_repo`: `../wp-rule/models/oml`
 
 ## 使用指南
 

@@ -42,8 +42,7 @@ pub fn warp_check_record(wpl: &str, data: &str) -> Result<DataRecord, AppError> 
     let code = WplCode::build(PathBuf::from(""), wpl).map_err(AppError::wpl_parse)?;
     let wpl_package = code.parse_pkg().map_err(AppError::wpl_parse)?;
     // let wpl_package = parse_wpl_package(wpl)?;
-    let rule_items = extract_rule_items(&wpl_package)
-        .map_err(|err| AppError::wpl_parse_msg(format!("构建 WPL 规则失败: {:?}", err)))?;
+    let rule_items = extract_rule_items(&wpl_package);
 
     if rule_items.is_empty() {
         return Err(AppError::wpl_parse_msg("WPL 中未找到任何规则"));
@@ -106,7 +105,8 @@ fn try_parse_with_rules(rule_items: Vec<RunParseProc>, data: &str) -> Result<Dat
     ))
 }
 
-fn extract_rule_items(wpl_package: &WplPackage) -> anyhow::Result<Vec<RunParseProc>> {
+/// 从 WPL 包中提取规则项
+fn extract_rule_items(wpl_package: &WplPackage) -> Vec<RunParseProc> {
     let mut rule_pairs = Vec::with_capacity(wpl_package.rules.len());
 
     for rule in wpl_package.rules.iter() {
@@ -116,7 +116,7 @@ fn extract_rule_items(wpl_package: &WplPackage) -> anyhow::Result<Vec<RunParsePr
         let funcs = AnnotationType::convert(rule.statement.tags());
         rule_pairs.push((rule_obj, funcs));
     }
-    Ok(rule_pairs)
+    rule_pairs
 }
 
 /// 构造更友好的日志位置提示，帮助用户快速定位解析中断点
