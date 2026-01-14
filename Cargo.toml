@@ -63,21 +63,9 @@ wp-conf-base =  "0.1"
 wp-data-fmt  =  "0.1"
 wp-editor-migrations = { path = "crates/migrations" }
 
-wp-engine= { git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
-wp-lang= { package = "wp-lang",git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
-wp-oml = { package = "wp-oml", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
-wp_parser = { package = "wp-parser", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
-wp_proj = { package = "wp-proj", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
-wp_knowledge = { package = "wp-knowledge", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
-wp-data-utils = { package = "wp-data-utils", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
-
-
- [patch."https://github.com/wp-labs/wp-engine"]
- wp-engine     = { path = "../wp-engine" }
- wp-data-utils = { path = "../wp-engine/crates/wp-data-utils" }
- wp-config     = { path = "../wp-engine/crates/wp-config" }
- wp-lang= { path = "../wp-engine/crates/wp-lang" }
- wp-oml        = { path = "../wp-engine/crates/wp-oml" }
- wp-knowledge  = { path = "../wp-engine/crates/wp-knowledge" }
- wp-cli-core   = { path = "../wp-engine/crates/wp-cli-core" }
- wp-proj       = { path = "../wp-engine/crates/wp-proj" }
+wp_lang = { package = "wp-lang", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.2-alpha" }
+wp_oml = { package = "wp-oml", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.2-alpha" }
+wp_parser = { package = "wp-parser", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.2-alpha" }
+wp_knowledge = { package = "wp-knowledge", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.2-alpha" }
+wp_data_utils = { package = "wp-data-utils", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.2-alpha" }
+wp_engine = { package = "wp-engine", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.2-alpha" }

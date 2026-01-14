@@ -1,9 +1,6 @@
-use std::fmt::Display;
-
 use crate::error::AppError;
-use orion_error::{DomainReason, ErrorCode, StructError};
 use wp_data_utils::cache::FieldQueryCache;
-use wp_error::{OMLCodeError, OMLCodeReason};
+use wp_error::OMLCodeError;
 use wp_model_core::model::DataRecord;
 use wp_oml::{core::DataTransformer, parser::oml_parse};
 
@@ -24,7 +21,7 @@ pub fn convert_record(oml: &str, record: DataRecord) -> Result<DataRecord, AppEr
         //.map_err(|e| OMLCodeError::from_syntax(e, oml, ""))
         .map_err(|e| AppError::OmlTransform(print_error(&e)))?;
     let mut cache = FieldQueryCache::with_capacity(10);
-    let target = model.transform(record, &mut cache);
+    let target = model.transform_ref(&record, &mut cache);
     Ok(target)
 }
 
