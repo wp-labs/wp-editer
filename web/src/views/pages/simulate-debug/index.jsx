@@ -1,6 +1,7 @@
 import { Table, message } from 'antd';
-import React, { useState } from 'react';
-import { parseLogs, convertRecord } from '@/services/debug';
+import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { convertRecord, fetchDebugExamples, parseLogs, wplCodeFormat, omlCodeFormat, base64Decode } from '@/services/debug';
 import CodeJarEditor from '@/views/components/CodeJarEditor';
 
 /**
@@ -12,19 +13,20 @@ import CodeJarEditor from '@/views/components/CodeJarEditor';
  * 对应原型：pages/views/simulate-debug/simulate-parse.html
  */
 
-// 示例日志数据
-const EXAMPLE_LOG = `222.133.52.20 - - [06/Aug/2019:12:12:19 +0800] "GET /nginx-logo.png HTTP/1.1" 200 368 "http://119.122.1.4/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36" "-"`;
-
-// 示例解析规则
-const EXAMPLE_RULE = `package /example/simple {
-  rule nginx {
-        (ip:sip,2*_,time:recv_time<[,]>,http/request",http/status,digit,chars",http/agent",_")
-  }
-}`;
-// 帮助中心在线文档地址，使用 iframe 内嵌以保持当前界面
-const HELP_CENTER_URL = 'https://wp-labs.github.io/wp-docs/';
+// 默认示例列表，保存在前端，便于无网络或后端无数据时直接展示
+const DEFAULT_EXAMPLES = [
+  {
+    name: 'nginx',
+    wpl_code:
+      'package /nginx/ {\n    rule nginx {\n        (\n            ip:sip,_^2,chars:timestamp<[,]>,http/request",chars:status,chars:size,chars:referer",http/agent",_"\n        )\n    }\n}\n',
+    oml_code: '',
+    sample_data:
+      '180.57.30.148 - - [21/Jan/2025:01:40:02 +0800] "GET /nginx-logo.png HTTP/1.1" 500 368 "<http://207.131.38.110/>" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36" "-"',
+  },
+];
 
 function SimulateDebugPage() {
+  const { t } = useTranslation();
   const [activeKey, setActiveKey] = useState('parse');
   const [inputValue, setInputValue] = useState('');
   const [ruleValue, setRuleValue] = useState('');
@@ -49,6 +51,12 @@ function SimulateDebugPage() {
   const [transformParseShowEmpty, setTransformParseShowEmpty] = useState(true);
   // 转换错误状态
   const [transformError, setTransformError] = useState(null);
+  // 示例列表状态
+  const [examples, setExamples] = useState(DEFAULT_EXAMPLES);
+  const examplesOpen = true;
+  const [examplesLoading, setExamplesLoading] = useState(false);
+  const [examplesLoaded, setExamplesLoaded] = useState(false);
+  const examplesFetchedRef = useRef(false); // 防止严格模式导致的重复请求
 
   /**
    * 处理测试/解析按钮点击
@@ -64,9 +72,10 @@ function SimulateDebugPage() {
         rules: ruleValue,
       });
       setResult(response);
-      // 同步更新转换页的解析结果
-      if (response?.fields && Array.isArray(response.fields)) {
-        setTransformParseResult({ fields: response.fields });
+      // 同步更新转换页的解析结果（使用原始数据用于转换，展示数据用于显示）
+      if (response?.fields && response?.rawFields) {
+        console.log('转换页解析结果:', response.rawFields);
+        setTransformParseResult({ fields: response.rawFields, formatJson: response.formatJson });
       }
     } catch (error) {
       setParseError(error); // 将错误存储到状态中
@@ -76,42 +85,74 @@ function SimulateDebugPage() {
   };
 
   /**
-   * 一键示例
-   * 填充示例日志和规则,并自动执行解析,同时填充转换页面数据
+   * 展示示例列表，按需拉取数据（默认展开，不再折叠）
    */
-  const handleExample = async () => {
-    setInputValue(EXAMPLE_LOG);
-    setRuleValue(EXAMPLE_RULE);
-    // 自动执行解析
-    setLoading(true);
-    setParseError(null); // 重置错误状态
+  const handleToggleExamples = async () => {
+    if (examplesLoading || examplesLoaded || examplesFetchedRef.current) {
+      return;
+    }
+    examplesFetchedRef.current = true;
+    // 拉取示例列表，供用户选择
+    setExamplesLoading(true);
     try {
-      const response = await parseLogs({
-        logs: EXAMPLE_LOG,
-        rules: EXAMPLE_RULE,
-      });
-      setResult(response);
-
-      // 同时填充转换页面的数据
-      const exampleOml = `name : /oml/example/simple
-
-rule :
-    /example/simple*
----
-recv_time  = take() ;
-occur_time = Now::time() ;
-from_ip    = take(option:[from-ip]) ;
-src_ip     = take(option:[src-ip,sip,source-ip] );
-*  = take() ;`;
-
-      setTransformOml(exampleOml);
-
-      // 使用真实解析结果同步到转换页面
-      if (response?.fields && Array.isArray(response.fields)) {
-        setTransformParseResult({ fields: response.fields });
+      const data = await fetchDebugExamples();
+      const list = data && typeof data === 'object' ? Object.values(data) : [];
+      if (Array.isArray(list) && list.length > 0) {
+        setExamples(list);
+        setExamplesLoaded(true);
+      } else if (!examplesLoaded && (!list || list.length === 0)) {
+        message.info(t('simulateDebug.examples.noAvailable'));
       }
     } catch (error) {
-      setParseError(error); // 将错误存储到状态中
+      message.error(`${t('simulateDebug.examples.fetchError')}：${error?.message || error}`);
+    } finally {
+      setExamplesLoading(false);
+    }
+  };
+
+  const wplFormat = async () => {
+    try {
+      const response = await wplCodeFormat(ruleValue);
+      console.log('格式化WPL代码响应:', response);
+      setRuleValue(response?.wpl_code || '');
+    } catch (error) {
+      message.error(`${t('simulateDebug.parseRule.formatError')}：${error?.message || error}`);
+    }
+  };
+
+  // 页面加载后默认展开示例并尝试拉取
+  useEffect(() => {
+    handleToggleExamples();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /**
+   * 应用某个示例到日志、规则与 OML 输入区域，并自动尝试解析
+   */
+  const handleApplyExample = async (exampleItem) => {
+    if (!exampleItem) return;
+    const { sample_data: sampleData, wpl_code: wplCode, oml_code: omlCode } = exampleItem;
+    setInputValue(sampleData || '');
+    setRuleValue(wplCode || '');
+    setTransformOml(omlCode || '');
+
+    if (!sampleData || !wplCode) {
+      return;
+    }
+
+    setLoading(true);
+    setParseError(null);
+    try {
+      const response = await parseLogs({
+        logs: sampleData,
+        rules: wplCode,
+      });
+      setResult(response);
+      if (response?.fields && response?.rawFields) {
+        setTransformParseResult({ fields: response.rawFields, formatJson: response.formatJson });
+      }
+    } catch (error) {
+      setParseError(error);
     } finally {
       setLoading(false);
     }
@@ -134,23 +175,41 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
     setTransformError(null); // 清空转换错误
   };
 
+  // 处理 Base64 解码按钮点击
+  const handleBase64Decode = async () => {
+    try {
+      const response = await base64Decode(inputValue);
+      console.log('Base64解码响应:', response);
+      setInputValue(response || '');
+    } catch (error) {
+      message.error(`${t('simulateDebug.logData.base64Error')}：${error?.message || error}`);
+    }
+  };
+
   const handleTransform = async () => {
     if (!transformOml) {
-      message.warning('请先填写 OML 转换规则');
+      message.warning(t('simulateDebug.omlInput.fillOmlWarning'));
       return;
     }
     setLoading(true);
     setTransformError(null); // 重置转换错误状态
     try {
-      const response = await convertRecord({ oml: transformOml });
+      console.log('转换页解析结果:', transformParseResult);
+      const response = await convertRecord({ oml: transformOml, parseResult: transformParseResult });
       // 新 API 直接返回 { fields: [...] } 格式
+      let fieldsData = [];
+      if (Array.isArray(response?.fields)) {
+        fieldsData = response.fields;
+      } else if (response?.fields && Array.isArray(response?.fields?.items)) {
+        fieldsData = response.fields.items;
+      }
       setTransformResult({
-        fields: Array.isArray(response?.fields) ? response.fields : [],
+        fields: fieldsData,
         formatJson: response.formatJson || '',
       });
       setTransformError(null);
     } catch (error) {
-      message.error(`执行转换失败：${error?.message || error}`);
+      message.error(`${t('simulateDebug.convertResult.convertError')}：${error?.message || error}`);
       setTransformError(error);
       setTransformResult(null);
     } finally {
@@ -158,18 +217,27 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
     }
   };
 
+
+  const omlFormat = async () => {
+    try {
+      const response = await omlCodeFormat(transformOml);
+      setTransformOml(response?.oml_code || '');
+    } catch (error) {
+      message.error(`${t('simulateDebug.omlInput.formatError')}：${error?.message || error}`);
+    }
+  };
+
   const menuItems = [
-    { key: 'parse', label: '解析' },
-    { key: 'convert', label: '转换' },
-    { key: 'knowledge', label: '帮助中心' },
+    { key: 'parse', label: t('simulateDebug.tabs.parse') },
+    { key: 'convert', label: t('simulateDebug.tabs.convert') },
   ];
 
   const resultColumns = [
-    { title: 'no', dataIndex: 'no', key: 'no', width: 60 },
-    { title: 'meta', dataIndex: 'meta', key: 'meta', width: 120 },
-    { title: 'name', dataIndex: 'name', key: 'name', width: 150 },
+    { title: t('simulateDebug.table.no'), dataIndex: 'no', key: 'no', width: 60 },
+    { title: t('simulateDebug.table.meta'), dataIndex: 'meta', key: 'meta', width: 120 },
+    { title: t('simulateDebug.table.name'), dataIndex: 'name', key: 'name', width: 150 },
     {
-      title: 'value',
+      title: t('simulateDebug.table.value'),
       dataIndex: 'value',
       key: 'value',
       style: { wordWrap: 'break-word', wordBreak: 'break-all', maxWidth: 300 },
@@ -177,7 +245,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
   ];
 
   /**
-   * 按“显示空值”开关过滤字段列表
+   * 按"显示空值"开关过滤字段列表
    * showEmptyFlag=false 时，过滤掉 value 为空字符串/null/undefined 的行
    */
   const filterFieldsByShowEmpty = (fields, showEmptyFlag) => {
@@ -194,6 +262,36 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
     });
   };
 
+  /**
+   * 从 value 对象中提取值
+   * @param {Object} valueObj - value 对象，如 { "IpAddr": "..." } 或 { "Chars": "..." }
+   * @returns {string} 提取的值字符串
+   */
+  const extractValueFromObj = (valueObj) => {
+    if (!valueObj || typeof valueObj !== 'object') {
+      return '';
+    }
+    const keys = Object.keys(valueObj);
+    if (keys.length > 0 && valueObj[keys[0]] !== undefined) {
+      return String(valueObj[keys[0]]);
+    }
+    return '';
+  };
+
+  /**
+   * 处理转换页解析结果，添加 no 序号并提取 value 值
+   * @param {Array} fields - 原始字段数组
+   * @returns {Array} 处理后的字段数组
+   */
+  const processTransformParseFields = (fields) => {
+    const list = Array.isArray(fields) ? fields : [];
+    return list.map((field, index) => ({
+      ...field,
+      no: index + 1,
+      value: extractValueFromObj(field?.value),
+    }));
+  };
+
   // 统一渲染解析错误内容，仅保留错误标题和错误码提示
   const renderParseError = () => {
     if (!parseError) return null;
@@ -208,11 +306,13 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
           margin: '10px',
         }}
       >
-        <h4 style={{ color: '#f5222d', marginBottom: '8px' }}>解析失败</h4>
-        <p>{parseError.message || '执行解析失败，请稍后重试'}</p>
+        <h4 style={{ color: '#f5222d', marginBottom: '8px', fontWeight: 'bold' }}>{t('simulateDebug.parseResult.parseFailed')}</h4>
+        <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', color: '#666', margin: '0 0 8px 0', fontSize: '14px', lineHeight: '1.5' }}>
+          {parseError.message || t('simulateDebug.parseResult.parseError')}
+        </pre>
         {parseError.code && (
           <p style={{ color: '#f5222d', margin: '8px 0 0 0' }}>
-            <span style={{ fontWeight: 'bold' }}>错误码：</span>
+            <span style={{ fontWeight: 'bold' }}>{t('simulateDebug.parseResult.errorCode')}：</span>
             {parseError.code}
           </p>
         )}
@@ -227,7 +327,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
       transformError.message ||
       transformError.responseData?.error?.message ||
       transformError.data?.error?.message ||
-      '执行转换失败，请稍后重试';
+      t('simulateDebug.convertResult.convertError');
 
     return (
       <div
@@ -239,11 +339,11 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
           margin: '10px',
         }}
       >
-        <h4 style={{ color: '#f5222d', marginBottom: '8px' }}>转换失败</h4>
+        <h4 style={{ color: '#f5222d', marginBottom: '8px' }}>{t('simulateDebug.convertResult.convertFailed')}</h4>
         <p>{errorMessage}</p>
         {transformError.code && (
           <p style={{ color: '#f5222d', margin: '8px 0 0 0' }}>
-            <span style={{ fontWeight: 'bold' }}>错误码：</span>
+            <span style={{ fontWeight: 'bold' }}>{t('simulateDebug.parseResult.errorCode')}：</span>
             {transformError.code}
           </p>
         )}
@@ -254,39 +354,59 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
   // 获取页面标题（与旧版本一致）
   const getPageTitle = () => {
     const titles = {
-      parse: '解析',
-      convert: '转换',
-      knowledge: '帮助中心',
+      parse: t('simulateDebug.tabs.parse'),
+      convert: t('simulateDebug.tabs.convert'),
     };
     return titles[activeKey] || 'Wp Editor';
   };
 
   return (
     <>
-      <aside className="side-nav" data-group="simulate-debug">
-        <button
-          type="button"
-          className={`side-item ${activeKey === 'parse' ? 'is-active' : ''}`}
-          onClick={() => setActiveKey('parse')}
-        >
-          <h2>解析</h2>
-        </button>
-        <button
-          type="button"
-          className={`side-item ${activeKey === 'convert' ? 'is-active' : ''}`}
-          onClick={() => setActiveKey('convert')}
-        >
-          <h2>转换</h2>
-        </button>
-        <button
-          type="button"
-          className={`side-item ${activeKey === 'knowledge' ? 'is-active' : ''}`}
-          onClick={() => setActiveKey('knowledge')}
-        >
-          <h2>帮助中心</h2>
-        </button>
-      </aside>
+      <div>
+        <aside className="side-nav" data-group="simulate-debug">
+          <button
+            type="button"
+            className={`side-item ${activeKey === 'parse' ? 'is-active' : ''}`}
+            onClick={() => setActiveKey('parse')}
+          >
+            <h2>{t('simulateDebug.tabs.parse')}</h2>
+          </button>
+          <button
+            type="button"
+            className={`side-item ${activeKey === 'convert' ? 'is-active' : ''}`}
+            onClick={() => setActiveKey('convert')}
+          >
+            <h2>{t('simulateDebug.tabs.convert')}</h2>
+          </button>
 
+        </aside>
+        <div className="example-list example-list--compact example-list--spaced">
+          <div className="example-list__header">
+            <div>
+              <h4 className="example-list__title">{t('simulateDebug.examples.title')}</h4>
+              <p className="example-list__desc">{t('simulateDebug.examples.desc')}</p>
+            </div>
+          </div>
+          {examplesLoading ? (
+            <div className="example-list__message">{t('simulateDebug.examples.loading')}</div>
+          ) : examples && examples.length > 0 ? (
+            <div className="example-list__grid example-list__grid--small">
+              {examples.map(exampleItem => (
+                <button
+                  key={exampleItem.name || exampleItem.key}
+                  type="button"
+                  className="example-list__item"
+                  onClick={() => handleApplyExample(exampleItem)}
+                >
+                  {exampleItem.name || t('simulateDebug.examples.unnamed')}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="example-list__message">{t('simulateDebug.examples.noData')}</div>
+          )}
+        </div>
+      </div>
       <section className="page-panels">
         <article className="panel is-visible">
           <header className="panel-header">
@@ -299,16 +419,23 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                 <div className="panel-block">
                   <div className="block-header">
                     <div>
-                      <h3>日志数据</h3>
-                      <p className="block-desc">粘贴实时采集的原始日志，支持文本与文件导入。</p>
+                      <h3>{t('simulateDebug.logData.title')}</h3>
+                      <p className="block-desc">{t('simulateDebug.logData.desc')}</p>
                     </div>
-                    <div className="block-actions">
-                      <button type="button" className="btn tertiary" onClick={handleExample}>
-                        一键示例
-                      </button>
-                      <button type="button" className="btn ghost" onClick={handleClear}>
-                        一键清空
-                      </button>
+                      <div className="block-actions" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            type="button"
+                            className="btn ghost"
+                            onClick={handleBase64Decode}
+                          >
+                            {t('simulateDebug.logData.base64Decode')}
+                          </button>
+                          <button type="button" className="btn ghost" onClick={handleClear}>
+                            {t('simulateDebug.logData.clearAll')}
+                          </button>
+                        </div>
+                   
                     </div>
                   </div>
                   <CodeJarEditor
@@ -322,15 +449,22 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                   <div className="split-col">
                     <div className="panel-block panel-block--fill">
                       <div className="block-header">
-                        <h3>解析规则</h3>
+                        <h3>{t('simulateDebug.parseRule.title')}</h3>
                         <div className="block-actions">
+                          <button
+                            type="button"
+                            className="btn ghost"
+                            onClick={wplFormat}
+                          >
+                            {t('simulateDebug.parseRule.format')}
+                          </button>
                           <button
                             type="button"
                             className="btn primary"
                             onClick={handleTest}
                             disabled={loading}
                           >
-                            {loading ? '解析中...' : '解析'}
+                            {loading ? t('simulateDebug.parseRule.parsing') : t('simulateDebug.parseRule.parse')}
                           </button>
                         </div>
                       </div>
@@ -346,21 +480,21 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                     <div className="panel-block panel-block--stretch panel-block--scrollable">
                       <div className="block-header">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                          <h3>解析结果</h3>
+                          <h3>{t('simulateDebug.parseResult.title')}</h3>
                           <div className="mode-toggle">
                             <button
                               type="button"
                               className={`toggle-btn ${viewMode === 'table' ? 'is-active' : ''}`}
                               onClick={() => setViewMode('table')}
                             >
-                              表格模式
+                              {t('simulateDebug.parseResult.tableMode')}
                             </button>
                             <button
                               type="button"
                               className={`toggle-btn ${viewMode === 'json' ? 'is-active' : ''}`}
                               onClick={() => setViewMode('json')}
                             >
-                              JSON 模式
+                              {t('simulateDebug.parseResult.jsonMode')}
                             </button>
                           </div>
                         </div>
@@ -371,7 +505,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                             onChange={e => setShowEmpty(e.target.checked)}
                           />
                           <span className="switch-slider"></span>
-                          <span className="switch-label">显示空值</span>
+                          <span className="switch-label">{t('simulateDebug.parseResult.showEmpty')}</span>
                         </label>
                       </div>
                       <div className={`mode-content ${viewMode === 'table' ? 'is-active' : ''}`}>
@@ -389,7 +523,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                           />
                         ) : (
                           <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                            点击"解析"按钮查看结果
+                            {t('simulateDebug.parseResult.clickToParse')}
                           </div>
                         )}
                       </div>
@@ -423,7 +557,7 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                           </pre>
                         ) : (
                           <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                            点击"解析"按钮查看结果
+                            {t('simulateDebug.parseResult.clickToParse')}
                           </div>
                         )}
                       </div>
@@ -440,24 +574,31 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                   <div className="panel-block panel-block--stretch panel-block--fill">
                     <div className="block-header">
                       <div>
-                        <h3>OML 输入</h3>
-                        <p className="block-desc">根据解析结果补齐转换逻辑。</p>
+                        <h3>{t('simulateDebug.omlInput.title')}</h3>
+                        <p className="block-desc">{t('simulateDebug.omlInput.desc')}</p>
                       </div>
                       <div className="block-actions">
+                        <button
+                          type="button"
+                          className="btn primary"
+                          onClick={omlFormat}
+                        >
+                          {t('simulateDebug.omlInput.format')}
+                        </button>
                         <button
                           type="button"
                           className="btn primary"
                           onClick={handleTransform}
                           disabled={loading}
                         >
-                          {loading ? '转换中...' : '转换'}
+                          {loading ? t('simulateDebug.omlInput.converting') : t('simulateDebug.omlInput.convert')}
                         </button>
                         <button
                           type="button"
                           className="btn ghost"
                           onClick={() => setTransformOml('')}
                         >
-                          清空
+                          {t('simulateDebug.omlInput.clear')}
                         </button>
                       </div>
                     </div>
@@ -472,25 +613,23 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                   <div className="panel-block panel-block--scrollable">
                     <div className="block-header">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <h3>解析结果</h3>
+                        <h3>{t('simulateDebug.parseResult.title')}</h3>
                         <div className="mode-toggle">
                           <button
                             type="button"
-                            className={`toggle-btn ${
-                              transformParseViewMode === 'table' ? 'is-active' : ''
-                            }`}
+                            className={`toggle-btn ${transformParseViewMode === 'table' ? 'is-active' : ''
+                              }`}
                             onClick={() => setTransformParseViewMode('table')}
                           >
-                            表格模式
+                            {t('simulateDebug.parseResult.tableMode')}
                           </button>
                           <button
                             type="button"
-                            className={`toggle-btn ${
-                              transformParseViewMode === 'json' ? 'is-active' : ''
-                            }`}
+                            className={`toggle-btn ${transformParseViewMode === 'json' ? 'is-active' : ''
+                              }`}
                             onClick={() => setTransformParseViewMode('json')}
                           >
-                            JSON 模式
+                            {t('simulateDebug.parseResult.jsonMode')}
                           </button>
                         </div>
                       </div>
@@ -501,20 +640,19 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                           onChange={e => setTransformParseShowEmpty(e.target.checked)}
                         />
                         <span className="switch-slider"></span>
-                        <span className="switch-label">显示空值</span>
+                        <span className="switch-label">{t('simulateDebug.parseResult.showEmpty')}</span>
                       </label>
                     </div>
                     <div
-                      className={`mode-content ${
-                        transformParseViewMode === 'table' ? 'is-active' : ''
-                      }`}
+                      className={`mode-content ${transformParseViewMode === 'table' ? 'is-active' : ''
+                        }`}
                     >
                       {transformParseResult ? (
                         <Table
                           size="small"
                           columns={resultColumns}
                           dataSource={filterFieldsByShowEmpty(
-                            transformParseResult.fields,
+                            processTransformParseFields(transformParseResult.fields),
                             transformParseShowEmpty
                           )}
                           pagination={false}
@@ -524,35 +662,44 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                         />
                       ) : (
                         <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                          解析结果将显示在这里
+                          {t('simulateDebug.parseResult.willShowHere')}
                         </div>
                       )}
                     </div>
                     <div
-                      className={`mode-content ${
-                        transformParseViewMode === 'json' ? 'is-active' : ''
-                      }`}
+                      className={`mode-content ${transformParseViewMode === 'json' ? 'is-active' : ''
+                        }`}
                     >
                       {transformParseResult ? (
                         <pre
                           className="code-block"
                           style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}
                         >
-                          {JSON.stringify(
-                            {
-                              ...transformParseResult,
-                              fields: filterFieldsByShowEmpty(
-                                transformParseResult.fields,
-                                transformParseShowEmpty
-                              ),
-                            },
-                            null,
-                            2
-                          )}
+                          {(() => {
+                            if (transformParseResult.formatJson) {
+                              try {
+                                const parsed = JSON.parse(transformParseResult.formatJson);
+                                return JSON.stringify(parsed, null, 2);
+                              } catch (_e) {
+                                return transformParseResult.formatJson;
+                              }
+                            }
+                            return JSON.stringify(
+                              {
+                                ...transformParseResult,
+                                fields: filterFieldsByShowEmpty(
+                                  processTransformParseFields(transformParseResult.fields),
+                                  transformParseShowEmpty
+                                ),
+                              },
+                              null,
+                              2
+                            );
+                          })()}
                         </pre>
                       ) : (
                         <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                          解析结果将显示在这里
+                          {t('simulateDebug.parseResult.willShowHere')}
                         </div>
                       )}
                     </div>
@@ -561,25 +708,23 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                   <div className="panel-block panel-block--scrollable">
                     <div className="block-header">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <h3>转换结果</h3>
+                        <h3>{t('simulateDebug.convertResult.title')}</h3>
                         <div className="mode-toggle">
                           <button
                             type="button"
-                            className={`toggle-btn ${
-                              transformResultViewMode === 'table' ? 'is-active' : ''
-                            }`}
+                            className={`toggle-btn ${transformResultViewMode === 'table' ? 'is-active' : ''
+                              }`}
                             onClick={() => setTransformResultViewMode('table')}
                           >
-                            表格模式
+                            {t('simulateDebug.parseResult.tableMode')}
                           </button>
                           <button
                             type="button"
-                            className={`toggle-btn ${
-                              transformResultViewMode === 'json' ? 'is-active' : ''
-                            }`}
+                            className={`toggle-btn ${transformResultViewMode === 'json' ? 'is-active' : ''
+                              }`}
                             onClick={() => setTransformResultViewMode('json')}
                           >
-                            JSON 模式
+                            {t('simulateDebug.parseResult.jsonMode')}
                           </button>
                         </div>
                       </div>
@@ -590,13 +735,12 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                           onChange={e => setTransformResultShowEmpty(e.target.checked)}
                         />
                         <span className="switch-slider"></span>
-                        <span className="switch-label">显示空值</span>
+                        <span className="switch-label">{t('simulateDebug.parseResult.showEmpty')}</span>
                       </label>
                     </div>
                     <div
-                      className={`mode-content ${
-                        transformResultViewMode === 'table' ? 'is-active' : ''
-                      }`}
+                      className={`mode-content ${transformResultViewMode === 'table' ? 'is-active' : ''
+                        }`}
                     >
                       {transformError ? (
                         renderTransformError()
@@ -615,14 +759,13 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                         />
                       ) : (
                         <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                          转换结果将显示在这里
+                          {t('simulateDebug.convertResult.willShowHere')}
                         </div>
                       )}
                     </div>
                     <div
-                      className={`mode-content ${
-                        transformResultViewMode === 'json' ? 'is-active' : ''
-                      }`}
+                      className={`mode-content ${transformResultViewMode === 'json' ? 'is-active' : ''
+                        }`}
                     >
                       {transformError ? (
                         renderTransformError()
@@ -658,40 +801,12 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
                         </pre>
                       ) : (
                         <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
-                          转换结果将显示在这里
+                          {t('simulateDebug.convertResult.willShowHere')}
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-
-            {/* 帮助中心页面 */}
-            {activeKey === 'knowledge' && (
-              <div
-                className="docs-layout"
-                style={{
-                  display: 'flex',
-                  alignItems: 'stretch',
-                  minHeight: 0,
-                }}
-              >
-                <iframe
-                  title="帮助中心"
-                  src={HELP_CENTER_URL}
-                  style={{
-                    flex: 1,
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '12px',
-                    width: '100%',
-                    height: 'calc(100vh - 220px)',
-                    background: '#fff',
-                  }}
-                  allow="clipboard-read; clipboard-write; fullscreen"
-                  allowFullScreen
-                  loading="lazy"
-                />
               </div>
             )}
           </section>

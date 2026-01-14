@@ -1,6 +1,7 @@
 use actix_web::{HttpResponse, ResponseError};
 use serde::Serialize;
 use std::fmt::Display;
+use wp_lang::WparseReason;
 
 #[derive(Debug, Serialize)]
 pub struct ErrorBody<T = serde_json::Value> {
@@ -43,11 +44,12 @@ pub enum AppError {
 
     // WPL 解析相关错误
     #[error("WPL 解析失败: {0}")]
-    WplParse(String),
+    WplParse(#[from] anyhow::Error),
 
     // OML 转换相关错误
     #[error("OML 转换失败: {0}")]
     OmlTransform(String),
+    //OmlTransform(anyhow::Error),
 
     // 调试相关错误
     #[error("未找到解析结果，请先执行日志解析")]
@@ -59,6 +61,9 @@ pub enum AppError {
 
     #[error("Git Token 无效: {reason}")]
     InvalidGitToken { reason: String },
+
+    #[error("Base64 解码失败: {0}")]
+    InvalidBase64(String),
 }
 
 impl AppError {
@@ -74,14 +79,38 @@ impl AppError {
         AppError::Git(e.to_string())
     }
 
-    pub fn wpl_parse<E: Display>(e: E) -> Self {
-        AppError::WplParse(e.to_string())
+    pub fn wpl_parse<E>(e: E) -> Self
+    where
+        E: std::error::Error + Send + Sync + 'static,
+    {
+        AppError::WplParse(anyhow::Error::new(e))
     }
 
-    pub fn oml_transform<E: Display>(e: E) -> Self {
+    pub fn wpl_best_error(
+        error: orion_error::StructError<WparseReason>,
+        depth: usize,
+        hint: impl Into<String>,
+    ) -> Self {
+        let err = anyhow::Error::new(error)
+            .context(format!("解析深度: {depth}"))
+            .context(hint.into());
+        AppError::WplParse(err)
+    }
+
+    pub fn wpl_parse_msg(msg: impl Into<String>) -> Self {
+        AppError::WplParse(anyhow::Error::msg(msg.into()))
+    }
+
+    pub fn oml_transform<E>(e: E) -> Self
+    where
+        E: std::error::Error + Send + Sync + Display + 'static,
+    {
         AppError::OmlTransform(e.to_string())
     }
 
+    pub fn oml_transform_msg(msg: impl Into<String>) -> Self {
+        AppError::OmlTransform(msg.into())
+    }
     /// 创建 NotFound 错误
     pub fn not_found(msg: impl Into<String>) -> Self {
         AppError::NotFound(msg.into())
@@ -120,6 +149,7 @@ impl AppError {
             AppError::NoParseResult => "NO_PARSE_RESULT",
             AppError::PortUnreachable { .. } => "PORT_UNREACHABLE",
             AppError::InvalidGitToken { .. } => "INVALID_GIT_TOKEN",
+            AppError::InvalidBase64(_) => "INVALID_BASE64",
         }
     }
 }
@@ -146,6 +176,9 @@ impl ResponseError for AppError {
 
             // 500 Internal Server Error - 服务器内部错误
             AppError::Internal(_) | AppError::Git(_) => StatusCode::INTERNAL_SERVER_ERROR,
+
+            // 500 Bad Request - Base64 解码错误
+            AppError::InvalidBase64(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
         let details = match self {

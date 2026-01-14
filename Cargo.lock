@@ -5607,7 +5607,7 @@ dependencies = [
  "winnow",
  "wp-conf-base",
  "wp-connector-api",
- "wp-data-utils 1.8.1",
+ "wp-data-utils",
  "wp-error",
  "wp-knowledge",
  "wp-lang",
@@ -5679,37 +5679,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "wp-data-utils"
-version = "1.8.1"
-source = "git+https://github.com/wp-labs/wp-engine?tag=v1.8.1#34842f3efb1f5b7b6951d6eeff93837470e18516"
-dependencies = [
- "arcstr",
- "chrono",
- "derive_builder",
- "lru",
- "orion-error",
- "orion_exp 1.8.1 (git+https://github.com/wp-labs/wp-engine?tag=v1.8.1)",
- "serde",
- "serde_derive",
- "serde_json",
- "smol_str",
- "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "wp-editor"
-version = "0.2.1"
+version = "1.0.0"
 dependencies = [
  "actix-files",
  "actix-multipart",
  "actix-web",
  "anyhow",
+ "base64 0.22.1",
  "cargo_metadata",
  "chrono",
  "clap",
  "config",
  "futures-util",
  "mime_guess",
+ "orion-error",
  "regex",
  "rust-embed",
  "sea-orm",
@@ -5727,19 +5711,20 @@ dependencies = [
  "wp-connector-api",
  "wp-ctrl-api",
  "wp-data-fmt",
+ "wp-data-utils",
  "wp-editor-migrations",
+ "wp-engine",
  "wp-enrich-api",
  "wp-error",
  "wp-knowledge",
  "wp-lang",
  "wp-log",
  "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "wp-oml 1.8.1 (git+https://github.com/wp-labs/wp-engine?tag=v1.8.1)",
+ "wp-oml",
  "wp-parse-api",
  "wp-parser 1.8.1 (git+https://github.com/wp-labs/wp-engine?tag=v1.8.1)",
  "wp-proj",
  "wp-specs",
- "wp_docs",
  "zip",
  "zip-extract",
 ]
@@ -5819,14 +5804,14 @@ dependencies = [
  "wp-connector-api",
  "wp-ctrl-api",
  "wp-data-fmt",
- "wp-data-utils 1.8.1",
+ "wp-data-utils",
  "wp-enrich-api",
  "wp-error",
  "wp-knowledge",
  "wp-lang",
  "wp-log",
  "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "wp-oml 1.8.1",
+ "wp-oml",
  "wp-parse-api",
  "wp-parser 1.8.1",
  "wp-specs",
@@ -5899,7 +5884,7 @@ dependencies = [
  "toml 0.9.11+spec-1.1.0",
  "wildmatch",
  "wp-data-fmt",
- "wp-data-utils 1.8.1",
+ "wp-data-utils",
  "wp-error",
  "wp-log",
  "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -6056,63 +6041,13 @@ dependencies = [
  "wildmatch",
  "winnow",
  "wp-data-fmt",
- "wp-data-utils 1.8.1",
+ "wp-data-utils",
  "wp-error",
  "wp-knowledge",
  "wp-lang",
  "wp-log",
  "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "wp-parser 1.8.1",
- "wp-specs",
-]
-
-[[package]]
-name = "wp-oml"
-version = "1.8.1"
-source = "git+https://github.com/wp-labs/wp-engine?tag=v1.8.1#34842f3efb1f5b7b6951d6eeff93837470e18516"
-dependencies = [
- "anyhow",
- "arcstr",
- "async-trait",
- "base64 0.22.1",
- "chrono",
- "contracts",
- "derive-getters",
- "derive_builder",
- "encoding_rs",
- "enum_dispatch",
- "escape8259",
- "html-escape",
- "imap-types",
- "ipnet",
- "lazy_static",
- "log",
- "md5",
- "once_cell",
- "orion-error",
- "orion_conf",
- "orion_exp 1.8.1 (git+https://github.com/wp-labs/wp-engine?tag=v1.8.1)",
- "parse-display",
- "parse-display-derive",
- "serde",
- "serde_derive",
- "serde_json",
- "strfmt",
- "strum 0.27.2",
- "strum_macros 0.27.2",
- "thiserror 2.0.17",
- "toml 0.9.11+spec-1.1.0",
- "url",
- "wildmatch",
- "winnow",
- "wp-data-fmt",
- "wp-data-utils 1.8.1 (git+https://github.com/wp-labs/wp-engine?tag=v1.8.1)",
- "wp-error",
- "wp-knowledge",
- "wp-lang",
- "wp-log",
- "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "wp-parser 1.8.1 (git+https://github.com/wp-labs/wp-engine?tag=v1.8.1)",
  "wp-specs",
 ]
 
@@ -6165,13 +6100,13 @@ dependencies = [
  "wp-cli-core",
  "wp-config",
  "wp-connector-api",
- "wp-data-utils 1.8.1",
+ "wp-data-utils",
  "wp-engine",
  "wp-error",
  "wp-knowledge",
  "wp-lang",
  "wp-log",
- "wp-oml 1.8.1",
+ "wp-oml",
 ]
 
 [[package]]
@@ -6219,11 +6154,6 @@ dependencies = [
  "wp-log",
  "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
-
-[[package]]
-name = "wp_docs"
-version = "1.0.0"
-source = "git+https://github.com/wp-labs/wp-docs.git?branch=main#7338a560b18b601cb11a23a34570e92f602041ba"
 
 [[package]]
 name = "writeable"

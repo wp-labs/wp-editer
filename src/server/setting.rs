@@ -36,25 +36,33 @@ impl Default for WebConf {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct RepoConf {
+    pub wpl_rule_repo: String,
+    pub oml_rule_repo: String,
+}
+
+impl Default for RepoConf {
+    fn default() -> Self {
+        RepoConf {
+            wpl_rule_repo: default_project_root(),
+            oml_rule_repo: default_oml_rule_repo(),
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Clone, Default)]
 pub struct Setting {
     pub log: LogConf,
     pub web: WebConf,
-    #[serde(default = "default_project_root")]
-    pub project_root: String,
+    pub repo: RepoConf,
+}
+
+fn default_oml_rule_repo() -> String {
+    "./rules/models/oml".to_string()
 }
 
 fn default_project_root() -> String {
-    "./project_root".to_string()
-}
-
-impl Default for Setting {
-    fn default() -> Self {
-        Setting {
-            log: LogConf::default(),
-            web: WebConf::default(),
-            project_root: default_project_root(),
-        }
-    }
+    "./rules".to_string()
 }
 
 impl Setting {

@@ -20,4 +20,4 @@ pub async fn get_version() -> impl Responder {
     })
 }
 
-pub use debug::{debug_parse, debug_transform};
+pub use debug::{debug_parse, debug_transform, decode_base64, oml_format, wpl_format};

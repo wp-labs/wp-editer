@@ -11,7 +11,7 @@
 /dist
 temp.zip
 template.zip
-
+web/dist/doc
 # misc
 .DS_Store
 *.swp
@@ -47,3 +47,5 @@ project_root/
 .*/
 !.github/
 CLAUDE.md
+web/vibecoding
+vibecoding

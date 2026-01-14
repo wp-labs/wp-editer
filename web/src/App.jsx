@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
+import enUS from 'antd/locale/en_US';
 import zhCN from 'antd/locale/zh_CN';
 import SimulateDebugPage from '@/views/pages/simulate-debug';
-import httpRequest from '@/services/request';
+import { useGitHubStarReminder } from '@/hooks/useGitHubStarReminder';
+import Header from '@/views/components/Header';
+import WechatModal from '@/views/components/WechatModal';
+import GitHubStarModal from '@/views/components/GitHubStarModal';
 
 // Ant Design 自定义主题配置
 const theme = {
@@ -20,81 +24,21 @@ const theme = {
   },
 };
 
-// 简化版导航栏组件，只包含logo展示
-function SimpleHeader() {
-  const [versionInfo, setVersionInfo] = useState({ wpEditor: '', warpParse: '', warpEngine: '' });
+function App() {
+  const [wechatModalOpen, setWechatModalOpen] = useState(false);
+  const [antdLocale, setAntdLocale] = useState(enUS);
+  const { showReminder, closeReminder, goToGitHub } = useGitHubStarReminder();
 
-  // 获取版本信息：wp-editor 与 warp-parse/warp-engine
+  // 初始化时根据保存的语言设置 Ant Design locale
   useEffect(() => {
-    const fetchVersion = async () => {
-      try {
-        const response = await httpRequest.get('/version');
-        setVersionInfo({
-          wpEditor: response?.wp_editor || '',
-          warpParse: response?.warp_parse || '',
-          warpEngine: response?.warp_engine || '',
-        });
-      } catch (error) {
-        // 忽略版本获取失败，不影响主流程
-      }
-    };
-
-    fetchVersion();
+    const savedLang = localStorage.getItem('language') || 'en-US';
+    setAntdLocale(savedLang === 'zh-CN' ? zhCN : enUS);
   }, []);
 
   return (
-    <header className="main-header">
-      <div className="brand" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
-        <img
-          src="/assets/images/index.png"
-          alt="WpEditor"
-          className="logo"
-          style={{ height: '70px' }}
-        />
-        <span className="divider">|</span>
-        {/* 确保显示subtitle */}
-        <span
-          className="subtitle"
-          style={{ marginRight: 10, color: '#fff', fontSize: '20px', fontWeight: '600' }}
-        >
-          Wp Editor
-        </span>
-      </div>
-      {/* 版本信息移到右侧 */}
-      <span
-        className="version-info"
-        style={{
-          fontSize: 12,
-          color: '#fff',
-          display: 'inline-block',
-          backgroundColor: 'rgba(255,255,255,0.1)',
-          padding: '8px 12px',
-          borderRadius: '4px',
-          lineHeight: '1.4',
-        }}
-      >
-        {versionInfo.wpEditor && (
-          <span style={{ display: 'block' }}>wp-editor: {versionInfo.wpEditor}</span>
-        )}
-        {/* 显示warp-engine，如果没有则显示warp-parse */}
-        {versionInfo.warpEngine || versionInfo.warpParse ? (
-          <span style={{ display: 'block' }}>
-            {versionInfo.warpEngine ? 'warp-engine' : 'warp-parse'}:{' '}
-            {versionInfo.warpEngine || versionInfo.warpParse}
-          </span>
-        ) : (
-          <span style={{ opacity: 0.7, display: 'block' }}>warp-engine: -</span>
-        )}
-      </span>
-    </header>
-  );
-}
-
-function App() {
-  return (
-    <ConfigProvider locale={zhCN} theme={theme}>
+    <ConfigProvider locale={antdLocale} theme={theme}>
       <div className="app-shell">
-        <SimpleHeader />
+        <Header onWechatClick={() => setWechatModalOpen(true)} onLocaleChange={setAntdLocale} />
         <div className="app-shell-body">
           <div className="main-content">
             <Routes>
@@ -104,6 +48,9 @@ function App() {
             </Routes>
           </div>
         </div>
+
+        <WechatModal open={wechatModalOpen} onCancel={() => setWechatModalOpen(false)} />
+        <GitHubStarModal open={showReminder} onCancel={closeReminder} onGoToGitHub={goToGitHub} />
       </div>
     </ConfigProvider>
   );

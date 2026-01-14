@@ -63,6 +63,10 @@ pub async fn start() -> std::io::Result<()> {
             // 调试 API
             .service(api::debug_parse)
             .service(api::debug_transform)
+            .service(api::debug::debug_examples)
+            .service(api::wpl_format)
+            .service(api::oml_format)
+            .service(api::decode_base64)
             // 默认路由：未匹配的 /api/* 返回 JSON 404，其余走静态文件（前端 SPA）
             .default_service(web::to(|req: HttpRequest| async move {
                 if req.path().starts_with("/api/") {

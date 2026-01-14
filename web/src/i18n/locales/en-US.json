@@ -1,0 +1,102 @@
+{
+  "header": {
+    "editor": "Editor",
+    "slack": "Slack",
+    "reddit": "Reddit",
+    "github": "GitHub",
+    "juejin": "Juejin",
+    "helpCenter": "Help Center",
+    "version": {
+      "wpEditor": "wp-editor",
+      "warpEngine": "warp-engine",
+      "warpParse": "warp-parse"
+    }
+  },
+  "modal": {
+    "wechat": {
+      "title": "Join WarpPase Official Support Group",
+      "scanTip": "Scan QR code to join WeChat group"
+    },
+    "github": {
+      "title": "Support Our Project",
+      "thanks": "Thank you for using",
+      "description": "If you find our project helpful, please consider giving us a Star on GitHub ⭐️",
+      "support": "Your support motivates us to keep improving!",
+      "later": "Later",
+      "goToGitHub": "Go to GitHub"
+    }
+  },
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "clear": "Clear",
+    "loading": "Loading...",
+    "noData": "No Data"
+  },
+  "simulateDebug": {
+    "tabs": {
+      "parse": "Parse",
+      "convert": "Convert"
+    },
+    "examples": {
+      "title": "Rule Examples",
+      "desc": "Click example to auto-fill logs and rules",
+      "loading": "Loading examples...",
+      "noData": "No example data",
+      "noAvailable": "No examples available, showing default examples",
+      "fetchError": "Failed to fetch examples",
+      "unnamed": "Unnamed Example"
+    },
+    "logData": {
+      "title": "Log Data",
+      "desc": "Paste raw logs collected in real-time, supports text and file import.",
+      "base64Decode": "Base64 Decode",
+      "clearAll": "Clear All",
+      "base64Error": "Base64 decode failed"
+    },
+    "parseRule": {
+      "title": "Parse Rule",
+      "format": "Format",
+      "parse": "Parse",
+      "parsing": "Parsing...",
+      "formatError": "Failed to format WPL code"
+    },
+    "parseResult": {
+      "title": "Parse Result",
+      "tableMode": "Table Mode",
+      "jsonMode": "JSON Mode",
+      "showEmpty": "Show Empty",
+      "clickToParse": "Click 'Parse' button to view results",
+      "willShowHere": "Parse results will be displayed here",
+      "parseFailed": "Parse Failed",
+      "errorCode": "Error Code",
+      "parseError": "Parse execution failed, please try again later"
+    },
+    "omlInput": {
+      "title": "OML Input",
+      "desc": "Complete conversion logic based on parse results.",
+      "format": "Format",
+      "convert": "Convert",
+      "converting": "Converting...",
+      "clear": "Clear",
+      "formatError": "Failed to format OML code",
+      "fillOmlWarning": "Please fill in OML conversion rules first"
+    },
+    "convertResult": {
+      "title": "Convert Result",
+      "willShowHere": "Convert results will be displayed here",
+      "convertFailed": "Convert Failed",
+      "convertError": "Convert execution failed, please try again later"
+    },
+    "table": {
+      "no": "no",
+      "meta": "meta",
+      "name": "name",
+      "value": "value"
+    }
+  }
+}

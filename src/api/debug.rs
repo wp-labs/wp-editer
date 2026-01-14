@@ -1,17 +1,19 @@
-// 模拟调试 API
-use crate::ParsedField;
-use crate::error::AppError;
-use crate::utils::{convert_record, record_to_fields, warp_check_record};
-use actix_web::{HttpResponse, post, web};
-use serde::{Deserialize, Serialize};
-use std::sync::Arc;
-use tokio::sync::Mutex;
-use wp_data_fmt::{DataFormat, FormatType, Json};
-use wp_model_core::model::DataRecord;
-use wp_model_core::model::fmt_def::TextFmt;
+use std::collections::HashMap;
+use std::path::PathBuf;
 
-// SharedRecord 类型定义：用于在 API 之间共享解析结果
-pub type SharedRecord = Arc<Mutex<Option<DataRecord>>>;
+// 模拟调试 API
+use crate::error::AppError;
+use crate::server::examples;
+use crate::utils::{convert_record, record_to_fields, warp_check_record};
+use crate::{OmlFormatter, ParsedField, Setting, WplFormatter};
+use actix_web::{HttpResponse, get, post, web};
+use base64::Engine;
+use base64::engine::general_purpose;
+use serde::{Deserialize, Serialize};
+use wp_data_fmt::{DataFormat, FormatType, Json};
+use wp_model_core::model::data::Record;
+use wp_model_core::model::fmt_def::TextFmt;
+use wp_model_core::model::{DataField, DataRecord};
 
 #[derive(Deserialize)]
 pub struct DebugParseRequest {
@@ -22,23 +24,15 @@ pub struct DebugParseRequest {
 
 // 新版调试接口：解析日志并返回字段列表
 #[post("/api/debug/parse")]
-pub async fn debug_parse(
-    shared_record: web::Data<SharedRecord>,
-    req: web::Json<DebugParseRequest>,
-) -> Result<HttpResponse, AppError> {
+pub async fn debug_parse(req: web::Json<DebugParseRequest>) -> Result<HttpResponse, AppError> {
     // 调用 warp_check_record 获取 DataRecord
     let record = warp_check_record(&req.rules, &req.logs)?;
 
-    // 存入 SharedRecord，供后续转换使用
-    let mut record_guard = shared_record.lock().await;
-    *record_guard = Some(record.clone());
-
-    // 直接返回 ParsedField 列表，由 Actix 负责序列化为 JSON
-    let parsed_fields = record_to_fields(&record);
+    // 直接返回 DataField 列表，由 Actix 负责序列化为 JSON
     let formatter = FormatType::from(&TextFmt::Json);
     let json_string = formatter.format_record(&record);
-    Ok(HttpResponse::Ok().json(RecordResponse {
-        fields: parsed_fields,
+    Ok(HttpResponse::Ok().json(RecordResponseRaw {
+        fields: record,
         format_json: json_string,
     }))
 }
@@ -46,35 +40,53 @@ pub async fn debug_parse(
 #[derive(Deserialize)]
 pub struct DebugTransformRequest {
     pub connection_id: Option<i32>,
-    pub parse_result: serde_json::Value,
+    pub parse_result: ParseResultWrapper,
     pub oml: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct ParseResultWrapper {
+    pub fields: Vec<DataField>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct RecordResponse {
+    pub fields: Vec<DataField>,
+    pub format_json: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct RecordResponseWithArray {
     pub fields: Vec<ParsedField>,
+    pub format_json: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct RecordResponseRaw {
+    pub fields: DataRecord,
     pub format_json: String,
 }
 
 // 新版调试接口：基于解析结果和 OML 进行转换
 #[post("/api/debug/transform")]
 pub async fn debug_transform(
-    shared_record: web::Data<SharedRecord>,
     req: web::Json<DebugTransformRequest>,
 ) -> Result<HttpResponse, AppError> {
-    let record_guard = shared_record.lock().await;
-    let record = record_guard.as_ref().ok_or(AppError::NoParseResult)?;
+    let DebugTransformRequest {
+        connection_id: _,
+        parse_result,
+        oml,
+    } = req.into_inner();
+    let parse_result = parse_result.fields.clone();
+    let res = Record::from(parse_result);
+    let transformed = convert_record(&oml, res)?;
 
-    let transformed = convert_record(&req.oml, record.clone())?;
-
-    //转换标准 json
     let formatter = FormatType::Json(Json);
     let json_string = formatter.format_record(&transformed);
 
-    //转化为标准的 fields
-    let parsed_fields = record_to_fields(&transformed);
+    let parsed_fields: Vec<ParsedField> = record_to_fields(&transformed);
 
-    Ok(HttpResponse::Ok().json(RecordResponse {
+    Ok(HttpResponse::Ok().json(RecordResponseWithArray {
         fields: parsed_fields,
         format_json: json_string,
     }))
@@ -116,4 +128,58 @@ pub async fn debug_knowledge_query(
     let _sql = req.sql.clone();
 
     todo!()
+}
+
+#[get("/api/debug/examples")]
+pub async fn debug_examples() -> HttpResponse {
+    let setting = Setting::load();
+    let mut rule_map = HashMap::new();
+    match examples::wpl_examples(
+        PathBuf::from(&setting.repo.wpl_rule_repo),
+        PathBuf::from(&setting.repo.oml_rule_repo),
+        &mut rule_map,
+    ) {
+        Ok(_) => HttpResponse::Ok().json(rule_map),
+        Err(e) => {
+            println!("加载 WPL 规则失败: {:?}", e);
+            HttpResponse::InternalServerError().json(serde_json::json!({
+                "success": false,
+                "error": {
+                    "code": "WPL_RULE_LOAD_ERROR",
+                    "message": "加载 WPL 规则失败",
+                    "detail": e.to_string()
+                }
+            }))
+        }
+    }
+}
+
+#[post("/api/debug/wpl/format")]
+pub async fn wpl_format(req: String) -> HttpResponse {
+    let formatter = WplFormatter::new();
+    let formatted = formatter.format_content(&req);
+    HttpResponse::Ok().json(formatted)
+}
+
+#[post("/api/debug/oml/format")]
+pub async fn oml_format(req: String) -> HttpResponse {
+    let formatter = OmlFormatter::new();
+    let formatted = formatter.format_content(&req);
+    HttpResponse::Ok().json(formatted)
+}
+
+#[post("/api/debug/decode/base64")]
+pub async fn decode_base64(req: String) -> HttpResponse {
+    let cleaned = req.replace(|c: char| c.is_whitespace(), "");
+    match general_purpose::STANDARD.decode(cleaned) {
+        Ok(decoded) => HttpResponse::Ok().json(String::from_utf8_lossy(&decoded)),
+        Err(e) => HttpResponse::BadRequest().json(serde_json::json!({
+            "success": false,
+            "error": {
+                "code": "BASE64_DECODE_ERROR",
+                "message": "Base64 解码失败",
+                "detail": e.to_string()
+            }
+        })),
+    }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "wp-editor"
-version = "0.2.1"
+version = "1.0.0"
 edition = "2024"
 build = "build.rs"
 
@@ -8,7 +8,6 @@ build = "build.rs"
 [build-dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-wp_docs = { git = "https://github.com/wp-labs/wp-docs.git", branch = "main" }
 
 
 [dependencies]
@@ -36,6 +35,8 @@ thiserror = "2.0"
 strum = { version = "0.26", features = ["derive"] }
 regex = "1.12"
 anyhow = "1"
+base64 = "0.22"
+orion-error = "0.5"
 
 
 # PostgreSQL 数据库支持 - SeaORM
@@ -62,19 +63,21 @@ wp-conf-base =  "0.1"
 wp-data-fmt  =  "0.1"
 wp-editor-migrations = { path = "crates/migrations" }
 
-wp_wpl = { package = "wp-lang",git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
-wp_oml = { package = "wp-oml", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
+wp-engine= { git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
+wp-lang= { package = "wp-lang",git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
+wp-oml = { package = "wp-oml", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
 wp_parser = { package = "wp-parser", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
 wp_proj = { package = "wp-proj", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
 wp_knowledge = { package = "wp-knowledge", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
-#wp-data-utils = { package = "wp-data-utils", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
+wp-data-utils = { package = "wp-data-utils", git = "https://github.com/wp-labs/wp-engine", tag = "v1.8.1" }
 
 
  [patch."https://github.com/wp-labs/wp-engine"]
  wp-engine     = { path = "../wp-engine" }
-# wp_data_utils = { path = "../wp-engine/crates/wp-data-utils" }
+ wp-data-utils = { path = "../wp-engine/crates/wp-data-utils" }
  wp-config     = { path = "../wp-engine/crates/wp-config" }
- wp-lang       = { path = "../wp-engine/crates/wp-lang" }
+ wp-lang= { path = "../wp-engine/crates/wp-lang" }
+ wp-oml        = { path = "../wp-engine/crates/wp-oml" }
  wp-knowledge  = { path = "../wp-engine/crates/wp-knowledge" }
  wp-cli-core   = { path = "../wp-engine/crates/wp-cli-core" }
  wp-proj       = { path = "../wp-engine/crates/wp-proj" }
