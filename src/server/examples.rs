@@ -2,6 +2,8 @@ use crate::{OmlFormatter, WplFormatter};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fs::File, io::Read, path::PathBuf};
 use wp_lang::WplCode;
+use wp_oml::parser::oml_parse;
+use wp_specs::WildArray;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct WplExample {
@@ -13,7 +15,7 @@ pub struct WplExample {
 
 pub fn wpl_examples(
     wpl_path: PathBuf,
-    oml_path: PathBuf,
+    oml_examples: &Vec<(WildArray, String)>,
     examples: &mut BTreeMap<String, WplExample>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     if wpl_path.is_file() {
@@ -21,7 +23,6 @@ pub fn wpl_examples(
             return Ok(());
         }
         let wpl_formatter = WplFormatter::new();
-        let oml_formatter = OmlFormatter::new();
         let mut example = WplExample::default();
         let mut file = File::open(&wpl_path)?;
         // 获取原始的wpl代码
@@ -59,26 +60,15 @@ pub fn wpl_examples(
                 .strip_prefix('/')
                 .unwrap_or(&rule.name)
                 .to_string();
-            let oml_dir = oml_path.join(pkg_name).join(&rule_name);
-            if oml_dir.is_dir()
-                && let Ok(entries) = oml_dir.read_dir()
+            let wpl_name = format!("{}/{}", pkg_name, rule_name);
+            println!("wpl_name: {}", wpl_name);
+            // 在 OML 规则示例中查找与当前 WPL 规则匹配的 OML 代码
+            if let Some((_, oml_code)) = oml_examples
+                .iter()
+                .find(|(rules, _)| rules.0.iter().any(|r| r.matches(&wpl_name)))
             {
-                entries.for_each(|entry| {
-                    if let Ok(entry) = entry {
-                        let path = entry.path();
-                        if path.extension().map(|ext| ext == "oml").unwrap_or(false)
-                            && let Ok(mut file) = File::open(&path)
-                        {
-                            let mut oml_contents = String::new();
-                            let res = file.read_to_string(&mut oml_contents);
-                            if res.is_ok() {
-                                example.oml_code = oml_formatter.format_content(&oml_contents);
-                            } else {
-                                println!("read oml file failed: {:?}", res);
-                            }
-                        }
-                    }
-                });
+                // 关联匹配的 OML 代码到当前示例
+                example.oml_code = oml_code.clone();
             }
         });
         examples.insert(example.name.clone(), example);
@@ -87,12 +77,42 @@ pub fn wpl_examples(
     wpl_path.read_dir()?.for_each(|entry| {
         if let Ok(entry) = entry {
             let path = entry.path();
-            let _ = wpl_examples(path, oml_path.clone(), examples);
+            let _ = wpl_examples(path, oml_examples, examples);
         }
     });
     Ok(())
 }
 
+pub fn oml_examples(
+    oml_path: PathBuf,
+) -> Result<Vec<(WildArray, String)>, Box<dyn std::error::Error>> {
+    let mut results = Vec::new();
+    if oml_path.is_file() {
+        if oml_path.extension().and_then(|ext| ext.to_str()) != Some("oml") {
+            return Ok(results);
+        }
+        let oml_formatter = OmlFormatter::new();
+        let mut file = File::open(&oml_path)?;
+        // 获取原始的oml代码
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        let oml_fmt = oml_formatter.format_content(&contents);
+        let code = oml_parse(&mut contents.as_str(), "")
+            .map_err(|e| anyhow::anyhow!("parse example oml failed: {}", e))?;
+        results.push((code.rules().clone(), oml_fmt));
+        return Ok(results);
+    }
+    oml_path.read_dir()?.for_each(|entry| {
+        if let Ok(entry) = entry {
+            let path = entry.path();
+            let res = oml_examples(path);
+            if let Ok(mut items) = res {
+                results.append(&mut items);
+            }
+        }
+    });
+    Ok(results)
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -124,7 +144,7 @@ mod tests {
         let mut examples = BTreeMap::new();
         let result = wpl_examples(
             temp_dir.path().to_path_buf(),
-            temp_dir.path().to_path_buf(),
+            &oml_examples(temp_dir.path().to_path_buf()).unwrap(),
             &mut examples,
         );
 
@@ -144,7 +164,11 @@ mod tests {
         fs::write(&file_path, invalid_content).unwrap();
 
         let mut examples = BTreeMap::new();
-        let result = wpl_examples(file_path, temp_dir.path().to_path_buf(), &mut examples);
+        let result = wpl_examples(
+            file_path,
+            &oml_examples(temp_dir.path().to_path_buf()).unwrap(),
+            &mut examples,
+        );
         assert!(result.is_err());
     }
 
@@ -152,8 +176,12 @@ mod tests {
     fn test_wpl_examples_non_existent_path() {
         let non_existent = PathBuf::from("/non/existent/path/xyz.wpl");
         let mut examples = BTreeMap::new();
-
-        let result = wpl_examples(non_existent.clone(), non_existent, &mut examples);
+        let temp_dir = TempDir::new().unwrap();
+        let result = wpl_examples(
+            non_existent.clone(),
+            &oml_examples(temp_dir.path().to_path_buf()).unwrap(),
+            &mut examples,
+        );
         assert!(result.is_err());
     }
 }

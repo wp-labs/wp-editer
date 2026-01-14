@@ -37,6 +37,7 @@ regex = "1.12"
 anyhow = "1"
 base64 = "0.22"
 orion-error = "0.5"
+tempfile = "3.24"
 
 
 # PostgreSQL 数据库支持 - SeaORM

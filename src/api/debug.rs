@@ -134,23 +134,37 @@ pub async fn debug_knowledge_query(
 pub async fn debug_examples() -> HttpResponse {
     let setting = Setting::load();
     let mut rule_map = BTreeMap::new();
+
+    // 加载 OML 规则
+    let oml_result = match examples::oml_examples(PathBuf::from(&setting.repo.oml_rule_repo)) {
+        Ok(result) => result,
+        Err(e) => {
+            return HttpResponse::InternalServerError().json(serde_json::json!({
+                "success": false,
+                "error": {
+                    "code": "OML_RULE_LOAD_ERROR",
+                    "message": "加载 OML 规则失败",
+                    "detail": e.to_string()
+                }
+            }));
+        }
+    };
+
+    // 加载 WPL 规则
     match examples::wpl_examples(
         PathBuf::from(&setting.repo.wpl_rule_repo),
-        PathBuf::from(&setting.repo.oml_rule_repo),
+        &oml_result,
         &mut rule_map,
     ) {
         Ok(_) => HttpResponse::Ok().json(rule_map),
-        Err(e) => {
-            println!("加载 WPL 规则失败: {:?}", e);
-            HttpResponse::InternalServerError().json(serde_json::json!({
-                "success": false,
-                "error": {
-                    "code": "WPL_RULE_LOAD_ERROR",
-                    "message": "加载 WPL 规则失败",
-                    "detail": e.to_string()
-                }
-            }))
-        }
+        Err(e) => HttpResponse::InternalServerError().json(serde_json::json!({
+            "success": false,
+            "error": {
+                "code": "WPL_RULE_LOAD_ERROR",
+                "message": "加载 WPL 规则失败",
+                "detail": e.to_string()
+            }
+        })),
     }
 }
 
