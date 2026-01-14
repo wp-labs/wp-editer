@@ -2163,7 +2163,7 @@ mark.diff-highlight {
 
 .example-list--compact {
   width: 100%;
-  max-height: 320px;
+  max-height: calc(100vh - 360px); /* 视口高度减去顶部导航和边距 */
   overflow-y: auto;
 }
 
@@ -2176,6 +2176,7 @@ mark.diff-highlight {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  flex-shrink: 0; /* 防止标题被压缩 */
 }
 
 .example-list__header--inline {

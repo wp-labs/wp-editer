@@ -15,7 +15,7 @@ const LanguageSwitcher = ({ onLocaleChange }) => {
     onLocaleChange(newLang === 'zh-CN' ? zhCN : enUS);
   };
 
-  const currentLang = i18n.language === 'zh-CN' ? '中文' : 'EN';
+  const currentLang = i18n.language === 'zh-CN' ? 'EN' : '中文';
 
   return (
     <Button
