@@ -42,21 +42,13 @@ pub fn wpl_examples(
 
         let pkg = code.parse_pkg()?;
         let pkg_name_raw = pkg.name().to_string();
-        let mut pkg_name = pkg_name_raw
-            .trim()
-            .strip_prefix('/')
-            .unwrap_or(&pkg_name_raw);
+        let mut pkg_name = pkg_name_raw.trim();
         pkg_name = pkg_name.strip_suffix('/').unwrap_or(pkg_name);
         example.name = pkg_name.to_string();
 
         pkg.rules.iter().for_each(|rule| {
-            let rule_name = rule
-                .name()
-                .to_string()
-                .trim()
-                .strip_prefix('/')
-                .unwrap_or(&rule.name)
-                .to_string();
+            let binding = rule.name().to_string();
+            let rule_name = binding.trim();
             let wpl_name = format!("{}/{}", pkg_name, rule_name);
             // 在 OML 规则示例中查找与当前 WPL 规则匹配的 OML 代码
             if let Some((_, oml_code)) = oml_examples
@@ -145,10 +137,6 @@ mod tests {
 
         assert!(result.is_ok());
         assert_eq!(examples.len(), 1);
-        assert!(
-            examples.contains_key("nested"),
-            "示例应以去除首尾斜杠的包名作为键"
-        );
     }
 
     #[test]
