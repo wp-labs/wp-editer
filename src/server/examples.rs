@@ -1,6 +1,6 @@
 use crate::{OmlFormatter, WplFormatter};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fs::File, io::Read, path::PathBuf};
+use std::{collections::BTreeMap, fs::File, io::Read, path::PathBuf};
 use wp_wpl::WplCode;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -14,7 +14,7 @@ pub struct WplExample {
 pub fn wpl_examples(
     wpl_path: PathBuf,
     oml_path: PathBuf,
-    examples: &mut HashMap<String, WplExample>,
+    examples: &mut BTreeMap<String, WplExample>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     if wpl_path.is_file() {
         if wpl_path.extension().and_then(|ext| ext.to_str()) != Some("wpl") {
@@ -121,7 +121,7 @@ mod tests {
 }"#;
         fs::write(&file_path, wpl_content).unwrap();
 
-        let mut examples = HashMap::new();
+        let mut examples = BTreeMap::new();
         let result = wpl_examples(
             temp_dir.path().to_path_buf(),
             temp_dir.path().to_path_buf(),
@@ -143,7 +143,7 @@ mod tests {
         let invalid_content = "this is not valid wpl content";
         fs::write(&file_path, invalid_content).unwrap();
 
-        let mut examples = HashMap::new();
+        let mut examples = BTreeMap::new();
         let result = wpl_examples(file_path, temp_dir.path().to_path_buf(), &mut examples);
         assert!(result.is_err());
     }
@@ -151,7 +151,7 @@ mod tests {
     #[test]
     fn test_wpl_examples_non_existent_path() {
         let non_existent = PathBuf::from("/non/existent/path/xyz.wpl");
-        let mut examples = HashMap::new();
+        let mut examples = BTreeMap::new();
 
         let result = wpl_examples(non_existent.clone(), non_existent, &mut examples);
         assert!(result.is_err());

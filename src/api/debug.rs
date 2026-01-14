@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 // 模拟调试 API
@@ -133,7 +133,7 @@ pub async fn debug_knowledge_query(
 #[get("/api/debug/examples")]
 pub async fn debug_examples() -> HttpResponse {
     let setting = Setting::load();
-    let mut rule_map = HashMap::new();
+    let mut rule_map = BTreeMap::new();
     match examples::wpl_examples(
         PathBuf::from(&setting.repo.wpl_rule_repo),
         PathBuf::from(&setting.repo.oml_rule_repo),

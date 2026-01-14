@@ -1,6 +1,6 @@
 [package]
 name = "wp-editor"
-version = "0.1.17"
+version = "1.0.0"
 edition = "2024"
 build = "build.rs"
 
@@ -36,7 +36,9 @@ thiserror = "~2.0"
 strum = { version = "~0.26", features = ["derive"] }
 regex = "~1.12"
 anyhow = "~1"
-
+base64 = "0.22.1"
+tempfile = "3.24.0"
+orion-error = "0.5.6"
 
 # PostgreSQL 数据库支持 - SeaORM
 sea-orm = { version = "1.1", features = [
@@ -47,12 +49,14 @@ sea-orm = { version = "1.1", features = [
 ] }
 wp-editor-migrations = { path = "crates/migrations" }
 
-wp_wpl = { package = "wp-lang",git = "{{GIT_REPO_SVR}}/wp-engine", tag = "{{WP_ENG_VER}}" }
+wp-error = "0.7"
+wp-data-fmt = "0.1"
+wp-model-core = "0.7"
+wp-parse-api = "0.7"
+
+wp_wpl = { package = "wp-lang", git = "{{GIT_REPO_SVR}}/wp-engine", tag = "{{WP_ENG_VER}}" }
 wp_oml = { package = "wp-oml", git = "{{GIT_REPO_SVR}}/wp-engine", tag = "{{WP_ENG_VER}}" }
 wp_parser = { package = "wp-parser", git = "{{GIT_REPO_SVR}}/wp-engine", tag = "{{WP_ENG_VER}}" }
-wp_proj = { package = "wp-proj", git = "{{GIT_REPO_SVR}}/wp-engine", tag = "{{WP_ENG_VER}}" }
 wp_knowledge = { package = "wp-knowledge", git = "{{GIT_REPO_SVR}}/wp-engine", tag = "{{WP_ENG_VER}}" }
 wp_data_utils = { package = "wp-data-utils", git = "{{GIT_REPO_SVR}}/wp-engine", tag = "{{WP_ENG_VER}}" }
-wp_model_core = { package = "wp-model-core", git = "{{GIT_REPO_SVR}}/wp-open-api", tag = "{{OPEN_API_VER}}"  }
-wp_parse_api = { package = "wp-parse-api", git = "{{GIT_REPO_SVR}}/wp-open-api", tag = "{{OPEN_API_VER}}"  }
-wp_data_fmt = { package = "wp-data-fmt", git = "{{GIT_REPO_SVR}}/wp-infras", tag = "{{WP_IFS_VER}}" }
+wp_engine = { package = "wp-engine", git = "{{GIT_REPO_SVR}}/wp-engine", tag = "{{WP_ENG_VER}}" }

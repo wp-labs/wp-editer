@@ -21,6 +21,6 @@ pub fn convert_record(oml: &str, record: DataRecord) -> Result<DataRecord, AppEr
         .map_err(|e| OMLCodeError::from_syntax(e, oml, ""))
         .map_err(|e| AppError::OmlTransform(anyhow::Error::new(e)))?;
     let mut cache = FieldQueryCache::with_capacity(10);
-    let target = model.transform(record, &mut cache);
+    let target = model.transform_ref(&record, &mut cache);
     Ok(target)
 }
