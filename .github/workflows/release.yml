@@ -10,25 +10,29 @@ env:
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
-  Release-Build:
+  build-matrix:
+    name: Build ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
       attestations: write
       id-token: write
     strategy:
+      fail-fast: false
       matrix:
-        target:
-          - x86_64-unknown-linux-gnu
-          - aarch64-apple-darwin
-        rustup_toolchain: [stable]
         include:
           - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
+            can-run: true
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            can-run: true
           - os: macos-14
             target: aarch64-apple-darwin
+            can-run: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -36,48 +40,155 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: ${{ matrix.rustup_toolchain }}
+          toolchain: stable
+          targets: ${{ matrix.target }}
 
       - name: Cargo build
+        env:
+          MACOSX_DEPLOYMENT_TARGET: ${{ runner.os == 'macOS' && '11.0' || '' }}
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Show version
+        if: matrix.can-run == true
         run: ./target/${{ matrix.target }}/release/wp-editor --version
 
-      - name: Archive (UNIX)
+      - name: Package artifacts
         run: |
+          set -euo pipefail
+          ARTIFACT="${{ github.event.repository.name }}-${{ github.ref_name }}-${{ matrix.target }}"
           mkdir -p artifacts
           cp -av target/${{ matrix.target }}/release/wp-editor artifacts/
-          tar -czf ${{ github.event.repository.name }}-${{ github.ref_name }}-${{ matrix.target }}.tar.gz  artifacts
-        if: ${{ ! startsWith(matrix.os, 'windows') }}
+          tar -czf "${ARTIFACT}.tar.gz" artifacts
 
       - name: Attest Build Provenance
         uses: actions/attest-build-provenance@v3
         continue-on-error: true
         with:
-          subject-path: ${{ github.event.repository.name }}-${{ github.ref_name }}-${{ matrix.target }}.*
+          subject-path: ${{ github.event.repository.name }}-${{ github.ref_name }}-${{ matrix.target }}.tar.gz
 
       - uses: actions/upload-artifact@v6
         with:
           name: ${{ github.event.repository.name }}-${{ github.ref_name }}-${{ matrix.target }}
-          path: ${{ github.event.repository.name }}-${{ github.ref_name }}-${{ matrix.target }}.*
+          path: ${{ github.event.repository.name }}-${{ github.ref_name }}-${{ matrix.target }}.tar.gz
           if-no-files-found: error
           retention-days: 7
 
-  Release:
-    needs: [Release-Build]
+  docker-build:
+    needs: [build-matrix]
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download amd64 artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ github.event.repository.name }}-${{ github.ref_name }}-x86_64-unknown-linux-gnu
+          path: docker-build/amd64-tar
+
+      - name: Download arm64 artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ github.event.repository.name }}-${{ github.ref_name }}-aarch64-unknown-linux-gnu
+          path: docker-build/arm64-tar
+
+      - name: Extract binaries
+        run: |
+          set -euo pipefail
+          cd docker-build
+          cd amd64-tar && tar -xzf *.tar.gz && cd ..
+          mkdir -p amd64
+          mv amd64-tar/artifacts/* amd64/
+          chmod +x amd64/*
+          rm -rf amd64-tar
+          cd arm64-tar && tar -xzf *.tar.gz && cd ..
+          mkdir -p arm64
+          mv arm64-tar/artifacts/* arm64/
+          chmod +x arm64/*
+          rm -rf arm64-tar
+          cp ../docker/Dockerfile .
+          cp -r ../docker/default_setting .
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: docker-build
+          file: docker-build/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v3
+        continue-on-error: true
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+  release:
+    needs: [build-matrix, docker-build]
     runs-on: ubuntu-22.04
     permissions:
       contents: write
-
     steps:
-      - name: Ensure artifacts dir exists
-        run: mkdir -p artifacts
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Extract changelog
+        id: changelog
+        run: |
+          bash scripts/extract-changelog.sh ${{ github.ref_name }}
+
+          # Read the extracted changelogs
+          CHANGELOG_ZH=$(cat /tmp/changelog-zh.md)
+          CHANGELOG_EN=$(cat /tmp/changelog-en.md)
+
+          # Save to output (escape for multiline)
+          echo "changelog_zh<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG_ZH" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "changelog_en<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG_EN" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Download Artifact
         uses: actions/download-artifact@v7
         with:
           path: artifacts
+          pattern: wp-editor*
           merge-multiple: true
 
       - name: Release
@@ -85,17 +196,66 @@ jobs:
         with:
           name: ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
-          generate_release_notes: true
+          generate_release_notes: false
           fail_on_unmatched_files: true
           body: |
-            Welcome to this new release of GalaxyFlow ${{ github.ref_name }}!
+            # WarpParse ${{ github.ref_name }}
 
-            All artifacts are signed with this repos identity using Sigstore.
-            You can verify the signatures using the `GitHub` CLI.
+            ${{ steps.changelog.outputs.changelog_en }}
+
+            ---
+
+            <details>
+            <summary>中文版 Changelog / Chinese Version</summary>
+
+            ${{ steps.changelog.outputs.changelog_zh }}
+
+            </details>
+
+            ---
+
+            ## 📦 Installation
+
+            ### Binary Downloads
+            Download the pre-built binaries for your platform from the assets below.
+
+            ### Quick Install Script
+            ```bash
+            curl -fsSL https://raw.githubusercontent.com/wp-labs/warp-parse/main/scripts/install.sh | bash
+            ```
+
+            ### Docker Image
+            Pull and run the Docker image:
+            ```shell
+            # Pull the specific version
+            docker pull ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+
+            # Or pull the latest version
+            docker pull ghcr.io/${{ github.repository }}:latest
+
+            # Run the container
+            docker run --rm ghcr.io/${{ github.repository }}:${{ github.ref_name }} wparse --help
+            ```
+
+            ## 🔐 Verification
+
+            All artifacts are signed with this repo's identity using Sigstore.
+            You can verify the signatures using the GitHub CLI:
 
             ```shell
-            gh attestation verify --owner ${{ github.repository_owner }} <my-artifact>
+            gh attestation verify --owner ${{ github.repository_owner }} <artifact-file>
             ```
+
+            ## 📚 Documentation
+
+            - [Release Management](https://github.com/wp-labs/warp-parse/blob/main/docs/RELEASE_MANAGEMENT.md)
+            - [User Guide](https://github.com/wp-labs/warp-parse/tree/main/docs/user-guide)
+            - [Performance Benchmarks](https://github.com/wp-labs/warp-parse/blob/main/docs/performance.md)
+
+            ## 🐛 Found an Issue?
+
+            Please report it at: https://github.com/wp-labs/warp-parse/issues
+
           token: ${{ secrets.GITHUB_TOKEN }}
-          prerelease: ${{ contains(github.ref, '-pre') }}
+          prerelease: ${{ contains(github.ref, '-alpha') || contains(github.ref, '-beta') }}
           files: artifacts/*
