@@ -203,9 +203,11 @@ function SimulateDebugPage() {
       } else if (response?.fields && Array.isArray(response?.fields?.items)) {
         fieldsData = response.fields.items;
       }
+      const processedFields = processFieldsForDisplay(fieldsData);
       setTransformResult({
-        fields: fieldsData,
+        fields: processedFields,
         formatJson: response.formatJson || '',
+        rawFields: fieldsData,
       });
       setTransformError(null);
     } catch (error) {
@@ -268,28 +270,81 @@ function SimulateDebugPage() {
    * @returns {string} 提取的值字符串
    */
   const extractValueFromObj = (valueObj) => {
-    if (!valueObj || typeof valueObj !== 'object') {
+    if (valueObj === null || valueObj === undefined) {
       return '';
     }
-    const keys = Object.keys(valueObj);
-    if (keys.length > 0 && valueObj[keys[0]] !== undefined) {
-      return String(valueObj[keys[0]]);
+
+    if (typeof valueObj !== 'object') {
+      return String(valueObj);
     }
-    return '';
+
+    // 处理普通数组
+    if (Array.isArray(valueObj)) {
+      const arrayValues = valueObj
+        .map(item => extractValueFromObj(item))
+        .filter(val => val !== '' && val !== null && val !== undefined);
+      return arrayValues.length > 0 ? `[${arrayValues.join(', ')}]` : '';
+    }
+
+    // 处理 Array 字段（包含 meta/name/value 结构的数组）
+    if (Array.isArray(valueObj.Array)) {
+      const arrayValues = valueObj.Array
+        .map(item => {
+          if (item && typeof item === 'object' && 'value' in item) {
+            return extractValueFromObj(item.value);
+          }
+          return extractValueFromObj(item);
+        })
+        .filter(val => val !== '' && val !== null && val !== undefined);
+      return arrayValues.length > 0 ? `[${arrayValues.join(', ')}]` : '';
+    }
+
+    const keys = Object.keys(valueObj);
+    if (keys.length === 0) {
+      return '';
+    }
+
+    const firstKey = keys[0];
+    const rawValue = valueObj[firstKey];
+
+    if (rawValue === null || rawValue === undefined) {
+      return '';
+    }
+
+    if (typeof rawValue === 'object') {
+      return extractValueFromObj(rawValue);
+    }
+
+    return String(rawValue);
   };
 
   /**
-   * 处理转换页解析结果，添加 no 序号并提取 value 值
+   * 处理需要展示的字段列表，添加 no 序号并提取 value 值
    * @param {Array} fields - 原始字段数组
    * @returns {Array} 处理后的字段数组
    */
-  const processTransformParseFields = (fields) => {
+  const processFieldsForDisplay = (fields) => {
     const list = Array.isArray(fields) ? fields : [];
-    return list.map((field, index) => ({
-      ...field,
-      no: index + 1,
-      value: extractValueFromObj(field?.value),
-    }));
+    return list.map((field, index) => {
+      // 处理 meta 字段
+      let metaDisplay = field.meta;
+      if (field.meta && typeof field.meta === 'object') {
+        if (field.meta.array) {
+          // 数组类型：显示为 "array:元素类型"
+          metaDisplay = `array:${field.meta.array}`;
+        } else {
+          // 其他对象类型：转换为 JSON 字符串
+          metaDisplay = JSON.stringify(field.meta);
+        }
+      }
+      
+      return {
+        ...field,
+        no: index + 1,
+        meta: metaDisplay,
+        value: extractValueFromObj(field?.value),
+      };
+    });
   };
 
   // 统一渲染解析错误内容，仅保留错误标题和错误码提示
@@ -654,7 +709,7 @@ function SimulateDebugPage() {
                           size="small"
                           columns={resultColumns}
                           dataSource={filterFieldsByShowEmpty(
-                            processTransformParseFields(transformParseResult.fields),
+                            processFieldsForDisplay(transformParseResult.fields),
                             transformParseShowEmpty
                           )}
                           pagination={false}
@@ -690,7 +745,7 @@ function SimulateDebugPage() {
                               {
                                 ...transformParseResult,
                                 fields: filterFieldsByShowEmpty(
-                                  processTransformParseFields(transformParseResult.fields),
+                                  processFieldsForDisplay(transformParseResult.fields),
                                   transformParseShowEmpty
                                 ),
                               },
