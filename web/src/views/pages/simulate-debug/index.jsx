@@ -569,15 +569,17 @@ function SimulateDebugPage() {
                         {parseError ? (
                           renderParseError()
                         ) : result ? (
-                          <Table
-                            size="small"
-                            columns={resultColumns}
-                            dataSource={filterFieldsByShowEmpty(result.fields, showEmpty)}
-                            pagination={false}
-                            rowKey="no"
-                            className="data-table compact"
-                            scroll={{ y: 400 }}
-                          />
+                          <div style={{ paddingBottom: '10px' }}>
+                            <Table
+                              size="small"
+                              columns={resultColumns}
+                              dataSource={filterFieldsByShowEmpty(result.fields, showEmpty)}
+                              pagination={false}
+                              rowKey="no"
+                              className="data-table compact"
+                              scroll={{ y: 'calc(100vh - 450px)', scrollToFirstRowOnChange: true }}
+                            />
+                          </div>
                         ) : (
                           <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
                             {t('simulateDebug.parseResult.clickToParse')}
@@ -705,18 +707,20 @@ function SimulateDebugPage() {
                         }`}
                     >
                       {transformParseResult ? (
-                        <Table
-                          size="small"
-                          columns={resultColumns}
-                          dataSource={filterFieldsByShowEmpty(
-                            processFieldsForDisplay(transformParseResult.fields),
-                            transformParseShowEmpty
-                          )}
-                          pagination={false}
-                          rowKey="no"
-                          className="data-table compact"
-                          scroll={{ y: 300 }}
-                        />
+                        <div style={{ paddingBottom: '10px' }}>
+                          <Table
+                            size="small"
+                            columns={resultColumns}
+                            dataSource={filterFieldsByShowEmpty(
+                              processFieldsForDisplay(transformParseResult.fields),
+                              transformParseShowEmpty
+                            )}
+                            pagination={false}
+                            rowKey="no"
+                            className="data-table compact"
+                            scroll={{ y: 'calc(50vh - 300px)', scrollToFirstRowOnChange: true }}
+                          />
+                        </div>
                       ) : (
                         <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
                           {t('simulateDebug.parseResult.willShowHere')}
@@ -802,18 +806,20 @@ function SimulateDebugPage() {
                       {transformError ? (
                         renderTransformError()
                       ) : transformResult ? (
-                        <Table
-                          size="small"
-                          columns={resultColumns}
-                          dataSource={filterFieldsByShowEmpty(
-                            transformResult.fields,
-                            transformResultShowEmpty
-                          )}
-                          pagination={false}
-                          rowKey="no"
-                          className="data-table compact"
-                          scroll={{ y: 300 }}
-                        />
+                        <div style={{ paddingBottom: '10px' }}>
+                          <Table
+                            size="small"
+                            columns={resultColumns}
+                            dataSource={filterFieldsByShowEmpty(
+                              transformResult.fields,
+                              transformResultShowEmpty
+                            )}
+                            pagination={false}
+                            rowKey="no"
+                            className="data-table compact"
+                            scroll={{ y: 'calc(50vh - 300px)', scrollToFirstRowOnChange: true }}
+                          />
+                        </div>
                       ) : (
                         <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
                           {t('simulateDebug.convertResult.willShowHere')}
