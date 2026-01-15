@@ -110,7 +110,7 @@ jobs:
           generate_release_notes: false
           fail_on_unmatched_files: true
           body: |
-            # WarpParse ${{ github.ref_name }}
+            # WP-Editor ${{ github.ref_name }}
 
             ${{ steps.changelog.outputs.changelog_en }}
 
@@ -124,36 +124,6 @@ jobs:
             </details>
 
             ---
-
-            ## 📦 Installation
-
-            ### Binary Downloads
-            Download the pre-built binaries for your platform from the assets below.
-
-            ### Quick Install Script
-            ```bash
-            curl -fsSL https://raw.githubusercontent.com/wp-labs/warp-parse/main/scripts/install.sh | bash
-            ```
-
-            ## 🔐 Verification
-
-            All artifacts are signed with this repo's identity using Sigstore.
-            You can verify the signatures using the GitHub CLI:
-
-            ```shell
-            gh attestation verify --owner ${{ github.repository_owner }} <artifact-file>
-            ```
-
-            ## 📚 Documentation
-
-            - [Release Management](https://github.com/wp-labs/warp-parse/blob/main/docs/RELEASE_MANAGEMENT.md)
-            - [User Guide](https://github.com/wp-labs/warp-parse/tree/main/docs/user-guide)
-            - [Performance Benchmarks](https://github.com/wp-labs/warp-parse/blob/main/docs/performance.md)
-
-            ## 🐛 Found an Issue?
-
-            Please report it at: https://github.com/wp-labs/warp-parse/issues
-
           token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: ${{ contains(github.ref, '-alpha') || contains(github.ref, '-beta') }}
           files: artifacts/*
