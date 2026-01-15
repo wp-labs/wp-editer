@@ -110,7 +110,7 @@ jobs:
           generate_release_notes: false
           fail_on_unmatched_files: true
           body: |
-            # WP-Editor ${{ github.ref_name }}
+            # wp-editor ${{ github.ref_name }}
 
             ${{ steps.changelog.outputs.changelog_en }}
 

@@ -23,6 +23,8 @@
 set -euo pipefail
 
 VERSION="${1:-}"
+# Use GITHUB_REF_NAME if available (set by GitHub Actions), otherwise fallback to 'main'
+GIT_REF="${GITHUB_REF_NAME:-main}"
 
 if [[ -z "$VERSION" ]]; then
     echo "Error: Version is required"
@@ -59,7 +61,7 @@ if [[ -f "CHANGELOG.md" ]]; then
         echo "⚠ No Chinese changelog found for version $VERSION"
         echo "## 更新日志" > /tmp/changelog-zh.md
         echo "" >> /tmp/changelog-zh.md
-        echo "请查看完整的 [CHANGELOG.md](https://github.com/wp-labs/warp-parse/blob/main/CHANGELOG.md)" >> /tmp/changelog-zh.md
+        echo "请查看完整的 [CHANGELOG.md](https://github.com/wp-labs/wp-editor/blob/${GIT_REF}/CHANGELOG.md)" >> /tmp/changelog-zh.md
     fi
 else
     echo "⚠ CHANGELOG.md not found"
@@ -93,7 +95,7 @@ if [[ -f "CHANGELOG.en.md" ]]; then
         echo "⚠ No English changelog found for version $VERSION"
         echo "## Changelog" > /tmp/changelog-en.md
         echo "" >> /tmp/changelog-en.md
-        echo "Please see the full [CHANGELOG.en.md](https://github.com/wp-labs/warp-parse/blob/main/CHANGELOG.en.md)" >> /tmp/changelog-en.md
+        echo "Please see the full [CHANGELOG.en.md](https://github.com/wp-labs/wp-editor/blob/${GIT_REF}/CHANGELOG.en.md)" >> /tmp/changelog-en.md
     fi
 else
     echo "⚠ CHANGELOG.en.md not found"
