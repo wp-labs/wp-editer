@@ -4,13 +4,8 @@ on:
   push:
     tags: ["v*.*.*"]
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 permissions:
   contents: read
-  packages: write
 
 jobs:
   build-matrix:
@@ -73,92 +68,8 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  docker-build:
-    needs: [build-matrix]
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-      packages: write
-      attestations: write
-      id-token: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Download amd64 artifact
-        uses: actions/download-artifact@v7
-        with:
-          name: ${{ github.event.repository.name }}-${{ github.ref_name }}-x86_64-unknown-linux-gnu
-          path: docker-build/amd64-tar
-
-      - name: Download arm64 artifact
-        uses: actions/download-artifact@v7
-        with:
-          name: ${{ github.event.repository.name }}-${{ github.ref_name }}-aarch64-unknown-linux-gnu
-          path: docker-build/arm64-tar
-
-      - name: Extract binaries
-        run: |
-          set -euo pipefail
-          cd docker-build
-          cd amd64-tar && tar -xzf *.tar.gz && cd ..
-          mkdir -p amd64
-          mv amd64-tar/artifacts/* amd64/
-          chmod +x amd64/*
-          rm -rf amd64-tar
-          cd arm64-tar && tar -xzf *.tar.gz && cd ..
-          mkdir -p arm64
-          mv arm64-tar/artifacts/* arm64/
-          chmod +x arm64/*
-          rm -rf arm64-tar
-          cp ../docker/Dockerfile .
-          cp -r ../docker/default_setting .
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (tags, labels)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=latest
-
-      - name: Build and push Docker image
-        id: push
-        uses: docker/build-push-action@v6
-        with:
-          context: docker-build
-          file: docker-build/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v3
-        continue-on-error: true
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
-
   release:
-    needs: [build-matrix, docker-build]
+    needs: [build-matrix]
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -222,19 +133,6 @@ jobs:
             ### Quick Install Script
             ```bash
             curl -fsSL https://raw.githubusercontent.com/wp-labs/warp-parse/main/scripts/install.sh | bash
-            ```
-
-            ### Docker Image
-            Pull and run the Docker image:
-            ```shell
-            # Pull the specific version
-            docker pull ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-
-            # Or pull the latest version
-            docker pull ghcr.io/${{ github.repository }}:latest
-
-            # Run the container
-            docker run --rm ghcr.io/${{ github.repository }}:${{ github.ref_name }} wparse --help
             ```
 
             ## 🔐 Verification
