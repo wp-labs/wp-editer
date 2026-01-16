@@ -466,9 +466,6 @@ function SimulateDebugPage() {
       </div>
       <section className="page-panels">
         <article className="panel is-visible">
-          <header className="panel-header">
-            <h2>{getPageTitle()}</h2>
-          </header>
           <section className="panel-body simulate-body">
             {/* 解析页面 */}
             {activeKey === 'parse' && (
