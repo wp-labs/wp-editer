@@ -44,6 +44,29 @@ const CodeJarEditor = forwardRef((props, ref) => {
     if (!editorRef.current) return;
 
     const jar = CodeJar(editorRef.current, highlight, { tab: '  ' });
+    
+    // 添加智能括号跳过功能
+    const handleKeyDown = (e) => {
+      const closingChars = [')', ']', '}', '"', "'"];
+      if (closingChars.includes(e.key)) {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const nextChar = range.endContainer.textContent?.[range.endOffset];
+          
+          // 如果下一个字符就是要输入的字符，跳过而不是插入
+          if (nextChar === e.key) {
+            e.preventDefault();
+            range.setStart(range.endContainer, range.endOffset + 1);
+            range.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(range);
+          }
+        }
+      }
+    };
+
+    editorRef.current.addEventListener('keydown', handleKeyDown);
     editorRef.current.addEventListener('scroll', syncScroll);
 
     jar.updateCode(props.value || '');
@@ -56,6 +79,7 @@ const CodeJarEditor = forwardRef((props, ref) => {
     jarRef.current = jar;
 
     return () => {
+      editorRef.current?.removeEventListener('keydown', handleKeyDown);
       editorRef.current?.removeEventListener('scroll', syncScroll);
       jar.destroy();
     };

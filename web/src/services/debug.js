@@ -124,15 +124,57 @@ export async function fetchDebugExamples() {
  * @returns {string} 提取的值字符串
  */
 const extractValueFromObj = (valueObj) => {
-  if (!valueObj || typeof valueObj !== 'object') {
+  if (valueObj === null || valueObj === undefined) {
     return '';
   }
-  // 取对象的第一个属性的值
-  const keys = Object.keys(valueObj);
-  if (keys.length > 0 && valueObj[keys[0]] !== undefined) {
-    return String(valueObj[keys[0]]);
+
+  if (typeof valueObj !== 'object') {
+    return String(valueObj);
   }
-  return '';
+
+  if (Array.isArray(valueObj)) {
+    const arrayValues = valueObj
+      .map(item => extractValueFromObj(item))
+      .filter(val => val !== '' && val !== null && val !== undefined);
+    return arrayValues.join(', ');
+  }
+
+  // 解析 { Array: [...] } 结构，提取每个子项的实际值
+  if (Array.isArray(valueObj.Array)) {
+    const arrayValues = valueObj.Array
+      .map(item => {
+        if (item && typeof item === 'object') {
+          if ('value' in item) {
+            return extractValueFromObj(item.value);
+          }
+          if ('Array' in item) {
+            return extractValueFromObj(item);
+          }
+        }
+        return '';
+      })
+      .filter(val => val !== '' && val !== null && val !== undefined);
+    return arrayValues.length > 0 ? `[${arrayValues.join(', ')}]` : '';
+  }
+
+  const keys = Object.keys(valueObj);
+  if (keys.length === 0) {
+    return '';
+  }
+
+  const firstKey = keys[0];
+  const rawValue = valueObj[firstKey];
+
+  if (rawValue === null || rawValue === undefined) {
+    return '';
+  }
+
+  if (typeof rawValue === 'object') {
+    // 嵌套对象或数组继续递归，尽量拿到最终值
+    return extractValueFromObj(rawValue);
+  }
+
+  return String(rawValue);
 };
 
 /**
@@ -144,11 +186,26 @@ const processFields = (fields) => {
   if (!Array.isArray(fields)) {
     return [];
   }
-  return fields.map((field, index) => ({
-    ...field,
-    no: index + 1,
-    value: extractValueFromObj(field?.value),
-  }));
+  return fields.map((field, index) => {
+    // 处理 meta 字段
+    let metaDisplay = field.meta;
+    if (field.meta && typeof field.meta === 'object') {
+      if (field.meta.array) {
+        // 数组类型：显示为 "array:元素类型"
+        metaDisplay = `array:${field.meta.array}`;
+      } else {
+        // 其他对象类型：转换为 JSON 字符串
+        metaDisplay = JSON.stringify(field.meta);
+      }
+    }
+    
+    return {
+      ...field,
+      no: index + 1,
+      meta: metaDisplay,
+      value: extractValueFromObj(field?.value),
+    };
+  });
 };
 
 export async function parseLogs(options) {
