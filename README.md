@@ -1,68 +1,133 @@
-# wp-editor
+<p align="center">
+  <img src="docs/WP—LOGO.V2.png" alt="Warp Parse Logo" width="200"/>
+</p>
 
-Wp Editor 是一个独立运行的 WEB 系统，专门用于日志解析和数据转换。它提供了完整的日志解析、数据转换和项目管理功能。
+<h1 align="center">WP Editor</h1>
+
+<p align="center">
+  <a href="https://github.com/wp-labs/wp-editor/actions/workflows/build-and-test.yml">
+    <img src="https://github.com/wp-labs/wp-editor/actions/workflows/build-and-test.yml/badge.svg" alt="Build & Test"/>
+  </a>
+  <a href="https://github.com/wp-labs/wp-editor/actions/workflows/release.yml">
+    <img src="https://github.com/wp-labs/wp-editor/actions/workflows/release.yml/badge.svg" alt="Release"/>
+  </a>
+  <a href="https://codecov.io/gh/wp-labs/wp-editor">
+    <img src="https://codecov.io/gh/wp-labs/wp-editor/branch/alpha/graph/badge.svg" alt="codecov"/>
+  </a>
+  <a href="https://www.elastic.co/licensing/elastic-license">
+    <img src="https://img.shields.io/badge/License-Elastic%202.0-green.svg" alt="License: Elastic 2.0"/>
+  </a>
+</p>
+
+---
+
+# Wp Editor
+
+Wp Editor 是一个面向 WPL/OML 的可视化调试与规则编辑 Web 应用，帮助你快速完成日志解析、字段转换和结果验证，并提供完整的前后端一体化部署体验。
+
+在线地址：`https://editor.warpparse.ai/`
+
+## 目录
+
+- 项目简介
+- 功能特性
+- 技术栈
+- 快速开始
+- 配置说明
+- 使用指南
+- API
+- 项目结构
+- 开发与测试
+- 部署
+- 许可证
+
+## 项目简介
+
+Wp Editor 以 Warp Parse 解析引擎为核心，提供 WPL 解析、OML 转换的在线调试能力。后端使用 Rust + Actix Web，前端使用 React + Vite，通过 `rust-embed` 将前端静态资源打包进服务端，单二进制即可运行。
 
 ## 功能特性
 
-- **日志解析**: 支持 WPL (Warp Parse Language) 规则，可解析多种格式的日志
-- **数据转换**: 支持 OML (Object Mapping Language) 规则，将解析后的数据转换为指定格式
-- **实时预览**: 支持实时解析和转换结果预览
-- **规则编辑**: 内置 CodeJar 编辑器，支持语法高亮和 Tab 键缩进
+- WPL 规则解析调试：输入日志 + WPL 规则，一键解析并查看字段结果
+- OML 规则转换调试：基于解析结果执行 OML 转换，支持多视图预览
+- 示例规则加载：从本地规则库读取 WPL/OML + sample 数据，快速复现
+- 规则格式化：WPL/OML 一键格式化，保证规则可读性
+- Base64 解码：对日志输入进行快速解码处理
+- 结果多视图：表格/JSON 切换，支持空值显示开关
+- 代码编辑体验：CodeJar 编辑器 + 行号 + 语法高亮 + Tab 缩进
+- 多语言界面与版本展示：支持中英文切换，展示 wp-editor 与 warp-engine 版本
 
 ## 技术栈
 
 ### 后端
 
-- **语言**: Rust (Edition 2024)
-- **Web 框架**: Actix Web 4.4
-- **核心引擎**: warp-flow
-- **异步运行时**: Tokio
+- Rust (Edition 2024)
+- Actix Web 4.x
+- Tokio
+- rust-embed
+- warp 系列核心库（WPL/OML 解析与转换）
 
 ### 前端
 
-- **框架**: React 19.0.0
-- **构建工具**: Vite 6.3.5
-- **UI 组件**: Ant Design 5.24.9
-- **编辑器**: CodeJar
+- React 19
+- Vite 5
+- Ant Design 5
+- CodeJar + Prism
+- i18next
 
 ## 快速开始
 
 ### 环境要求
 
-- Rust 1.70+
-- Node.js 20+
-- Cargo 包管理器
+- Rust Stable（支持 Edition 2024）
+- Node.js 18+（推荐 20+）
 
-### 安装步骤
+### 安装与构建
 
-1. **克隆项目**
+1. 克隆项目
 
 ```bash
 git clone <repository-url>
 cd wp-editor
 ```
 
-1. **构建后端**
+1. 构建前端（生成 `web/dist`）
+
+```bash
+cd web
+npm install
+npm run build
+cd ..
+```
+
+1. 构建并运行后端
 
 ```bash
 cargo build
+cargo run
 ```
 
-1. **运行服务**
+启动后访问：`http://localhost:8080`
+
+### 前端开发模式（可选）
 
 ```bash
-# 运行后端服务
+# 终端 1
 cargo run
 
+# 终端 2
+cd web
+npm run dev
 ```
 
-### 配置说明
+Vite 会自动代理 `/api` 到 `http://localhost:8080`。
 
-配置文件位于 `config/config.toml`:
+## 配置说明
+
+配置文件位于 `config/config.toml`：
 
 ```toml
 [log]
-level = "info,ctrl=info,launch=info"
+level = "debug"
 output = "Console"
 output_path = "./logs/"
 
@@ -71,181 +136,79 @@ host = "0.0.0.0"
 port = 8080
 
 [repo]
-wpl_rule_repo = "./rules"
-oml_rule_repo = "./rules/models/oml"
+wpl_rule_repo = "../wp-rule/models/wpl"
+oml_rule_repo = "../wp-rule/models/oml"
 ```
 
-### 处理个人Rule库路径
+- `wpl_rule_repo` / `oml_rule_repo` 支持绝对路径或相对路径
+- 示例数据默认读取同目录下的 `sample.dat`
+- 若每个人规则库路径不同，可通过软链接避免提交冲突
 
-由于每个人都可能有自己的Rule库路径，为了避免提交冲突，我们提供了以下解决方案：
-
-#### 方案：使用软链接（推荐）
-
-1. 创建软链接指向个人配置文件：
-
-   ```bash
-   ln -sf your/path/to/warp-rules/models/wpl ../wp-rule/models/wpl
-   ln -sf your/path/to/warp-rules/models/oml ../wp-rule/models/oml
-   ```
-
-2. 这样每次运行程序时都会使用个人配置，而不会影响团队共享的配置文件
-
-### 注意事项
-
-- `wpl_rule_repo`和`oml_rule_repo`可以是绝对路径或相对路径
-- 相对路径是相对于项目根目录的路径
-- 如果不指定这些路径，程序会使用默认路径：
-  - `wpl_rule_repo`: `../wp-rule/models/wpl`
-  - `oml_rule_repo`: `../wp-rule/models/oml`
+```bash
+ln -sf /your/path/to/warp-rules/models/wpl ../wp-rule/models/wpl
+ln -sf /your/path/to/warp-rules/models/oml ../wp-rule/models/oml
+```
 
 ## 使用指南
 
-### 1. 编写 WPL 规则
+可以通过点击示例库中的实例，查看学习。
 
-WPL (Warp Parse Language) 用于定义日志解析规则:
+### 1. 解析调试（WPL）
 
-```wpl
-package /example/simple {
-    rule nginx {
-        (ip:sip,2*_,time:recv_time<[,]>,http/request",http/status,digit,chars",http/agent",_")
-    }
-}
-```
+- 输入待解析日志
+- 编辑或选择示例 WPL 规则
+- 点击“解析”查看表格/JSON 结果
+- 可切换空值显示、JSON 视图
 
-### 2. 编写 OML 规则
+### 2. 转换调试（OML）
 
-OML (Object Mapping Language) 用于定义数据转换规则:
+- 先完成一次解析，系统自动带出解析结果
+- 编辑 OML 规则
+- 点击“转换”查看转换后的字段与 JSON 输出
 
-```oml
-name : /oml/example/simple 
-rule :
-    /example/simple*
----
-recv_time  = take() ;
-occur_time = Now::time() ;
-src_ip     = take(option:[src-ip,sip,source-ip] );
-```
+### 3. 规则格式化 / Base64 解码
 
-### 3. 测试解析
+- WPL/OML 输入区支持一键格式化
+- 日志输入区支持 Base64 解码
 
-- 在解析器页面输入示例日志
-- 系统将实时显示解析结果
-- 支持单条日志和批量日志解析
+## API
 
-## API 文档
-
-### 基础接口
-
-- `GET /api/hello` - 健康检查
-- `GET /api/version` - 获取版本信息
-
-### 核心功能接口
-
-- `POST /api/parse-logs` - 解析日志
-- `POST /api/convert-record` - 转换数据
+- `GET /api/version`：获取版本信息
+- `POST /api/debug/parse`：解析日志（WPL）
+- `POST /api/debug/transform`：转换记录（OML）
+- `GET /api/debug/examples`：加载示例规则与样本
+- `POST /api/debug/wpl/format`：格式化 WPL
+- `POST /api/debug/oml/format`：格式化 OML
+- `POST /api/debug/decode/base64`：Base64 解码
 
 ## 项目结构
 
 ```
 wp-editor/
-├── .github/          # GitHub Actions 工作流配置
-├── _gal/             # 内部工具配置,使用gflow更新版本依赖
-├── config/           # 配置文件
-│   └── config.toml
-├── crates/           # 子 crate
-│   └── migrations/   # 数据库迁移
-├── src/              # 后端源码
-│   ├── api/          # API 接口实现
-│   │   ├── debug.rs
-│   │   ├── knowledge.rs
-│   │   └── mod.rs
-│   ├── db/           # 数据库操作
-│   │   ├── knowledge_config.rs
-│   │   ├── mod.rs
-│   │   └── pool.rs
-│   ├── server/       # 服务器配置
-│   │   ├── app.rs
-│   │   ├── mod.rs
-│   │   └── setting.rs
-│   ├── utils/        # 工具函数
-│   │   ├── knowledge.rs
-│   │   ├── mod.rs
-│   │   ├── oml.rs
-│   │   └── wpl.rs
-│   ├── error.rs
-│   ├── lib.rs
-│   └── main.rs
-├── tests/            # 测试代码
-│   ├── api/          # API 测试
-│   └── utils/        # 工具测试
-├── web/              # 前端源码
-│   ├── dist/         # 构建输出
-│   ├── public/       # 静态资源
-│   ├── src/          # 前端源码
-│   │   ├── configs/  # 配置
-│   │   ├── services/ # API 服务
-│   │   ├── styles/   # 样式
-│   │   ├── test/     # 前端测试
-│   │   ├── utils/    # 前端工具
-│   │   ├── views/    # 页面组件
-│   │   │   ├── components/ # 通用组件
-│   │   │   └── pages/      # 页面
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── index.html
-│   ├── package.json
-│   └── vite.config.js
-├── Cargo.lock
+├── config/                # 配置文件
+├── crates/                # 子 crate（数据库迁移等）
+├── docs/                  # 项目文档
+├── src/                   # 后端源码
+├── web/                   # 前端源码（Vite）
 ├── Cargo.toml
 ├── Dockerfile
-├── README.md
-└── build.rs
+└── README.md
 ```
 
-## 开发指南
+## 开发与测试
 
-### 后端开发
-
-- 使用 `cargo test` 运行测试
-- 使用 `cargo clippy` 检查代码质量
-- 遵循 Rust 代码规范
-
-### 前端开发
-
-- 使用 `npm run lint` 检查代码质量
-- 使用 `npm run build` 构建生产版本
-- 遵循 React 18+ 最佳实践
+- Rust 测试：`cargo test`
+- Rust 代码检查：`cargo clippy`
+- 前端 lint：`npm run lint`
+- 前端测试：`npm run test`
 
 ## 部署
 
-### Docker 部署
-
 ```bash
-docker build -t wp-editor .
-docker run -p 8080:8080 wp-editor
+cargo build --release
+./target/release/wp-editor
 ```
-
-### 直接部署
-
-1. 构建后端: `cargo build --release`
-2. 运行: `./target/release/wp-editor`
-
-## 贡献指南
-
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
 
 ## 许可证
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
-## 支持
-
-如有问题或建议，请提交 Issue 或联系开发团队。
-
-## 详细文档
-
-更多详细信息请查看 [doc/README.md](doc/README.md) 文档。
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE)

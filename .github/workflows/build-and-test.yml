@@ -30,12 +30,31 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+          components: llvm-tools-preview
 
       - name: Cargo build
         run: cargo build --all
 
       - name: Cargo test
         run: cargo test --all
+
+      - name: Install cargo-llvm-cov
+        if: matrix.os == 'ubuntu-22.04'
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Generate coverage (lcov)
+        if: matrix.os == 'ubuntu-22.04'
+        run: cargo llvm-cov --all --lcov --output-path lcov.info
+
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-22.04'
+        uses: codecov/codecov-action@v4
+        with:
+          files: lcov.info
+          flags: rust
+          fail_ci_if_error: true
 
       - name: Cargo fmt
         run: cargo fmt --check
