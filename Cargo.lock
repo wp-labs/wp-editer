@@ -772,9 +772,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.52"
+version = "1.2.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd4932aefd12402b36c60956a4fe0035421f544799057659ff86f923657aada3"
+checksum = "755d2fce177175ffca841e9a06afdb2c4ab0f593d53b4dee48147dfaade85932"
 dependencies = [
  "find-msvc-tools",
  "jobserver",
@@ -1491,9 +1491,9 @@ checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
 
 [[package]]
 name = "find-msvc-tools"
-version = "0.1.7"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f449e6c6c08c865631d4890cfacf252b3d396c9bcc83adb6623cdb02a8336c41"
+checksum = "8591b0bcc8a98a64310a2fae1bb3e9b8564dd10e381e6e28010fde8e8e8568db"
 
 [[package]]
 name = "flate2"
@@ -2818,8 +2818,8 @@ dependencies = [
 
 [[package]]
 name = "orion_exp"
-version = "1.8.2"
-source = "git+https://github.com/wp-labs/wp-engine?tag=v1.8.2-alpha#fb50281cb08ddcaa9b4c45499f8abde8b3132f9d"
+version = "1.10.0"
+source = "git+https://github.com/wp-labs/wp-engine?tag=v1.10.0-alpha#ed936b3925a9398bc127c397049752b5f97eff69"
 dependencies = [
  "arcstr",
  "chrono",
@@ -2831,8 +2831,8 @@ dependencies = [
 
 [[package]]
 name = "orion_overload"
-version = "1.8.2"
-source = "git+https://github.com/wp-labs/wp-engine?tag=v1.8.2-alpha#fb50281cb08ddcaa9b4c45499f8abde8b3132f9d"
+version = "1.10.0"
+source = "git+https://github.com/wp-labs/wp-engine?tag=v1.10.0-alpha#ed936b3925a9398bc127c397049752b5f97eff69"
 dependencies = [
  "anyhow",
  "derive-getters",
@@ -3576,18 +3576,18 @@ dependencies = [
 
 [[package]]
 name = "rustls-pki-types"
-version = "1.13.2"
+version = "1.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21e6f2ab2928ca4291b86736a8bd920a277a399bba1589409d72154ff87c1282"
+checksum = "be040f8b0a225e40375822a563fa9524378b9d63112f53e19ffff34df5d33fdd"
 dependencies = [
  "zeroize",
 ]
 
 [[package]]
 name = "rustls-webpki"
-version = "0.103.8"
+version = "0.103.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ffdfa2f5286e2247234e03f680868ac2815974dc39e00ea15adc445d0aafe52"
+checksum = "d7df23109aa6c1567d1c575b9952556388da57401e4ace1d15f79eedad0d8f53"
 dependencies = [
  "ring",
  "rustls-pki-types",
@@ -5528,6 +5528,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7249219f66ced02969388cf2bb044a09756a083d0fab1e566056b04d9fbcaa5"
 
 [[package]]
+name = "wp-cli-core"
+version = "1.10.0"
+source = "git+https://github.com/wp-labs/wp-engine?tag=v1.10.0-alpha#ed936b3925a9398bc127c397049752b5f97eff69"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "comfy-table",
+ "orion-error",
+ "orion-variate",
+ "orion_conf",
+ "serde",
+ "serde_json",
+ "toml 0.9.11+spec-1.1.0",
+ "walkdir",
+ "wp-config",
+ "wp-knowledge",
+]
+
+[[package]]
 name = "wp-conf-base"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5547,13 +5566,13 @@ dependencies = [
  "toml 0.9.11+spec-1.1.0",
  "winnow",
  "wp-connector-api",
- "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wp-model-core 0.7.1",
 ]
 
 [[package]]
 name = "wp-config"
-version = "1.8.2"
-source = "git+https://github.com/wp-labs/wp-engine?tag=v1.8.2-alpha#fb50281cb08ddcaa9b4c45499f8abde8b3132f9d"
+version = "1.10.0"
+source = "git+https://github.com/wp-labs/wp-engine?tag=v1.10.0-alpha#ed936b3925a9398bc127c397049752b5f97eff69"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5584,7 +5603,7 @@ dependencies = [
  "wp-knowledge",
  "wp-lang",
  "wp-log",
- "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wp-model-core 0.7.1",
  "wp-parser",
  "wp-specs",
 ]
@@ -5608,7 +5627,7 @@ dependencies = [
  "smol_str",
  "thiserror 2.0.17",
  "toml 0.9.11+spec-1.1.0",
- "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wp-model-core 0.7.1",
  "wp-parse-api",
 ]
 
@@ -5630,13 +5649,13 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.17",
- "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wp-model-core 0.7.1",
 ]
 
 [[package]]
 name = "wp-data-utils"
-version = "1.8.2"
-source = "git+https://github.com/wp-labs/wp-engine?tag=v1.8.2-alpha#fb50281cb08ddcaa9b4c45499f8abde8b3132f9d"
+version = "1.10.0"
+source = "git+https://github.com/wp-labs/wp-engine?tag=v1.10.0-alpha#ed936b3925a9398bc127c397049752b5f97eff69"
 dependencies = [
  "arcstr",
  "chrono",
@@ -5648,7 +5667,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "smol_str",
- "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wp-model-core 0.7.1",
 ]
 
 [[package]]
@@ -5692,7 +5711,7 @@ dependencies = [
  "wp-knowledge",
  "wp-lang",
  "wp-log",
- "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wp-model-core 0.7.1",
  "wp-oml",
  "wp-parse-api",
  "wp-parser",
@@ -5713,8 +5732,8 @@ dependencies = [
 
 [[package]]
 name = "wp-engine"
-version = "1.8.2"
-source = "git+https://github.com/wp-labs/wp-engine?tag=v1.8.2-alpha#fb50281cb08ddcaa9b4c45499f8abde8b3132f9d"
+version = "1.10.0"
+source = "git+https://github.com/wp-labs/wp-engine?tag=v1.10.0-alpha#ed936b3925a9398bc127c397049752b5f97eff69"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -5772,6 +5791,7 @@ dependencies = [
  "walkdir",
  "wildmatch",
  "winnow",
+ "wp-cli-core",
  "wp-conf-base",
  "wp-config",
  "wp-connector-api",
@@ -5783,7 +5803,7 @@ dependencies = [
  "wp-knowledge",
  "wp-lang",
  "wp-log",
- "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wp-model-core 0.7.1",
  "wp-oml",
  "wp-parse-api",
  "wp-parser",
@@ -5796,7 +5816,7 @@ name = "wp-enrich-api"
 version = "0.0.5"
 source = "git+https://github.com/wp-labs/wp-advanced-api?tag=v0.0.5-beta#89d175482649ac93c80df6d4312f06f03a01f701"
 dependencies = [
- "wp-model-core 0.7.0 (git+https://github.com/wp-labs/wp-open-api.git?tag=v0.7.0)",
+ "wp-model-core 0.7.0",
 ]
 
 [[package]]
@@ -5824,13 +5844,13 @@ dependencies = [
  "winnow",
  "wp-connector-api",
  "wp-log",
- "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wp-model-core 0.7.1",
 ]
 
 [[package]]
 name = "wp-knowledge"
-version = "1.8.2"
-source = "git+https://github.com/wp-labs/wp-engine?tag=v1.8.2-alpha#fb50281cb08ddcaa9b4c45499f8abde8b3132f9d"
+version = "1.10.0"
+source = "git+https://github.com/wp-labs/wp-engine?tag=v1.10.0-alpha#ed936b3925a9398bc127c397049752b5f97eff69"
 dependencies = [
  "anyhow",
  "chrono",
@@ -5861,14 +5881,14 @@ dependencies = [
  "wp-data-utils",
  "wp-error",
  "wp-log",
- "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wp-model-core 0.7.1",
  "wp-specs",
 ]
 
 [[package]]
 name = "wp-lang"
-version = "1.8.2"
-source = "git+https://github.com/wp-labs/wp-engine?tag=v1.8.2-alpha#fb50281cb08ddcaa9b4c45499f8abde8b3132f9d"
+version = "1.10.0"
+source = "git+https://github.com/wp-labs/wp-engine?tag=v1.10.0-alpha#ed936b3925a9398bc127c397049752b5f97eff69"
 dependencies = [
  "ahash 0.8.12",
  "anyhow",
@@ -5913,7 +5933,7 @@ dependencies = [
  "wp-data-fmt",
  "wp-error",
  "wp-log",
- "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wp-model-core 0.7.1",
  "wp-parse-api",
  "wp-parser",
  "wp-specs",
@@ -5946,23 +5966,6 @@ dependencies = [
 [[package]]
 name = "wp-model-core"
 version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d2ca9487bd36ef6d6c8016e70dbc6b8cdce6c968beddcfff66ca4ea0b449faa"
-dependencies = [
- "chrono",
- "ipnet",
- "serde",
- "serde_derive",
- "serde_json",
- "smallvec",
- "smol_str",
- "thiserror 2.0.17",
- "wildmatch",
-]
-
-[[package]]
-name = "wp-model-core"
-version = "0.7.0"
 source = "git+https://github.com/wp-labs/wp-open-api.git?tag=v0.7.0#ae95cbb187ede42488eab72be555dbe0c8597f23"
 dependencies = [
  "arcstr",
@@ -5978,9 +5981,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "wp-model-core"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea3ac4ff396490408f4257fb358fdc2054e29826d13aca45f8d5e672b781baf4"
+dependencies = [
+ "chrono",
+ "ipnet",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "smallvec",
+ "smol_str",
+ "thiserror 2.0.17",
+ "wildmatch",
+]
+
+[[package]]
 name = "wp-oml"
-version = "1.8.2"
-source = "git+https://github.com/wp-labs/wp-engine?tag=v1.8.2-alpha#fb50281cb08ddcaa9b4c45499f8abde8b3132f9d"
+version = "1.10.0"
+source = "git+https://github.com/wp-labs/wp-engine?tag=v1.10.0-alpha#ed936b3925a9398bc127c397049752b5f97eff69"
 dependencies = [
  "anyhow",
  "arcstr",
@@ -6022,7 +6042,7 @@ dependencies = [
  "wp-knowledge",
  "wp-lang",
  "wp-log",
- "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wp-model-core 0.7.1",
  "wp-parser",
  "wp-specs",
 ]
@@ -6039,13 +6059,13 @@ dependencies = [
  "serde",
  "serde_derive",
  "thiserror 2.0.17",
- "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wp-model-core 0.7.1",
 ]
 
 [[package]]
 name = "wp-parser"
-version = "1.8.2"
-source = "git+https://github.com/wp-labs/wp-engine?tag=v1.8.2-alpha#fb50281cb08ddcaa9b4c45499f8abde8b3132f9d"
+version = "1.10.0"
+source = "git+https://github.com/wp-labs/wp-engine?tag=v1.10.0-alpha#ed936b3925a9398bc127c397049752b5f97eff69"
 dependencies = [
  "orion_exp",
  "winnow",
@@ -6069,13 +6089,13 @@ dependencies = [
  "wildmatch",
  "winnow",
  "wp-connector-api",
- "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wp-model-core 0.7.1",
 ]
 
 [[package]]
 name = "wp-stats"
-version = "1.8.2"
-source = "git+https://github.com/wp-labs/wp-engine?tag=v1.8.2-alpha#fb50281cb08ddcaa9b4c45499f8abde8b3132f9d"
+version = "1.10.0"
+source = "git+https://github.com/wp-labs/wp-engine?tag=v1.10.0-alpha#ed936b3925a9398bc127c397049752b5f97eff69"
 dependencies = [
  "anyhow",
  "chrono",
@@ -6095,7 +6115,7 @@ dependencies = [
  "toml 0.9.11+spec-1.1.0",
  "wildmatch",
  "wp-log",
- "wp-model-core 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wp-model-core 0.7.1",
 ]
 
 [[package]]
