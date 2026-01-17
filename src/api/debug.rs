@@ -15,7 +15,7 @@ use wp_model_core::model::data::Record;
 use wp_model_core::model::fmt_def::TextFmt;
 use wp_model_core::model::{DataField, DataRecord};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct DebugParseRequest {
     pub connection_id: Option<i32>,
     pub rules: String,
@@ -37,14 +37,14 @@ pub async fn debug_parse(req: web::Json<DebugParseRequest>) -> Result<HttpRespon
     }))
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct DebugTransformRequest {
     pub connection_id: Option<i32>,
     pub parse_result: ParseResultWrapper,
     pub oml: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ParseResultWrapper {
     pub fields: Vec<DataField>,
 }
