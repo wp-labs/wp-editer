@@ -38,26 +38,5 @@ jobs:
       - name: Cargo test
         run: cargo test --all
 
-      - name: Install cargo-llvm-cov
-        if: matrix.os == 'ubuntu-22.04'
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-llvm-cov
-
-      - name: Generate coverage report
-        if: matrix.os == 'ubuntu-22.04'
-        run: |
-          cargo llvm-cov --all --lcov --output-path lcov.info
-          cargo llvm-cov --all --html --output-dir coverage
-
-      - name: Upload coverage reports
-        if: matrix.os == 'ubuntu-22.04'
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: |
-            lcov.info
-            coverage/
-
       - name: Cargo fmt
         run: cargo fmt --check
