@@ -1,4 +1,4 @@
-use actix_web::{test, App, http::StatusCode, body::to_bytes};
+use actix_web::{App, body::to_bytes, http::StatusCode, test};
 use serde_json::Value;
 
 /// 测试Base64解码API端点的成功情况
@@ -6,10 +6,8 @@ use serde_json::Value;
 #[actix_web::test]
 async fn test_decode_base64_success() {
     use wp_editor::api::decode_base64;
-    
-    let app = test::init_service(
-        App::new().service(decode_base64)
-    ).await;
+
+    let app = test::init_service(App::new().service(decode_base64)).await;
 
     let base64_content = "SGVsbG8gV29ybGQ=";
 
@@ -27,10 +25,8 @@ async fn test_decode_base64_success() {
 #[actix_web::test]
 async fn test_decode_base64_error_cases() {
     use wp_editor::api::decode_base64;
-    
-    let app = test::init_service(
-        App::new().service(decode_base64)
-    ).await;
+
+    let app = test::init_service(App::new().service(decode_base64)).await;
 
     // 测试无效的Base64内容
     let invalid_base64 = "invalid_base64_content!@#";

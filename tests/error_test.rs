@@ -1,4 +1,4 @@
-use actix_web::{test, http::StatusCode, ResponseError};
+use actix_web::{ResponseError, http::StatusCode, test};
 use serde_json::Value;
 use wp_editor::error::AppError;
 
@@ -8,7 +8,10 @@ use wp_editor::error::AppError;
 async fn test_app_error_creation() {
     // 测试各种错误创建方法
     let conn_err = AppError::invalid_connection(123);
-    assert!(matches!(conn_err, AppError::InvalidConnection { connection_id: 123 }));
+    assert!(matches!(
+        conn_err,
+        AppError::InvalidConnection { connection_id: 123 }
+    ));
 
     let internal_err = AppError::internal("test error");
     assert!(matches!(internal_err, AppError::Internal(_)));
@@ -58,12 +61,18 @@ async fn test_app_error_response_error() {
         (AppError::invalid_connection(123), StatusCode::BAD_REQUEST),
         (AppError::validation("test"), StatusCode::BAD_REQUEST),
         (AppError::not_found("test"), StatusCode::NOT_FOUND),
-        (AppError::internal("test"), StatusCode::INTERNAL_SERVER_ERROR),
-        (AppError::ConnectionMismatch { 
-            resource_id: 1, 
-            resource_connection_id: 2, 
-            requested_connection_id: 3 
-        }, StatusCode::FORBIDDEN),
+        (
+            AppError::internal("test"),
+            StatusCode::INTERNAL_SERVER_ERROR,
+        ),
+        (
+            AppError::ConnectionMismatch {
+                resource_id: 1,
+                resource_connection_id: 2,
+                requested_connection_id: 3,
+            },
+            StatusCode::FORBIDDEN,
+        ),
     ];
 
     for (error, expected_status) in test_cases {
@@ -71,9 +80,11 @@ async fn test_app_error_response_error() {
         assert_eq!(response.status(), expected_status);
 
         // 验证响应体结构
-        let body = actix_web::body::to_bytes(response.into_body()).await.unwrap();
+        let body = actix_web::body::to_bytes(response.into_body())
+            .await
+            .unwrap();
         let json: Value = serde_json::from_slice(&body).unwrap();
-        
+
         assert_eq!(json["success"], false);
         assert!(json["error"]["code"].is_string());
         assert!(json["error"]["message"].is_string());
@@ -85,19 +96,22 @@ async fn test_app_error_response_error() {
 #[actix_web::test]
 async fn test_db_error_complete() {
     use wp_editor::error::DbError;
-    
+
     // 测试DbError创建和显示
     let not_found_err = DbError::not_found("user");
-    assert!(matches!(not_found_err, DbError::NotFound { entity: "user" }));
+    assert!(matches!(
+        not_found_err,
+        DbError::NotFound { entity: "user" }
+    ));
 
     let display_str = format!("{}", not_found_err);
     assert!(display_str.contains("user"));
     assert!(display_str.contains("不存在"));
-    
+
     // 测试DbError到AppError的转换
     let db_not_found = DbError::not_found("connection");
     let app_error: AppError = db_not_found.into();
-    
+
     assert!(matches!(app_error, AppError::NotFound(_)));
     let display_str = format!("{}", app_error);
     assert!(display_str.contains("connection"));
@@ -117,14 +131,22 @@ async fn test_error_codes() {
         (AppError::wpl_parse("test"), "WPL_PARSE_ERROR"),
         (AppError::oml_transform_msg("test"), "OML_TRANSFORM_ERROR"),
         (AppError::NoParseResult, "NO_PARSE_RESULT"),
-        (AppError::port_unreachable("addr", "reason"), "PORT_UNREACHABLE"),
+        (
+            AppError::port_unreachable("addr", "reason"),
+            "PORT_UNREACHABLE",
+        ),
         (AppError::invalid_git_token("reason"), "INVALID_GIT_TOKEN"),
-        (AppError::InvalidBase64("test".to_string()), "INVALID_BASE64"),
+        (
+            AppError::InvalidBase64("test".to_string()),
+            "INVALID_BASE64",
+        ),
     ];
 
     for (error, expected_code) in test_cases {
         let response = error.error_response();
-        let body = actix_web::body::to_bytes(response.into_body()).await.unwrap();
+        let body = actix_web::body::to_bytes(response.into_body())
+            .await
+            .unwrap();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["error"]["code"], expected_code);
     }

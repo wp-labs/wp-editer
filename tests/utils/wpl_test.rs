@@ -109,9 +109,9 @@ rule access_log {
 fn test_warp_check_malformed_log() {
     // 测试格式不正确的日志
     let malformed_logs = vec![
-        "",  // 空日志
-        "incomplete log entry",  // 不完整的日志
-        "192.168.1.1 - -",  // 缺少必要字段
+        "",                     // 空日志
+        "incomplete log entry", // 不完整的日志
+        "192.168.1.1 - -",      // 缺少必要字段
     ];
 
     let wpl_rule = r#"package /example/simple {
@@ -175,11 +175,11 @@ rule chinese_log {
         Ok(record) => {
             let fields = record_to_fields(&record);
             assert!(!fields.is_empty(), "Unicode日志应该能够解析");
-            
+
             // 验证Unicode内容是否正确处理
-            let has_chinese = fields.iter().any(|f| 
-                f.value.contains("张三") || f.value.contains("登录成功")
-            );
+            let has_chinese = fields
+                .iter()
+                .any(|f| f.value.contains("张三") || f.value.contains("登录成功"));
             assert!(has_chinese, "应该包含中文内容");
         }
         Err(e) => {
@@ -193,10 +193,10 @@ rule chinese_log {
 fn test_record_to_fields_empty() {
     // 测试空记录的处理
     use wp_model_core::model::data::Record;
-    
+
     let empty_record = Record::default();
     let fields = record_to_fields(&empty_record);
-    
+
     // 空记录应该返回空字段列表或者包含默认字段
     assert!(fields.is_empty() || fields.len() >= 0, "空记录处理应该正常");
 }
@@ -211,25 +211,27 @@ rule single_field {
 }"#;
 
     let record = warp_check_record(wpl_rule, log_data).expect("单字段解析应该成功");
-    
+
     // 测试JSON格式化
     let formatter = FormatType::Json(Json);
     let json_string = formatter.format_record(&record);
-    
+
     assert!(!json_string.is_empty(), "JSON格式化结果不应为空");
-    assert!(json_string.contains("single_value") || json_string.contains("test_value"), 
-           "JSON应包含字段名或值");
-    
+    assert!(
+        json_string.contains("single_value") || json_string.contains("test_value"),
+        "JSON应包含字段名或值"
+    );
+
     // 验证JSON是有效的
-    let _: serde_json::Value = serde_json::from_str(&json_string)
-        .expect("格式化的JSON应该是有效的");
+    let _: serde_json::Value =
+        serde_json::from_str(&json_string).expect("格式化的JSON应该是有效的");
 }
 
 #[test]
 fn test_warp_check_numeric_fields() {
     // 测试数字字段的处理
     let log_data = r#"42 3.14159 -100 0"#;
-    
+
     let wpl_rule = r#"package /example/numbers {
 rule numeric_test {
     (digit:integer,float:decimal,digit:negative,digit:zero)
@@ -241,7 +243,7 @@ rule numeric_test {
         Ok(record) => {
             let fields = record_to_fields(&record);
             assert!(fields.len() >= 3, "应该解析出数字字段");
-            
+
             // 验证数字字段
             let integer_field = fields.iter().find(|f| f.name == "integer");
             if let Some(field) = integer_field {

@@ -12,7 +12,7 @@ async fn test_db_pool_url_validation() {
         "postgresql://user:@host",
         "postgresql://user:pass@",
     ];
-    
+
     for url in invalid_urls {
         let result = DbPool::new(url, 10, 1).await;
         assert!(result.is_err(), "无效URL {} 应该返回错误", url);
@@ -25,20 +25,20 @@ async fn test_db_pool_url_validation() {
 async fn test_db_pool_sqlite_operations() {
     // 使用内存SQLite数据库进行测试
     let result = DbPool::new("sqlite::memory:", 1, 1).await;
-    
+
     match result {
         Ok(pool) => {
             // 测试连接
             let test_result = pool.test_connection().await;
             // SQLite内存数据库应该能够连接成功
             assert!(test_result.is_ok(), "内存数据库连接测试应该成功");
-            
+
             // 测试获取内部连接
             let _inner = pool.inner();
-            
+
             // 测试DbPool的Clone实现
             let cloned_pool = pool.clone();
-            
+
             // 两个池应该都能工作
             let _ = pool.test_connection().await;
             let _ = cloned_pool.test_connection().await;
@@ -62,7 +62,7 @@ fn test_db_pool_parameters() {
         if result.is_ok() {
             println!("连接池创建成功，即使最大连接数为0");
         }
-        
+
         // 测试较大的连接数
         let result = DbPool::new("sqlite::memory:", 100, 10).await;
         if result.is_ok() {
