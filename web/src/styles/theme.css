@@ -2234,6 +2234,12 @@ mark.diff-highlight {
   outline: none;
 }
 
+.example-list__item.is-active {
+  background: rgba(39, 94, 254, 0.12);
+  color: var(--primary);
+  font-weight: 500;
+}
+
 .example-list__message {
   color: #666;
   font-size: 12px;
