@@ -1,41 +1,276 @@
-import { forwardRef, useImperativeHandle, useRef, useEffect } from 'react';
-import { CodeJar } from 'codejar';
-import Prism from 'prismjs';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/themes/prism-tomorrow.css';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import {
+  autocompletion,
+  closeBrackets,
+  closeBracketsKeymap,
+  completionKeymap,
+  snippetCompletion,
+} from '@codemirror/autocomplete';
+import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+import { EditorState } from '@codemirror/state';
+import { StreamLanguage } from '@codemirror/language';
+import {
+  EditorView,
+  highlightActiveLine,
+  highlightActiveLineGutter,
+  keymap,
+  lineNumbers,
+} from '@codemirror/view';
+import { oneDark } from '@codemirror/theme-one-dark';
 import styles from './CodeJarEditor.module.css';
 
-const highlight = (editor) => {
-  const code = editor.textContent;
-  editor.innerHTML = Prism.highlight(code, Prism.languages.javascript, 'javascript');
+const WPL_KEYWORDS = new Set([
+  'package',
+  'rule',
+  'plg_pipe',
+  'alt',
+  'opt',
+  'some_of',
+  'seq',
+  'order',
+  'tag',
+  'copy_raw',
+  'include',
+  'macro',
+  'decode',
+  'unquote',
+  'base64',
+  'hex',
+  'unescape',
+]);
+const WPL_TYPES = new Set([
+  'auto',
+  'bool',
+  'chars',
+  'symbol',
+  'peek_symbol',
+  'digit',
+  'float',
+  '_',
+  'sn',
+  'time',
+  'time/clf',
+  'time_iso',
+  'time_3339',
+  'time_2822',
+  'time_timestamp',
+  'ip',
+  'ip_net',
+  'domain',
+  'email',
+  'port',
+  'hex',
+  'base64',
+  'kv',
+  'json',
+  'exact_json',
+  'url',
+  'proto_text',
+  'obj',
+  'id_card',
+  'mobile_phone',
+  'array',
+  'array/ip',
+]);
+const WPL_FUNCTIONS = new Set([
+  'take',
+  'last',
+  'f_has',
+  'f_chars_has',
+  'f_chars_not_has',
+  'f_chars_in',
+  'f_digit_has',
+  'f_digit_in',
+  'f_ip_in',
+  'has',
+  'chars_has',
+  'chars_not_has',
+  'chars_in',
+  'digit_has',
+  'digit_in',
+  'ip_in',
+  'json_unescape',
+  'base64_decode',
+]);
+const WPL_BUILTINS = new Set(['http/request', 'http/agent']);
+
+const WPL_KEYWORD_COMPLETIONS = [
+  'plg_pipe',
+  'id',
+  'alt',
+  'opt',
+  'some_of',
+  'seq',
+  'order',
+  'tag',
+  'copy_raw',
+  'include',
+  'macro',
+  'decode',
+  'unquote',
+  'base64',
+  'hex',
+  'unescape',
+].map((label) => ({ label, type: 'keyword', detail: '关键字' }));
+
+const WPL_TYPE_COMPLETIONS = Array.from(WPL_TYPES).map((label) => ({
+  label,
+  type: 'type',
+  detail: '字段类型',
+}));
+
+const WPL_FUNCTION_COMPLETIONS = Array.from(WPL_FUNCTIONS).map((label) => ({
+  label,
+  type: 'function',
+  detail: '字段函数',
+}));
+
+const WPL_BUILTIN_COMPLETIONS = Array.from(WPL_BUILTINS).map((label) => ({
+  label,
+  type: 'constant',
+  detail: '内置字段',
+}));
+
+const wplLanguage = StreamLanguage.define({
+  token(stream) {
+    if (stream.eatSpace()) {
+      return null;
+    }
+    const ch = stream.peek();
+    if (ch === '"') {
+      stream.next();
+      while (!stream.eol()) {
+        if (stream.next() === '"' && !stream.match(/\\$/, false)) {
+          break;
+        }
+      }
+      return 'string';
+    }
+    if (stream.match(/-?\d+(\.\d+)?/)) {
+      return 'number';
+    }
+    if (stream.match(/[\w/]+/)) {
+      const word = stream.current();
+      if (WPL_KEYWORDS.has(word)) return 'keyword';
+      if (WPL_TYPES.has(word)) return 'typeName';
+      if (WPL_FUNCTIONS.has(word)) return 'function';
+      if (WPL_BUILTINS.has(word)) return 'atom';
+      return 'variableName';
+    }
+    if (stream.match(/[{}()[\],|:]/)) {
+      return 'operator';
+    }
+    stream.next();
+    return null;
+  },
+});
+
+const WPL_COMPLETIONS = [
+  snippetCompletion(['package /${path}/ {', '}'].join('\n'), {
+    label: 'package',
+    type: 'keyword',
+    detail: '包定义',
+    info: '定义 WPL 包路径与作用域。',
+  }),
+  snippetCompletion(['rule ${name} {(', ')}'].join('\n'), {
+    label: 'rule',
+    type: 'keyword',
+    detail: '规则定义',
+    info: '定义规则名称与规则体。',
+  }),
+  { label: '_', type: 'variable', detail: '占位符' },
+  ...WPL_KEYWORD_COMPLETIONS,
+  ...WPL_TYPE_COMPLETIONS,
+  ...WPL_FUNCTION_COMPLETIONS,
+  ...WPL_BUILTIN_COMPLETIONS,
+];
+
+const wplCompletionSource = (context) => {
+  const word = context.matchBefore(/[\w/]+/);
+  if (!word && !context.explicit) {
+    return null;
+  }
+  const from = word ? word.from : context.pos;
+  return {
+    from,
+    options: WPL_COMPLETIONS,
+    validFor: /[\w/]+/,
+  };
 };
+
+const editorTheme = EditorView.theme({
+  '&': {
+    height: '100%',
+    backgroundColor: '#0f172a',
+    color: '#e2e8f0',
+  },
+  '.cm-content': {
+    fontFamily:
+      '"Fira Code", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+    fontSize: '13px',
+    lineHeight: '1.6',
+    padding: '14px 16px',
+  },
+  '.cm-scroller': {
+    overflow: 'auto',
+  },
+  '.cm-gutters': {
+    backgroundColor: '#0b1224',
+    color: '#94a3b8',
+    borderRight: '1px solid rgba(226, 232, 240, 0.1)',
+    minWidth: '48px',
+  },
+  '.cm-lineNumbers .cm-gutterElement': {
+    padding: '0 12px 0 10px',
+    textAlign: 'right',
+  },
+  '.cm-activeLineGutter': {
+    backgroundColor: 'rgba(148, 163, 184, 0.1)',
+  },
+  '.cm-activeLine': {
+    backgroundColor: 'rgba(148, 163, 184, 0.08)',
+  },
+  '.cm-keyword': {
+    color: '#7dd3fc',
+  },
+  '.cm-typeName': {
+    color: '#facc15',
+  },
+  '.cm-function': {
+    color: '#f472b6',
+  },
+  '.cm-atom': {
+    color: '#a5b4fc',
+  },
+  '.cm-string': {
+    color: '#86efac',
+  },
+  '.cm-number': {
+    color: '#fde047',
+  },
+  '.cm-operator': {
+    color: '#cbd5f5',
+  },
+  '.cm-variableName': {
+    color: '#e2e8f0',
+  },
+});
 
 const CodeJarEditor = forwardRef((props, ref) => {
   const editorRef = useRef(null);
-  const jarRef = useRef(null);
-   const lineNumberRef = useRef(null);
-
-  const updateLineNumbers = (code = '') => {
-    const total = Math.max(1, code.split(/\r\n|\n/).length);
-    if (lineNumberRef.current) {
-      lineNumberRef.current.textContent = Array.from(
-        { length: total },
-        (_, idx) => `${idx + 1}`,
-      ).join('\n');
-    }
-  };
-
-  const syncScroll = () => {
-    if (lineNumberRef.current && editorRef.current) {
-      lineNumberRef.current.scrollTop = editorRef.current.scrollTop;
-    }
-  };
+  const viewRef = useRef(null);
 
   useImperativeHandle(ref, () => ({
-    getValue: () => jarRef.current?.toString() || '',
+    getValue: () => viewRef.current?.state.doc.toString() || '',
     setValue: (value) => {
-      if (jarRef.current) {
-        jarRef.current.updateCode(value || '');
+      const view = viewRef.current;
+      if (!view) return;
+      const nextValue = value || '';
+      const currentValue = view.state.doc.toString();
+      if (currentValue !== nextValue) {
+        view.dispatch({
+          changes: { from: 0, to: currentValue.length, insert: nextValue },
+        });
       }
     },
   }));
@@ -43,76 +278,65 @@ const CodeJarEditor = forwardRef((props, ref) => {
   useEffect(() => {
     if (!editorRef.current) return;
 
-    const jar = CodeJar(editorRef.current, highlight, { tab: '  ' });
-    
-    // 添加智能括号跳过功能
-    const handleKeyDown = (e) => {
-      const closingChars = [')', ']', '}', '"', "'"];
-      if (closingChars.includes(e.key)) {
-        const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          const nextChar = range.endContainer.textContent?.[range.endOffset];
-          
-          // 如果下一个字符就是要输入的字符，跳过而不是插入
-          if (nextChar === e.key) {
-            e.preventDefault();
-            range.setStart(range.endContainer, range.endOffset + 1);
-            range.collapse(true);
-            selection.removeAllRanges();
-            selection.addRange(range);
-          }
-        }
+    const updateListener = EditorView.updateListener.of((update) => {
+      if (update.docChanged) {
+        props.onChange?.(update.state.doc.toString());
       }
-    };
-
-    editorRef.current.addEventListener('keydown', handleKeyDown);
-    editorRef.current.addEventListener('scroll', syncScroll);
-
-    jar.updateCode(props.value || '');
-    updateLineNumbers(props.value || '');
-    jar.onUpdate((code) => {
-      props.onChange?.(code);
-      updateLineNumbers(code);
     });
 
-    jarRef.current = jar;
+    const state = EditorState.create({
+      doc: props.value || '',
+      extensions: [
+        lineNumbers(),
+        highlightActiveLineGutter(),
+        highlightActiveLine(),
+        EditorView.lineWrapping,
+        EditorState.tabSize.of(2),
+        history(),
+        wplLanguage,
+        autocompletion({ override: [wplCompletionSource] }),
+        closeBrackets(),
+        keymap.of([
+          ...completionKeymap,
+          ...closeBracketsKeymap,
+          indentWithTab,
+          ...historyKeymap,
+          ...defaultKeymap,
+        ]),
+        oneDark,
+        editorTheme,
+        updateListener,
+      ],
+    });
+
+    const view = new EditorView({
+      state,
+      parent: editorRef.current,
+    });
+
+    viewRef.current = view;
 
     return () => {
-      editorRef.current?.removeEventListener('keydown', handleKeyDown);
-      editorRef.current?.removeEventListener('scroll', syncScroll);
-      jar.destroy();
+      view.destroy();
+      viewRef.current = null;
     };
   }, []);
 
   useEffect(() => {
-    if (jarRef.current && props.value !== undefined) {
-      try {
-        const pos = jarRef.current.save();
-        if (pos) {
-          jarRef.current.updateCode(props.value || '');
-          jarRef.current.restore(pos);
-        } else {
-          jarRef.current.updateCode(props.value || '');
-        }
-      } catch (e) {
-        jarRef.current.updateCode(props.value || '');
-      }
-      updateLineNumbers(props.value || '');
+    const view = viewRef.current;
+    if (!view || props.value === undefined) return;
+    const nextValue = props.value || '';
+    const currentValue = view.state.doc.toString();
+    if (currentValue !== nextValue) {
+      view.dispatch({
+        changes: { from: 0, to: currentValue.length, insert: nextValue },
+      });
     }
   }, [props.value]);
 
   return (
     <div className={`${styles.editor} ${props.className || ''}`}>
-      <pre
-        className={styles.gutter}
-        aria-hidden
-        ref={lineNumberRef}
-      />
-      <div
-        ref={editorRef}
-        className={styles.code}
-      />
+      <div ref={editorRef} className={styles.code} />
     </div>
   );
 });
