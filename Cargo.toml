@@ -1,6 +1,6 @@
 [package]
 name = "wp-editor"
-version = "1.5.0"
+version = "1.6.0"
 edition = "2024"
 build = "build.rs"
 
@@ -69,3 +69,4 @@ wp_parser = { package = "wp-parser", git = "https://github.com/wp-labs/wp-engine
 wp_knowledge = { package = "wp-knowledge", git = "https://github.com/wp-labs/wp-engine", tag = "v1.10.0-alpha" }
 wp_data_utils = { package = "wp-data-utils", git = "https://github.com/wp-labs/wp-engine", tag = "v1.10.0-alpha" }
 wp_engine = { package = "wp-engine", git = "https://github.com/wp-labs/wp-engine", tag = "v1.10.0-alpha" }
+semver = "1.0.27"

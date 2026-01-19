@@ -53,6 +53,7 @@ function SimulateDebugPage() {
   const [transformError, setTransformError] = useState(null);
   // 示例列表状态
   const [examples, setExamples] = useState(DEFAULT_EXAMPLES);
+  const [selectedExample, setSelectedExample] = useState(null); // 当前选中的示例
   const examplesOpen = true;
   const [examplesLoading, setExamplesLoading] = useState(false);
   const [examplesLoaded, setExamplesLoaded] = useState(false);
@@ -135,6 +136,7 @@ function SimulateDebugPage() {
     setInputValue(sampleData || '');
     setRuleValue(wplCode || '');
     setTransformOml(omlCode || '');
+    setSelectedExample(exampleItem.name); // 更新选中的示例
 
     if (!sampleData || !wplCode) {
       return;
@@ -173,6 +175,8 @@ function SimulateDebugPage() {
     setTransformParseResult(null);
     setTransformResult(null);
     setTransformError(null); // 清空转换错误
+    // 清空选中示例状态
+    setSelectedExample(null);
   };
 
   // 处理 Base64 解码按钮点击
@@ -452,7 +456,7 @@ function SimulateDebugPage() {
                 <button
                   key={exampleItem.name || exampleItem.key}
                   type="button"
-                  className="example-list__item"
+                  className={`example-list__item ${selectedExample === exampleItem.name ? 'is-active' : ''}`}
                   onClick={() => handleApplyExample(exampleItem)}
                 >
                   {exampleItem.name || t('simulateDebug.examples.unnamed')}
