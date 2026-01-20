@@ -3,7 +3,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { convertRecord, fetchDebugExamples, parseLogs, wplCodeFormat, omlCodeFormat, base64Decode } from '@/services/debug';
+import {
+  convertRecord,
+  fetchDebugExamples,
+  parseLogs,
+  wplCodeFormat,
+  omlCodeFormat,
+  base64Decode,
+} from '@/services/debug';
 import CodeEditor from '@/views/components/CodeEditor';
 
 /**
@@ -20,7 +27,7 @@ const DEFAULT_EXAMPLES = [
   {
     name: 'nginx',
     wpl_code:
-      'package /nginx/ {\n    rule nginx {\n        (\n            ip:sip,_^2,chars:timestamp<[,]>,http/request",chars:status,chars:size,chars:referer",http/agent",_"\n        )\n    }\n}\n',
+      'package /nginx/ {\n    rule nginx {\n        (\n            ip:sip,2*_,chars:timestamp<[,]>,http/request",chars:status,chars:size,chars:referer",http/agent",_"\n        )\n    }\n}\n',
     oml_code: '',
     sample_data:
       '180.57.30.148 - - [21/Jan/2025:01:40:02 +0800] "GET /nginx-logo.png HTTP/1.1" 500 368 "<http://207.131.38.110/>" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36" "-"',
@@ -145,7 +152,7 @@ function SimulateDebugPage() {
   /**
    * 应用某个示例到日志、规则与 OML 输入区域，并自动尝试解析
    */
-  const handleApplyExample = async (exampleItem) => {
+  const handleApplyExample = async exampleItem => {
     if (!exampleItem) return;
     const { sample_data: sampleData, wpl_code: wplCode, oml_code: omlCode } = exampleItem;
     setInputValue(sampleData || '');
@@ -214,7 +221,10 @@ function SimulateDebugPage() {
     setTransformError(null); // 重置转换错误状态
     try {
       console.log('转换页解析结果:', transformParseResult);
-      const response = await convertRecord({ oml: transformOml, parseResult: transformParseResult });
+      const response = await convertRecord({
+        oml: transformOml,
+        parseResult: transformParseResult,
+      });
       // 新 API 直接返回 { fields: [...] } 格式
       let fieldsData = [];
       if (Array.isArray(response?.fields)) {
@@ -237,7 +247,6 @@ function SimulateDebugPage() {
       setLoading(false);
     }
   };
-
 
   const omlFormat = async () => {
     try {
@@ -288,7 +297,7 @@ function SimulateDebugPage() {
    * @param {Object} valueObj - value 对象，如 { "IpAddr": "..." } 或 { "Chars": "..." }
    * @returns {string} 提取的值字符串
    */
-  const extractValueFromObj = (valueObj) => {
+  const extractValueFromObj = valueObj => {
     if (valueObj === null || valueObj === undefined) {
       return '';
     }
@@ -307,14 +316,12 @@ function SimulateDebugPage() {
 
     // 处理 Array 字段（包含 meta/name/value 结构的数组）
     if (Array.isArray(valueObj.Array)) {
-      const arrayValues = valueObj.Array
-        .map(item => {
-          if (item && typeof item === 'object' && 'value' in item) {
-            return extractValueFromObj(item.value);
-          }
-          return extractValueFromObj(item);
-        })
-        .filter(val => val !== '' && val !== null && val !== undefined);
+      const arrayValues = valueObj.Array.map(item => {
+        if (item && typeof item === 'object' && 'value' in item) {
+          return extractValueFromObj(item.value);
+        }
+        return extractValueFromObj(item);
+      }).filter(val => val !== '' && val !== null && val !== undefined);
       return arrayValues.length > 0 ? `[${arrayValues.join(', ')}]` : '';
     }
 
@@ -342,7 +349,7 @@ function SimulateDebugPage() {
    * @param {Array} fields - 原始字段数组
    * @returns {Array} 处理后的字段数组
    */
-  const processFieldsForDisplay = (fields) => {
+  const processFieldsForDisplay = fields => {
     const list = Array.isArray(fields) ? fields : [];
     return list.map((field, index) => {
       // 处理 meta 字段
@@ -356,7 +363,7 @@ function SimulateDebugPage() {
           metaDisplay = JSON.stringify(field.meta);
         }
       }
-      
+
       return {
         ...field,
         no: index + 1,
@@ -380,8 +387,19 @@ function SimulateDebugPage() {
           margin: '10px',
         }}
       >
-        <h4 style={{ color: '#f5222d', marginBottom: '8px', fontWeight: 'bold' }}>{t('simulateDebug.parseResult.parseFailed')}</h4>
-        <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', color: '#666', margin: '0 0 8px 0', fontSize: '14px', lineHeight: '1.5' }}>
+        <h4 style={{ color: '#f5222d', marginBottom: '8px', fontWeight: 'bold' }}>
+          {t('simulateDebug.parseResult.parseFailed')}
+        </h4>
+        <pre
+          style={{
+            whiteSpace: 'pre-wrap',
+            wordWrap: 'break-word',
+            color: '#666',
+            margin: '0 0 8px 0',
+            fontSize: '14px',
+            lineHeight: '1.5',
+          }}
+        >
           {parseError.message || t('simulateDebug.parseResult.parseError')}
         </pre>
         {parseError.code && (
@@ -413,8 +431,19 @@ function SimulateDebugPage() {
           margin: '10px',
         }}
       >
-        <h4 style={{ color: '#f5222d', marginBottom: '8px', fontWeight: 'bold' }}>{t('simulateDebug.convertResult.convertFailed')}</h4>
-        <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word', color: '#666', margin: '0 0 8px 0', fontSize: '14px', lineHeight: '1.5' }}>
+        <h4 style={{ color: '#f5222d', marginBottom: '8px', fontWeight: 'bold' }}>
+          {t('simulateDebug.convertResult.convertFailed')}
+        </h4>
+        <pre
+          style={{
+            whiteSpace: 'pre-wrap',
+            wordWrap: 'break-word',
+            color: '#666',
+            margin: '0 0 8px 0',
+            fontSize: '14px',
+            lineHeight: '1.5',
+          }}
+        >
           {errorMessage}
         </pre>
         {transformError.code && (
@@ -454,7 +483,6 @@ function SimulateDebugPage() {
           >
             <h2>{t('simulateDebug.tabs.convert')}</h2>
           </button>
-
         </aside>
         <div className="example-list example-list--compact example-list--spaced">
           <div className="example-list__header">
@@ -495,20 +523,18 @@ function SimulateDebugPage() {
                       <h3>{t('simulateDebug.logData.title')}</h3>
                       <p className="block-desc">{t('simulateDebug.logData.desc')}</p>
                     </div>
-                      <div className="block-actions" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button
-                            type="button"
-                            className="btn ghost"
-                            onClick={handleBase64Decode}
-                          >
-                            {t('simulateDebug.logData.base64Decode')}
-                          </button>
-                          <button type="button" className="btn ghost" onClick={handleClear}>
-                            {t('simulateDebug.logData.clearAll')}
-                          </button>
-                        </div>
-                   
+                    <div
+                      className="block-actions"
+                      style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}
+                    >
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button type="button" className="btn ghost" onClick={handleBase64Decode}>
+                          {t('simulateDebug.logData.base64Decode')}
+                        </button>
+                        <button type="button" className="btn ghost" onClick={handleClear}>
+                          {t('simulateDebug.logData.clearAll')}
+                        </button>
+                      </div>
                     </div>
                   </div>
                   <CodeEditor
@@ -525,11 +551,7 @@ function SimulateDebugPage() {
                       <div className="block-header">
                         <h3>{t('simulateDebug.parseRule.title')}</h3>
                         <div className="block-actions">
-                          <button
-                            type="button"
-                            className="btn ghost"
-                            onClick={wplFormat}
-                          >
+                          <button type="button" className="btn ghost" onClick={wplFormat}>
                             {t('simulateDebug.parseRule.format')}
                           </button>
                           <button
@@ -538,7 +560,9 @@ function SimulateDebugPage() {
                             onClick={handleTest}
                             disabled={loading}
                           >
-                            {loading ? t('simulateDebug.parseRule.parsing') : t('simulateDebug.parseRule.parse')}
+                            {loading
+                              ? t('simulateDebug.parseRule.parsing')
+                              : t('simulateDebug.parseRule.parse')}
                           </button>
                         </div>
                       </div>
@@ -580,7 +604,9 @@ function SimulateDebugPage() {
                             onChange={e => setShowEmpty(e.target.checked)}
                           />
                           <span className="switch-slider"></span>
-                          <span className="switch-label">{t('simulateDebug.parseResult.showEmpty')}</span>
+                          <span className="switch-label">
+                            {t('simulateDebug.parseResult.showEmpty')}
+                          </span>
                         </label>
                       </div>
                       <div className={`mode-content ${viewMode === 'table' ? 'is-active' : ''}`}>
@@ -646,11 +672,7 @@ function SimulateDebugPage() {
                         <p className="block-desc">{t('simulateDebug.omlInput.desc')}</p>
                       </div>
                       <div className="block-actions">
-                        <button
-                          type="button"
-                          className="btn primary"
-                          onClick={omlFormat}
-                        >
+                        <button type="button" className="btn primary" onClick={omlFormat}>
                           {t('simulateDebug.omlInput.format')}
                         </button>
                         <button
@@ -659,7 +681,9 @@ function SimulateDebugPage() {
                           onClick={handleTransform}
                           disabled={loading}
                         >
-                          {loading ? t('simulateDebug.omlInput.converting') : t('simulateDebug.omlInput.convert')}
+                          {loading
+                            ? t('simulateDebug.omlInput.converting')
+                            : t('simulateDebug.omlInput.convert')}
                         </button>
                         <button
                           type="button"
@@ -686,16 +710,18 @@ function SimulateDebugPage() {
                         <div className="mode-toggle">
                           <button
                             type="button"
-                            className={`toggle-btn ${transformParseViewMode === 'table' ? 'is-active' : ''
-                              }`}
+                            className={`toggle-btn ${
+                              transformParseViewMode === 'table' ? 'is-active' : ''
+                            }`}
                             onClick={() => setTransformParseViewMode('table')}
                           >
                             {t('simulateDebug.parseResult.tableMode')}
                           </button>
                           <button
                             type="button"
-                            className={`toggle-btn ${transformParseViewMode === 'json' ? 'is-active' : ''
-                              }`}
+                            className={`toggle-btn ${
+                              transformParseViewMode === 'json' ? 'is-active' : ''
+                            }`}
                             onClick={() => setTransformParseViewMode('json')}
                           >
                             {t('simulateDebug.parseResult.jsonMode')}
@@ -709,12 +735,15 @@ function SimulateDebugPage() {
                           onChange={e => setTransformParseShowEmpty(e.target.checked)}
                         />
                         <span className="switch-slider"></span>
-                        <span className="switch-label">{t('simulateDebug.parseResult.showEmpty')}</span>
+                        <span className="switch-label">
+                          {t('simulateDebug.parseResult.showEmpty')}
+                        </span>
                       </label>
                     </div>
                     <div
-                      className={`mode-content ${transformParseViewMode === 'table' ? 'is-active' : ''
-                        }`}
+                      className={`mode-content ${
+                        transformParseViewMode === 'table' ? 'is-active' : ''
+                      }`}
                     >
                       {transformParseResult ? (
                         <div style={{ paddingBottom: '10px' }}>
@@ -738,8 +767,9 @@ function SimulateDebugPage() {
                       )}
                     </div>
                     <div
-                      className={`mode-content ${transformParseViewMode === 'json' ? 'is-active' : ''
-                        }`}
+                      className={`mode-content ${
+                        transformParseViewMode === 'json' ? 'is-active' : ''
+                      }`}
                     >
                       {transformParseResult ? (
                         <SyntaxHighlighter
@@ -775,16 +805,18 @@ function SimulateDebugPage() {
                         <div className="mode-toggle">
                           <button
                             type="button"
-                            className={`toggle-btn ${transformResultViewMode === 'table' ? 'is-active' : ''
-                              }`}
+                            className={`toggle-btn ${
+                              transformResultViewMode === 'table' ? 'is-active' : ''
+                            }`}
                             onClick={() => setTransformResultViewMode('table')}
                           >
                             {t('simulateDebug.parseResult.tableMode')}
                           </button>
                           <button
                             type="button"
-                            className={`toggle-btn ${transformResultViewMode === 'json' ? 'is-active' : ''
-                              }`}
+                            className={`toggle-btn ${
+                              transformResultViewMode === 'json' ? 'is-active' : ''
+                            }`}
                             onClick={() => setTransformResultViewMode('json')}
                           >
                             {t('simulateDebug.parseResult.jsonMode')}
@@ -798,12 +830,15 @@ function SimulateDebugPage() {
                           onChange={e => setTransformResultShowEmpty(e.target.checked)}
                         />
                         <span className="switch-slider"></span>
-                        <span className="switch-label">{t('simulateDebug.parseResult.showEmpty')}</span>
+                        <span className="switch-label">
+                          {t('simulateDebug.parseResult.showEmpty')}
+                        </span>
                       </label>
                     </div>
                     <div
-                      className={`mode-content ${transformResultViewMode === 'table' ? 'is-active' : ''
-                        }`}
+                      className={`mode-content ${
+                        transformResultViewMode === 'table' ? 'is-active' : ''
+                      }`}
                     >
                       {transformError ? (
                         renderTransformError()
@@ -829,8 +864,9 @@ function SimulateDebugPage() {
                       )}
                     </div>
                     <div
-                      className={`mode-content ${transformResultViewMode === 'json' ? 'is-active' : ''
-                        }`}
+                      className={`mode-content ${
+                        transformResultViewMode === 'json' ? 'is-active' : ''
+                      }`}
                     >
                       {transformError ? (
                         renderTransformError()
@@ -854,7 +890,8 @@ function SimulateDebugPage() {
                                 transformResultShowEmpty
                               ),
                             },
-                            parsed => (transformResultShowEmpty ? parsed : filterEmptyFields(parsed))
+                            parsed =>
+                              transformResultShowEmpty ? parsed : filterEmptyFields(parsed)
                           )}
                         </SyntaxHighlighter>
                       ) : (

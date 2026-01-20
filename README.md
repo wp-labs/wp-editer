@@ -73,7 +73,7 @@ package /raw/web {
     rule nginx {
         (
             ip:sip,
-            _^2,
+            2*_,
             chars:timestamp<[,]>,
             http/request",
             chars:status,
