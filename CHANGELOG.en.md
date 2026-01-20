@@ -10,23 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Implement automatic grammar filling feature
-- Add English README and modular documentation
-- Add semver dependency
+- Add intelligent syntax completion feature for code editor
+- Add OML syntax completion support and example tables
+- Add bilingual (Chinese/English) completion hint tables
 
 ### Changed
 
-- Update CI configuration
-- Update release workflow and Dockerfile
-- Improve editor and UI interface
-- Optimize selected state display on simulation debugging page
-- Rebuild web assets
-- Clean up legacy documentation
+- Optimize code editor component completion experience
+- Improve debug interface and error handling
 
 ### Fixed
 
-- Fix issue where long error logs do not wrap to new line
-- Restore highlighting effect of example button
+- Fix code editor related issues
 
 ## [1.5.0] - 2026-01-17
 
