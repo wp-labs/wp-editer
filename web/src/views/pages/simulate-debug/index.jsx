@@ -528,6 +528,7 @@ function SimulateDebugPage() {
                       </div>
                       <CodeJarEditor
                         className="code-area code-area--large"
+                        language="wpl"
                         value={ruleValue}
                         onChange={value => setRuleValue(value)}
                       />
@@ -664,6 +665,7 @@ function SimulateDebugPage() {
                     </div>
                     <CodeJarEditor
                       className="code-area code-area--large"
+                      language="oml"
                       value={transformOml}
                       onChange={value => setTransformOml(value)}
                     />

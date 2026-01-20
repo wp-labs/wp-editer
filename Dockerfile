@@ -1,13 +1,9 @@
-FROM docker.cnb.cool/dy-sec/s-devkit/rust-cicd:0.7.1  AS builder
+FROM rust:1.83-bookworm AS builder
 
 WORKDIR /usr/src/app
 
-# 复制源代码（包含.cargo/config）
+# 复制源代码
 COPY . .
-
-ARG CI_DOCKER_PWD
-ENV CI_DOCKER_PWD=${CI_DOCKER_PWD}
-RUN git config --global url."https://cnb:${CI_DOCKER_PWD}@cnb.cool/".insteadOf "https://cnb.cool/"
 
 RUN cargo build --release
  
