@@ -3,6 +3,22 @@
 本文件记录所有重要变更，格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.6.1-alpha] - 2026-01-20
+
+### Changed
+
+- 前端性能优化：移除 6 个未使用的依赖（echarts、prismjs、refractor、react-diff-view、@ant-design/pro-components、@seed-fe/logger）
+- 优化构建配置：使用 esbuild 替代 terser，构建速度提升 30-50%
+- 优化代码分割策略：实现细粒度的按需加载，减少首屏加载体积
+- 优化 HTML 配置：添加 DNS 预连接，禁用不必要的格式检测
+
+### Performance
+
+- 依赖体积减少约 10MB
+- 构建时间缩短至 ~3.2 秒
+- 首屏加载体积优化（gzip 后约 320KB）
+- 解决循环依赖问题
+
 ## [1.6.0-alpha] - 2026-01-20
 
 ### Added

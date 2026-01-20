@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.6.1-alpha] - 2026-01-20
+
+### Changed
+
+- Frontend performance optimization: Removed 6 unused dependencies (echarts, prismjs, refractor, react-diff-view, @ant-design/pro-components, @seed-fe/logger)
+- Optimized build configuration: Use esbuild instead of terser, build speed improved by 30-50%
+- Optimized code splitting strategy: Implemented fine-grained lazy loading to reduce initial load size
+- Optimized HTML configuration: Added DNS prefetch, disabled unnecessary format detection
+
+### Performance
+
+- Dependency size reduced by approximately 10MB
+- Build time reduced to ~3.2 seconds
+- Initial load size optimized (~320KB after gzip)
+- Fixed circular dependency issues
+
 ## [1.6.0-alpha] - 2026-01-20
 
 ### Added
