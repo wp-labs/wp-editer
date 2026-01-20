@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import {
   autocompletion,
   closeBrackets,
@@ -18,6 +18,11 @@ import {
 } from '@codemirror/view';
 import { oneDark } from '@codemirror/theme-one-dark';
 import styles from './CodeJarEditor.module.css';
+import OML_COMPLETION_TABLE_ZH from './omlCompletionTable';
+import OML_COMPLETION_TABLE_EN from './omlCompletionTable.en';
+import WPL_COMPLETION_TABLE_ZH from './wplCompletionTable';
+import WPL_COMPLETION_TABLE_EN from './wplCompletionTable.en';
+import { useTranslation } from 'react-i18next';
 
 const LANGUAGE_DEFINITIONS = {
   wpl: {
@@ -127,106 +132,98 @@ const LANGUAGE_DEFINITIONS = {
   },
 };
 
-const WPL_COMPLETION_INFO = {
-  peek_symbol: { description: '预读匹配但不消费输入', example: 'peek_symbol(peek_symbol)' },
-  symbol: { description: '精确匹配指定字符串', example: 'symbol(symbol)' },
-  bool: { description: '布尔值，匹配 true/false', example: 'true' },
-  chars: { description: '字符串，支持引号或裸字符串', example: '"hello" / hello' },
-  digit: { description: '整数', example: '123 / -456' },
-  float: { description: '浮点数', example: '3.14 / -0.5' },
-  time_3339: { description: 'RFC3339/ISO 8601 时间', example: '2026-01-19T12:34:56Z' },
-  time_2822: { description: 'RFC2822 邮件时间格式', example: 'Mon, 07 Jul 2025 09:20:32 +0000' },
-  'time/clf': { description: 'Common Log Format 时间', example: '[06/Aug/2019:12:12:19 +0800]' },
-  time_timestamp: { description: 'Unix 秒级时间戳', example: '1647849600' },
-  ip: { description: 'IPv4/IPv6 地址', example: '192.168.1.100 / ::1' },
-  ip_net: { description: 'CIDR 网段', example: '192.168.0.0/24' },
-  port: { description: '端口号（1-65535）', example: '8080' },
-  kvarr: { description: '键值对 key=value', example: 'name=test' },
-  json: { description: 'JSON 对象', example: '{"strict":true}' },
-  'http/request': { description: 'HTTP 请求行', example: '"GET /api/users HTTP/1.1"' },
-  'http/status': { description: 'HTTP 状态码', example: '200' },
-  'http/agent': { description: 'User-Agent', example: '"Mozilla/5.0"' },
-  'http/method': { description: 'HTTP 方法', example: '"POST"' },
-  hex: { description: '十六进制字符串', example: '0x1A2B / 1A2B' },
-  base64: { description: 'Base64 编码字符串', example: 'YmFzZTY0ZGF0YQ==' },
-  sn: { description: '字母数字序列号', example: 'ABC123XYZ' },
-  _: { description: '文档未给出详解', example: '文档未提供' },
-  'decode/base64': { description: '对整行 Base64 解码', example: '|decode/base64|' },
-  'decode/hex': { description: '对整行十六进制解码', example: '|decode/hex|' },
-  'unquote/unescape': { description: '移除引号并还原转义', example: '|unquote/unescape|' },
-  plg_pipe: { description: '自定义预处理扩展', example: '|plg_pipe/dayu|' },
-  take: { description: '选择指定字段为活跃字段', example: '|take(name)|' },
-  last: { description: '选择最后一个字段为活跃字段', example: '|last()|' },
-  f_has: { description: '检查字段是否存在', example: '|f_has(status)|' },
-  f_chars_has: { description: '检查字段值等于字符串', example: '|f_chars_has(status, success)|' },
-  f_chars_not_has: { description: '检查字段值不等于字符串', example: '|f_chars_not_has(level, error)|' },
-  f_chars_in: { description: '检查字段值在字符串列表', example: '|f_chars_in(method, [GET, POST])|' },
-  f_digit_has: { description: '检查字段值等于数字', example: '|f_digit_has(code, 200)|' },
-  f_digit_in: { description: '检查字段值在数字列表', example: '|f_digit_in(status, [200, 201])|' },
-  f_ip_in: { description: '检查 IP 在列表', example: '|f_ip_in(client_ip, [127.0.0.1])|' },
-  has: { description: '检查活跃字段存在', example: '|take(name)| has()|' },
-  chars_has: { description: '检查活跃字段等于字符串', example: '|take(status)| chars_has(success)|' },
-  chars_not_has: { description: '检查活跃字段不等于字符串', example: '|take(level)| chars_not_has(error)|' },
-  chars_in: { description: '检查活跃字段在字符串列表', example: '|take(method)| chars_in([GET, POST])|' },
-  digit_has: { description: '检查活跃字段等于数字', example: '|take(code)| digit_has(200)|' },
-  ip_in: { description: '检查活跃 IP 在列表', example: '|take(client_ip)| ip_in([127.0.0.1])|' },
-  json_unescape: { description: 'JSON 反转义', example: '|take(message)| json_unescape()|' },
-  base64_decode: { description: 'Base64 解码', example: '|take(payload)| base64_decode()|' },
+const COMPLETION_LABELS = {
+  'zh-CN': {
+    description: '说明',
+    example: '示例',
+    packageDetail: '包定义',
+    packageInfo: '定义 WPL 包路径与作用域。',
+    ruleDetail: '规则定义',
+    ruleInfo: '定义规则名称与规则体。',
+  },
+  'en-US': {
+    description: 'Description',
+    example: 'Example',
+    packageDetail: 'Package',
+    packageInfo: 'Define WPL package path and scope.',
+    ruleDetail: 'Rule',
+    ruleInfo: 'Define rule name and body.',
+  },
 };
 
-const buildCompletionInfo = (label, fallbackDetail) => {
-  const info = WPL_COMPLETION_INFO[label];
-  if (!info) {
-    return fallbackDetail ? `说明：${fallbackDetail}` : undefined;
-  }
+const getCompletionLabels = (lang) => COMPLETION_LABELS[lang] || COMPLETION_LABELS['zh-CN'];
+
+const buildCompletionInfo = (labels, description, example) => {
   const lines = [];
-  if (info.description) lines.push(`说明：${info.description}`);
-  if (info.example) lines.push(`示例：${info.example}`);
-  return lines.join('\n');
+  if (description) lines.push(`${labels.description}：${description}`);
+  if (example) lines.push(`${labels.example}：${example}`);
+  return lines.length ? lines.join('\n') : undefined;
 };
 
-const buildCompletionItems = (definition, infoMap = {}) => {
-  const keywordItems = definition.keywords.map((label) => ({
-    label,
-    type: 'keyword',
-    detail: '关键字',
-    info: buildCompletionInfo(label, '关键字'),
-  }));
-  const typeItems = definition.types.map((label) => ({
-    label,
-    type: 'type',
-    detail: infoMap[label]?.description || '字段类型',
-    info: buildCompletionInfo(label),
-  }));
-  const functionItems = definition.functions.map((label) => ({
-    label,
-    type: 'function',
-    detail: infoMap[label]?.description || '字段函数',
-    info: buildCompletionInfo(label),
-  }));
-  const constantItems = definition.constants.map((label) => ({
-    label,
-    type: 'constant',
-    detail: '内置字段',
-    info: buildCompletionInfo(label, '内置字段'),
-  }));
-  const placeholderItems = definition.placeholders.map((label) => ({
-    label,
-    type: 'variable',
-    detail: '占位符',
-    info: buildCompletionInfo(label, '占位符'),
-  }));
-  return [...keywordItems, ...typeItems, ...functionItems, ...constantItems, ...placeholderItems];
+const resolveDescription = (item) => item.description;
+
+const buildWplCompletionOptions = (lang) => {
+  const labels = getCompletionLabels(lang);
+  const table = lang === 'en-US' ? WPL_COMPLETION_TABLE_EN : WPL_COMPLETION_TABLE_ZH;
+  return [
+    snippetCompletion(['package /${path}/ {', '  $0', '}'].join('\n'), {
+      label: 'package',
+      type: 'keyword',
+      detail: labels.packageDetail,
+      info: labels.packageInfo,
+    }),
+    snippetCompletion(['rule ${name} {(', '  $0', ')}'].join('\n'), {
+      label: 'rule',
+      type: 'keyword',
+      detail: labels.ruleDetail,
+      info: labels.ruleInfo,
+    }),
+    ...table.map((item) => {
+      const description = resolveDescription(item);
+      return snippetCompletion(item.insertText, {
+        label: item.label,
+        type: item.kind,
+        detail: description,
+        info: buildCompletionInfo(labels, description, item.example),
+      });
+    }),
+  ];
+};
+
+const buildOmlCompletionOptions = (lang) => {
+  const labels = getCompletionLabels(lang);
+  const table = lang === 'en-US' ? OML_COMPLETION_TABLE_EN : OML_COMPLETION_TABLE_ZH;
+  return table.map((item) => {
+    const description = resolveDescription(item);
+    return snippetCompletion(item.insertText, {
+      label: item.label,
+      type: 'function',
+      detail: description,
+      info: buildCompletionInfo(labels, description, item.example),
+    });
+  });
+};
+
+const createCompletionSource = (options, validFor) => (context) => {
+  const word = context.matchBefore(validFor);
+  if (!word && !context.explicit) {
+    return null;
+  }
+  const from = word ? word.from : context.pos;
+  return {
+    from,
+    options,
+    validFor,
+  };
 };
 
 const WPL_DEFINITION = LANGUAGE_DEFINITIONS.wpl;
 const WPL_KEYWORDS = new Set(WPL_DEFINITION.keywords);
-const WPL_TYPES = new Set(WPL_DEFINITION.types);
-const WPL_FUNCTIONS = new Set(WPL_DEFINITION.functions);
-const WPL_BUILTINS = new Set(WPL_DEFINITION.constants);
-const WPL_COMPLETION_ITEMS = buildCompletionItems(WPL_DEFINITION, WPL_COMPLETION_INFO).filter(
-  (item) => !['package', 'rule', 'plg_pipe'].includes(item.label),
+const WPL_TYPES = new Set(WPL_COMPLETION_TABLE_ZH.filter((item) => item.kind === 'type').map((item) => item.label));
+const WPL_FUNCTIONS = new Set(
+  WPL_COMPLETION_TABLE_ZH.filter((item) => item.kind === 'function').map((item) => item.label),
 );
+const WPL_BUILTINS = new Set(WPL_DEFINITION.constants);
 
 const wplLanguage = StreamLanguage.define({
   token(stream) {
@@ -262,348 +259,14 @@ const wplLanguage = StreamLanguage.define({
   },
 });
 
-const WPL_COMPLETIONS = [
-  snippetCompletion(['package /${path}/ {', '}'].join('\n'), {
-    label: 'package',
-    type: 'keyword',
-    detail: '包定义',
-    info: '定义 WPL 包路径与作用域。',
-  }),
-  snippetCompletion(['rule ${name} {(', ')}'].join('\n'), {
-    label: 'rule',
-    type: 'keyword',
-    detail: '规则定义',
-    info: '定义规则名称与规则体。',
-  }),
-  snippetCompletion('plg_pipe/${name}', {
-    label: 'plg_pipe',
-    type: 'function',
-    detail: '预处理扩展',
-    info: buildCompletionInfo('plg_pipe'),
-  }),
-  ...WPL_COMPLETION_ITEMS,
-];
-
-const wplCompletionSource = (context) => {
-  const word = context.matchBefore(/[\w/]+/);
-  if (!word && !context.explicit) {
-    return null;
-  }
-  const from = word ? word.from : context.pos;
-  return {
-    from,
-    options: WPL_COMPLETIONS,
-    validFor: /[\w/]+/,
-  };
-};
+const WPL_COMPLETION_VALID_FOR = /[\w/]+|\|/;
 
 const OML_DEFINITION = LANGUAGE_DEFINITIONS.oml;
 const OML_KEYWORDS = new Set(OML_DEFINITION.keywords);
 const OML_TYPES = new Set(OML_DEFINITION.types);
 const OML_FUNCTIONS = new Set(OML_DEFINITION.functions);
 
-const OML_COMPLETION_TABLE = [
-  {
-    label: 'chars()',
-    description: '直接创建常量值',
-    example: 'chars(13)',
-    insertText: 'chars(${chars})',
-  },
-  {
-    label: 'digit()',
-    description: '直接创建常量值',
-    example: 'digit(13)',
-    insertText: 'digit(${digit})',
-  },
-  {
-    label: 'read',
-    description: '简单取值',
-    example: 'read(simple_chars)',
-    insertText: 'read(${Variable})',
-  },
-  {
-    label: 'read(keys)',
-    description: '通配符批量操作',
-    example: 'a_name_fields = read(keys:[A*/name])',
-    insertText: 'read(${keys:[A*/name]})',
-  },
-  {
-    label: 'read',
-    description: '字段不存在时使用默认值',
-    example: 'read(optional_field) { _ : chars(DEFAULT_VALUE) }',
-    insertText: 'read(${field}) { _ : chars(DEFAULT) }',
-  },
-  {
-    label: 'option:[]',
-    description: '选择取值（按顺序尝试多个字段）',
-    example: 'read(option:[select_one, select_two])',
-    insertText: 'option:[${select_one}]',
-  },
-  {
-    label: 'take',
-    description: '破坏性读取并移除源字段',
-    example: 'field_taken = take(source_field)',
-    insertText: 'take(${source_field})',
-  },
-  {
-    label: 'take',
-    description: 'take失败使用默认值',
-    example: 'field_taken_again = take(source_field) { _ : chars(already_taken) }',
-    insertText: 'take(${source_field}) { _ : chars(DEFAULT) }',
-  },
-  {
-    label: 'take()',
-    description: '取所有字段',
-    example: 'all_fields = take()',
-    insertText: 'all_fields = take()',
-  },
-  {
-    label: 'take(keys)',
-    description: '通配符批量操作',
-    example: 'path_fields = take(keys:[*/path])',
-    insertText: 'path_fields = take(keys:[*/path])',
-  },
-  {
-    label: 'Now::time()',
-    description: '获取当前完整时间',
-    example: 'current_time = Now::time()',
-    insertText: 'current_time = Now::time()',
-  },
-  {
-    label: 'Now::date()',
-    description: '获取当前日期',
-    example: 'current_date = Now::date()',
-    insertText: 'Now::date()',
-  },
-  {
-    label: 'Now::hour()',
-    description: '获取当前小时',
-    example: 'current_hour = Now::hour()',
-    insertText: 'Now::hour()',
-  },
-  {
-    label: 'match',
-    description: '范围判断',
-    example: 'num_range = match read(option:[num_range]) { in (digit(0), digit(1000)) => read(num_range) }',
-    insertText: 'match read(option:[${num_range}]) { in (digit(0), digit(1000)) => read(num_range) }',
-  },
-  {
-    label: 'match',
-    description: '字段匹配',
-    example: 'is_enabled : digit = match read(enabled) { bool(true) => digit(1) }',
-    insertText: 'match read(${field}) {}',
-  },
-  {
-    label: 'match',
-    description: '双字段组合匹配',
-    example:
-      'location : chars = match (read(city1), read(city2)) { (chars(beijing), chars(shanghai)) => chars(east_region) }',
-    insertText:
-      'location : chars = match (read(city1), read(city2)) { (chars(beijing), chars(shanghai)) => chars(east_region) }',
-  },
-  {
-    label: 'match + !',
-    description: '否定条件匹配',
-    example: 'valid_status = match read(status) { !chars(error) => chars(ok) }',
-    insertText: 'match read(status) { !chars(!{error}) => chars(ok) }',
-  },
-  {
-    label: 'Time::to_ts_zone',
-    description: '时间转换（时区）',
-    example: 'timestamp_zone = pipe read(timestamp_zone) | Time::to_ts_zone(0, ms)',
-    insertText: 'Time::to_ts_zone(${0}, ms)',
-  },
-  {
-    label: 'Time::to_ts',
-    description: '时间转换（秒级）',
-    example: 'timestamp_s = pipe read(timestamp_zone) | Time::to_ts',
-    insertText: 'Time::to_ts',
-  },
-  {
-    label: 'Time::to_ts_ms',
-    description: '时间转换（毫秒）',
-    example: 'timestamp_ms = pipe @current_time | Time::to_ts_ms',
-    insertText: 'Time::to_ts_ms',
-  },
-  {
-    label: 'Time::to_ts_us',
-    description: '时间转换（微秒）',
-    example: 'timestamp_us = pipe @current_time | Time::to_ts_us',
-    insertText: 'Time::to_ts_us',
-  },
-  {
-    label: 'base64_decode',
-    description: 'Base64 解码',
-    example: 'base64_decoded = pipe read(base64) | base64_decode(Utf8)',
-    insertText: 'base64_decode(${Utf8})',
-  },
-  {
-    label: 'base64_encode',
-    description: 'Base64 编码',
-    example: 'base64_encoded = pipe read(base64) | base64_encode',
-    insertText: 'base64_encode',
-  },
-  {
-    label: 'html_escape',
-    description: 'HTML 转义',
-    example: 'html_escaped = pipe read(html) | html_escape',
-    insertText: 'html_escape',
-  },
-  {
-    label: 'html_unescape',
-    description: 'HTML 反转义',
-    example: 'html_unescaped = pipe read(html) | html_unescape',
-    insertText: 'html_unescape',
-  },
-  {
-    label: 'json_escape',
-    description: 'JSON 转义',
-    example: 'json_escaped = pipe read(json_escape) | json_escape',
-    insertText: 'json_escape',
-  },
-  {
-    label: 'json_unescape',
-    description: 'JSON 反转义',
-    example: 'json_unescaped = pipe @json_escaped | json_unescape',
-    insertText: 'json_unescape',
-  },
-  {
-    label: 'str_escape',
-    description: '字符串转义',
-    example: 'str_escaped = pipe read(str) | str_escape',
-    insertText: 'str_escape',
-  },
-  {
-    label: 'to_str',
-    description: '转为字符串',
-    example: 'to_str_result = pipe read(str) | to_str',
-    insertText: 'to_str',
-  },
-  {
-    label: 'to_json',
-    description: '转为 JSON',
-    example: 'array_json = pipe read(array_str) | to_json',
-    insertText: 'to_json',
-  },
-  {
-    label: 'ip4_to_int',
-    description: 'IPv4 转整数',
-    example: 'ip_to_int = pipe read(simple_ip) | ip4_to_int',
-    insertText: 'ip4_to_int',
-  },
-  {
-    label: 'nth',
-    description: '数组取元素',
-    example: 'array_first = pipe read(array_str) | nth(0)',
-    insertText: 'nth(${0})',
-  },
-  {
-    label: 'get',
-    description: '对象嵌套取值',
-    example: 'obj_nested = pipe read(obj) | nth(0) | get(one/two)',
-    insertText: 'get(${one/two})',
-  },
-  {
-    label: 'path(name)',
-    description: '提取文件名',
-    example: 'file_name = pipe read(path) | path(name)',
-    insertText: 'path(name)',
-  },
-  {
-    label: 'path(path)',
-    description: '提取文件路径',
-    example: 'file_path = pipe read(path) | path(path)',
-    insertText: 'path(path)',
-  },
-  {
-    label: 'url(domain)',
-    description: '提取 URL domain',
-    example: 'url_domain = pipe read(url) | url(domain)',
-    insertText: 'url(domain)',
-  },
-  {
-    label: 'url(host)',
-    description: '提取 URL host',
-    example: 'url_host = pipe read(url) | url(host)',
-    insertText: 'url(host)',
-  },
-  {
-    label: 'url(uri)',
-    description: '提取 URL uri',
-    example: 'url_uri = pipe read(url) | url(uri)',
-    insertText: 'url(uri)',
-  },
-  {
-    label: 'url(path)',
-    description: '提取 URL path',
-    example: 'url_path = pipe read(url) | url(path)',
-    insertText: 'url(path)',
-  },
-  {
-    label: 'url(params)',
-    description: '提取 URL params',
-    example: 'url_params = pipe read(url) | url(params)',
-    insertText: 'url(params)',
-  },
-  {
-    label: 'skip_empty',
-    description: '跳过空值',
-    example: 'skip_empty_result = pipe read(empty_chars) | skip_empty',
-    insertText: 'skip_empty',
-  },
-  {
-    label: 'pipe',
-    description: '流处理',
-    example: 'pipe simple_transform = read(data) | to_json',
-    insertText: 'pipe',
-  },
-  {
-    label: 'fmt',
-    description: '字符串格式化',
-    example: 'splice = fmt("{one}:{two}|{three}:{four}", read(one), read(two), read(three), read(four))',
-    insertText: 'fmt',
-  },
-  {
-    label: 'object',
-    description: '对象创建',
-    example: 'extends = object { extend1, extend2 = read() }',
-    insertText: 'object { }',
-  },
-  {
-    label: 'collect',
-    description: '数组收集',
-    example: 'collected_ports : array = collect read(keys:[sport, dport, extra_port])',
-    insertText: 'collect read(keys:[${sport}])',
-  },
-  {
-    label: 'collect + 通配符',
-    description: '通配符收集',
-    example: 'wildcard_items : array = collect take(keys:[details[*]/process_name])',
-    insertText: 'collect take(keys:[${details[*]/process_name}])',
-  },
-];
-
-const OML_COMPLETIONS = OML_COMPLETION_TABLE.map((item) =>
-  snippetCompletion(item.insertText, {
-    label: item.label,
-    type: 'function',
-    detail: item.description,
-    info: `说明：${item.description}\n示例：${item.example}`,
-  }),
-);
-
-const omlCompletionSource = (context) => {
-  const word = context.matchBefore(/[\w/:\[\]]+/);
-  if (!word && !context.explicit) {
-    return null;
-  }
-  const from = word ? word.from : context.pos;
-  return {
-    from,
-    options: OML_COMPLETIONS,
-    validFor: /[\w/:\[\]]+/,
-  };
-};
+const OML_COMPLETION_VALID_FOR = /[\w/:\[\]]+|\|/;
 
 const omlLanguage = StreamLanguage.define({
   token(stream) {
@@ -671,17 +334,20 @@ const editorTheme = EditorView.theme({
   '.cm-activeLine': {
     backgroundColor: 'rgba(148, 163, 184, 0.08)',
   },
-  '.cm-keyword': {
-    color: '#7dd3fc',
+  '.cm-content .cm-keyword': {
+    color: '#3b82f6 !important',
+  },
+  '.cm-content .ͼp': {
+    color: '#3b82f6 !important',
   },
   '.cm-typeName': {
     color: '#facc15',
   },
   '.cm-function': {
-    color: '#f472b6',
+    color: '#7281f4ff',
   },
   '.cm-atom': {
-    color: '#a5b4fc',
+    color: '#a5b4fcff',
   },
   '.cm-string': {
     color: '#86efac',
@@ -697,10 +363,23 @@ const editorTheme = EditorView.theme({
   },
 });
 
+
 const CodeJarEditor = forwardRef((props, ref) => {
   const editorRef = useRef(null);
   const viewRef = useRef(null);
   const language = props.language || 'plain';
+  const { i18n } = useTranslation();
+  const uiLanguage = i18n.language;
+  const wplCompletionOptions = useMemo(() => buildWplCompletionOptions(uiLanguage), [uiLanguage]);
+  const omlCompletionOptions = useMemo(() => buildOmlCompletionOptions(uiLanguage), [uiLanguage]);
+  const wplCompletionSource = useMemo(
+    () => createCompletionSource(wplCompletionOptions, WPL_COMPLETION_VALID_FOR),
+    [wplCompletionOptions],
+  );
+  const omlCompletionSource = useMemo(
+    () => createCompletionSource(omlCompletionOptions, OML_COMPLETION_VALID_FOR),
+    [omlCompletionOptions],
+  );
 
   useImperativeHandle(ref, () => ({
     getValue: () => viewRef.current?.state.doc.toString() || '',
@@ -769,7 +448,7 @@ const CodeJarEditor = forwardRef((props, ref) => {
       view.destroy();
       viewRef.current = null;
     };
-  }, [language]);
+  }, [language, uiLanguage, wplCompletionSource, omlCompletionSource]);
 
   useEffect(() => {
     const view = viewRef.current;

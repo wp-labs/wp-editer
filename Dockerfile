@@ -13,8 +13,8 @@ WORKDIR /app
 # 根据目标架构复制预构建的二进制文件
 COPY ${TARGETARCH}/wp-editor /app/wp-editor
 
-# 复制静态资源（如果存在）
-COPY --chown=appuser:appgroup dist /app/web/dist 2>/dev/null || true
+# 复制静态资源
+COPY --chown=appuser:appgroup dist /app/web/dist
 
 # 设置权限
 RUN chown -R appuser:appgroup /app && \
