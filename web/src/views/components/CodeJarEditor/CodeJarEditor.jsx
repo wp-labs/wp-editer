@@ -325,7 +325,7 @@ const OML_COMPLETION_TABLE = [
     label: 'read(keys)',
     description: '通配符批量操作',
     example: 'a_name_fields = read(keys:[A*/name])',
-    insertText: 'a_name_fields = read(${keys:[A*/name]})',
+    insertText: 'read(${keys:[A*/name]})',
   },
   {
     label: 'read',
