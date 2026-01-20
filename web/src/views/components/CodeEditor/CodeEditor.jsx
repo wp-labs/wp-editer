@@ -17,7 +17,7 @@ import {
   lineNumbers,
 } from '@codemirror/view';
 import { oneDark } from '@codemirror/theme-one-dark';
-import styles from './CodeJarEditor.module.css';
+import styles from './CodeEditor.module.css';
 import OML_COMPLETION_TABLE_ZH from './omlCompletionTable';
 import OML_COMPLETION_TABLE_EN from './omlCompletionTable.en';
 import WPL_COMPLETION_TABLE_ZH from './wplCompletionTable';
@@ -166,13 +166,13 @@ const buildWplCompletionOptions = (lang) => {
   const labels = getCompletionLabels(lang);
   const table = lang === 'en-US' ? WPL_COMPLETION_TABLE_EN : WPL_COMPLETION_TABLE_ZH;
   return [
-    snippetCompletion(['package /${path}/ {', '  $0', '}'].join('\n'), {
+    snippetCompletion(['package /${path}/ {', '}'].join('\n'), {
       label: 'package',
       type: 'keyword',
       detail: labels.packageDetail,
       info: labels.packageInfo,
     }),
-    snippetCompletion(['rule ${name} {(', '  $0', ')}'].join('\n'), {
+    snippetCompletion(['rule ${name} {(', ')}'].join('\n'), {
       label: 'rule',
       type: 'keyword',
       detail: labels.ruleDetail,
@@ -206,10 +206,11 @@ const buildOmlCompletionOptions = (lang) => {
 
 const createCompletionSource = (options, validFor) => (context) => {
   const word = context.matchBefore(validFor);
-  if (!word && !context.explicit) {
+  const pipe = context.matchBefore(/\|/);
+  if (!word && !pipe && !context.explicit) {
     return null;
   }
-  const from = word ? word.from : context.pos;
+  const from = (pipe || word)?.from ?? context.pos;
   return {
     from,
     options,
@@ -338,10 +339,13 @@ const editorTheme = EditorView.theme({
     color: '#3b82f6 !important',
   },
   '.cm-content .ͼp': {
-    color: '#3b82f6 !important',
+    color: '#80F4FF !important',
   },
   '.cm-typeName': {
-    color: '#facc15',
+    color: '#FFF2b3',
+  },
+  '.cm-content .ͼu': {
+    color: '#FFF2b3 !important',
   },
   '.cm-function': {
     color: '#7281f4ff',
@@ -364,10 +368,11 @@ const editorTheme = EditorView.theme({
 });
 
 
-const CodeJarEditor = forwardRef((props, ref) => {
+const CodeEditor = forwardRef((props, ref) => {
   const editorRef = useRef(null);
   const viewRef = useRef(null);
   const language = props.language || 'plain';
+  const textColor = props.textColor;
   const { i18n } = useTranslation();
   const uiLanguage = i18n.language;
   const wplCompletionOptions = useMemo(() => buildWplCompletionOptions(uiLanguage), [uiLanguage]);
@@ -380,6 +385,17 @@ const CodeJarEditor = forwardRef((props, ref) => {
     () => createCompletionSource(omlCompletionOptions, OML_COMPLETION_VALID_FOR),
     [omlCompletionOptions],
   );
+  const colorTheme = useMemo(() => {
+    if (!textColor) return null;
+    return EditorView.theme({
+      '&': {
+        color: textColor,
+      },
+      '.cm-content': {
+        color: textColor,
+      },
+    });
+  }, [textColor]);
 
   useImperativeHandle(ref, () => ({
     getValue: () => viewRef.current?.state.doc.toString() || '',
@@ -422,6 +438,7 @@ const CodeJarEditor = forwardRef((props, ref) => {
       ]),
       oneDark,
       editorTheme,
+      ...(colorTheme ? [colorTheme] : []),
       updateListener,
     ];
 
@@ -448,7 +465,7 @@ const CodeJarEditor = forwardRef((props, ref) => {
       view.destroy();
       viewRef.current = null;
     };
-  }, [language, uiLanguage, wplCompletionSource, omlCompletionSource]);
+  }, [language, uiLanguage, wplCompletionSource, omlCompletionSource, colorTheme]);
 
   useEffect(() => {
     const view = viewRef.current;
@@ -469,4 +486,4 @@ const CodeJarEditor = forwardRef((props, ref) => {
   );
 });
 
-export default CodeJarEditor;
+export default CodeEditor;

@@ -1,8 +1,10 @@
 import { Table, message } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { convertRecord, fetchDebugExamples, parseLogs, wplCodeFormat, omlCodeFormat, base64Decode } from '@/services/debug';
-import CodeJarEditor from '@/views/components/CodeJarEditor';
+import CodeEditor from '@/views/components/CodeEditor';
 
 /**
  * Wp Editor
@@ -58,6 +60,19 @@ function SimulateDebugPage() {
   const [examplesLoading, setExamplesLoading] = useState(false);
   const [examplesLoaded, setExamplesLoaded] = useState(false);
   const examplesFetchedRef = useRef(false); // 防止严格模式导致的重复请求
+
+  const formatJsonForDisplay = (formatJson, fallbackData, postProcess) => {
+    if (formatJson) {
+      try {
+        const parsed = JSON.parse(formatJson);
+        const processed = postProcess ? postProcess(parsed) : parsed;
+        return JSON.stringify(processed, null, 2);
+      } catch (_e) {
+        return formatJson;
+      }
+    }
+    return JSON.stringify(fallbackData, null, 2);
+  };
 
   /**
    * 处理测试/解析按钮点击
@@ -496,10 +511,11 @@ function SimulateDebugPage() {
                    
                     </div>
                   </div>
-                  <CodeJarEditor
+                  <CodeEditor
                     className="code-area"
                     value={inputValue}
                     onChange={value => setInputValue(value)}
+                    textColor="#ffffff"
                   />
                 </div>
 
@@ -526,7 +542,7 @@ function SimulateDebugPage() {
                           </button>
                         </div>
                       </div>
-                      <CodeJarEditor
+                      <CodeEditor
                         className="code-area code-area--large"
                         language="wpl"
                         value={ruleValue}
@@ -592,30 +608,21 @@ function SimulateDebugPage() {
                         {parseError ? (
                           renderParseError()
                         ) : result ? (
-                          <pre
+                          <SyntaxHighlighter
                             className="code-block"
-                            style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}
+                            language="json"
+                            style={oneDark}
+                            customStyle={{ margin: 0, background: '#0f172a' }}
+                            codeTagProps={{ style: { background: 'transparent' } }}
+                            wrapLines
+                            lineProps={{ style: { background: 'transparent' } }}
+                            wrapLongLines
                           >
-                            {(() => {
-                              if (result.formatJson) {
-                                try {
-                                  const parsed = JSON.parse(result.formatJson);
-                                  return JSON.stringify(parsed, null, 2);
-                                } catch (_e) {
-                                  // 如果不是严格 JSON 字符串，则按原样输出
-                                  return result.formatJson;
-                                }
-                              }
-                              return JSON.stringify(
-                                {
-                                  ...result,
-                                  fields: filterFieldsByShowEmpty(result.fields, showEmpty),
-                                },
-                                null,
-                                2
-                              );
-                            })()}
-                          </pre>
+                            {formatJsonForDisplay(result.formatJson, {
+                              ...result,
+                              fields: filterFieldsByShowEmpty(result.fields, showEmpty),
+                            })}
+                          </SyntaxHighlighter>
                         ) : (
                           <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
                             {t('simulateDebug.parseResult.clickToParse')}
@@ -663,7 +670,7 @@ function SimulateDebugPage() {
                         </button>
                       </div>
                     </div>
-                    <CodeJarEditor
+                    <CodeEditor
                       className="code-area code-area--large"
                       language="oml"
                       value={transformOml}
@@ -735,32 +742,24 @@ function SimulateDebugPage() {
                         }`}
                     >
                       {transformParseResult ? (
-                        <pre
+                        <SyntaxHighlighter
                           className="code-block"
-                          style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}
+                          language="json"
+                          style={oneDark}
+                          customStyle={{ margin: 0, background: '#0f172a' }}
+                          codeTagProps={{ style: { background: 'transparent' } }}
+                          wrapLines
+                          lineProps={{ style: { background: 'transparent' } }}
+                          wrapLongLines
                         >
-                          {(() => {
-                            if (transformParseResult.formatJson) {
-                              try {
-                                const parsed = JSON.parse(transformParseResult.formatJson);
-                                return JSON.stringify(parsed, null, 2);
-                              } catch (_e) {
-                                return transformParseResult.formatJson;
-                              }
-                            }
-                            return JSON.stringify(
-                              {
-                                ...transformParseResult,
-                                fields: filterFieldsByShowEmpty(
-                                  processFieldsForDisplay(transformParseResult.fields),
-                                  transformParseShowEmpty
-                                ),
-                              },
-                              null,
-                              2
-                            );
-                          })()}
-                        </pre>
+                          {formatJsonForDisplay(transformParseResult.formatJson, {
+                            ...transformParseResult,
+                            fields: filterFieldsByShowEmpty(
+                              processFieldsForDisplay(transformParseResult.fields),
+                              transformParseShowEmpty
+                            ),
+                          })}
+                        </SyntaxHighlighter>
                       ) : (
                         <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
                           {t('simulateDebug.parseResult.willShowHere')}
@@ -836,35 +835,28 @@ function SimulateDebugPage() {
                       {transformError ? (
                         renderTransformError()
                       ) : transformResult ? (
-                        <pre
+                        <SyntaxHighlighter
                           className="code-block"
-                          style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}
+                          language="json"
+                          style={oneDark}
+                          customStyle={{ margin: 0, background: '#0f172a' }}
+                          codeTagProps={{ style: { background: 'transparent' } }}
+                          wrapLines
+                          lineProps={{ style: { background: 'transparent' } }}
+                          wrapLongLines
                         >
-                          {(() => {
-                            if (transformResult.formatJson) {
-                              try {
-                                const parsed = JSON.parse(transformResult.formatJson);
-                                if (transformResultShowEmpty) {
-                                  return JSON.stringify(parsed, null, 2);
-                                }
-                                return JSON.stringify(filterEmptyFields(parsed), null, 2);
-                              } catch (_e) {
-                                return transformResult.formatJson;
-                              }
-                            }
-                            return JSON.stringify(
-                              {
-                                ...transformResult,
-                                fields: filterFieldsByShowEmpty(
-                                  transformResult.fields,
-                                  transformResultShowEmpty
-                                ),
-                              },
-                              null,
-                              2
-                            );
-                          })()}
-                        </pre>
+                          {formatJsonForDisplay(
+                            transformResult.formatJson,
+                            {
+                              ...transformResult,
+                              fields: filterFieldsByShowEmpty(
+                                transformResult.fields,
+                                transformResultShowEmpty
+                              ),
+                            },
+                            parsed => (transformResultShowEmpty ? parsed : filterEmptyFields(parsed))
+                          )}
+                        </SyntaxHighlighter>
                       ) : (
                         <div style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
                           {t('simulateDebug.convertResult.willShowHere')}

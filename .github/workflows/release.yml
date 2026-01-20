@@ -206,7 +206,7 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           path: artifacts
-          pattern: wp-editor*
+          pattern: ${{ github.event.repository.name }}-*
           merge-multiple: true
 
       - name: Release
@@ -231,6 +231,52 @@ jobs:
             </details>
 
             ---
+
+            ## 📦 安装方式 / Installation
+
+            ### 二进制文件下载 / Binary Downloads
+            从下方 Assets 中下载适合您平台的预编译二进制文件。
+
+            Download the pre-built binaries for your platform from the assets below.
+
+            **支持的平台 / Supported Platforms:**
+            - Linux x86_64 (AMD64)
+            - Linux aarch64 (ARM64)
+            - macOS aarch64 (Apple Silicon)
+
+            ### Docker 镜像 / Docker Image
+            拉取并运行 Docker 镜像 / Pull and run the Docker image:
+
+            ```shell
+            # 拉取指定版本 / Pull the specific version
+            docker pull ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+
+            # 或拉取最新版本 / Or pull the latest version
+            docker pull ghcr.io/${{ github.repository }}:latest
+
+            # 运行容器 / Run the container
+            docker run -d -p 8080:8080 ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+
+            # 访问 / Access at: http://localhost:8080
+            ```
+
+            ## 🔐 签名验证 / Verification
+            所有构建产物都使用 Sigstore 进行签名。您可以使用 GitHub CLI 验证签名:
+
+            All artifacts are signed with this repo's identity using Sigstore. You can verify the signatures using the GitHub CLI:
+
+            ```shell
+            gh attestation verify --owner ${{ github.repository_owner }} <artifact-file>
+            ```
+
+            ## 📚 文档 / Documentation
+            - [配置说明 / Configuration](https://github.com/${{ github.repository }}/blob/main/docs/CONFIGURATION.md)
+            - [API 文档 / API Documentation](https://github.com/${{ github.repository }}/blob/main/docs/API.md)
+            - [项目结构 / Project Structure](https://github.com/${{ github.repository }}/blob/main/docs/PROJECT_STRUCTURE.md)
+            - [发布管理 / Release Management](https://github.com/${{ github.repository }}/blob/main/docs/RELEASE_MANAGEMENT.md)
+
+            ## 🐛 发现问题? / Found an Issue?
+            请在此报告 / Please report it at: https://github.com/${{ github.repository }}/issues
           token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: ${{ contains(github.ref, '-alpha') || contains(github.ref, '-beta') }}
           files: artifacts/*

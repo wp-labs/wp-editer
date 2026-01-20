@@ -3,30 +3,6 @@
 本文件记录所有重要变更，格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-
-## [1.6.0-alpha] - 2026-01-20
-
-### Added
-
-- 实现自动语法填充功能
-- 添加英文 README 和模块化文档
-- 添加 semver 依赖
-
-### Changed
-
-- 更新 CI 配置
-- 更新发布工作流和 Dockerfile
-- 改进编辑器和 UI 界面
-- 优化模拟调试页面的选中状态显示
-- 重建 web 资源
-- 清理遗留文档
-
-### Fixed
-
-- 修复长错误日志不换行的问题
-- 恢复示例按钮的高亮效果
-
-
 ## [1.5.0] - 2026-01-17
 
 ### Added

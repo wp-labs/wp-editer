@@ -86,8 +86,8 @@ const OML_COMPLETION_TABLE = [
   {
     label: 'match',
     description: '字段匹配',
-    example: 'is_enabled : digit = match read(enabled) { bool(true) => digit(1) }',
-    insertText: 'match read(${field}) {}',
+    example: 'is_enabled : digit = match read(field) { bool(true) => digit(1) }',
+    insertText: 'match read(${field}) {\n  _ => chars(defaule) \n}',
   },
   {
     label: 'match',
