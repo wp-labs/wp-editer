@@ -128,13 +128,9 @@ This project is licensed under the **Elastic License 2.0** - see the [LICENSE](L
 
 ## 📚 Documentation
 
-*   [Tech Stack](docs/TECH_STACK.md)
-*   [Quick Start Guide](docs/QUICK_START.md)
-*   [Configuration](docs/CONFIGURATION.md)
 *   [API Documentation](docs/API.md)
+*   [Configuration](docs/CONFIGURATION.md)
 *   [Project Structure](docs/PROJECT_STRUCTURE.md)
-*   [Development & Testing](docs/DEVELOPMENT.md)
-*   [Deployment Guide](docs/DEPLOYMENT.md)
 
 ---
 

@@ -126,13 +126,9 @@ rule : /raw/web/*
 
 ## 📚 更多文档
 
-*   [技术栈详情](docs/TECH_STACK.md)
-*   [快速开始指南](docs/QUICK_START.md)
-*   [配置说明](docs/CONFIGURATION.md)
 *   [API 文档](docs/API.md)
+*   [配置说明](docs/CONFIGURATION.md)
 *   [项目结构](docs/PROJECT_STRUCTURE.md)
-*   [开发与测试](docs/DEVELOPMENT.md)
-*   [部署指南](docs/DEPLOYMENT.md)
 
 **⭐ 如果这个项目对你有帮助，请给我们一个 Star！**
 

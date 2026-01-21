@@ -268,13 +268,7 @@ jobs:
             ```shell
             gh attestation verify --owner ${{ github.repository_owner }} <artifact-file>
             ```
-
-            ## 📚 文档 / Documentation
-            - [配置说明 / Configuration](https://github.com/${{ github.repository }}/blob/main/docs/CONFIGURATION.md)
-            - [API 文档 / API Documentation](https://github.com/${{ github.repository }}/blob/main/docs/API.md)
-            - [项目结构 / Project Structure](https://github.com/${{ github.repository }}/blob/main/docs/PROJECT_STRUCTURE.md)
-            - [发布管理 / Release Management](https://github.com/${{ github.repository }}/blob/main/docs/RELEASE_MANAGEMENT.md)
-
+            
             ## 🐛 发现问题? / Found an Issue?
             请在此报告 / Please report it at: https://github.com/${{ github.repository }}/issues
           token: ${{ secrets.GITHUB_TOKEN }}
