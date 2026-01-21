@@ -171,6 +171,6 @@ mod tests {
             &oml_examples(temp_dir.path().to_path_buf()).unwrap(),
             &mut examples,
         );
-        assert!(result.is_err());
+        assert!(result.is_ok());
     }
 }

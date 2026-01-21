@@ -1,4 +1,4 @@
-use actix_web::{ResponseError, http::StatusCode, test};
+use actix_web::{ResponseError, http::StatusCode};
 use serde_json::Value;
 use wp_editor::error::AppError;
 

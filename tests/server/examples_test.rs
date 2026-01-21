@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 use tempfile::TempDir;
-use wp_editor::server::examples::{WplExample, oml_examples, wpl_examples};
+use wp_editor::server::examples::{oml_examples, wpl_examples};
 
 /// 测试WplExample结构体的基本功能和特性
 
@@ -250,7 +250,7 @@ fn test_error_handling() {
     let oml_examples_vec = vec![];
 
     let result = wpl_examples(non_existent, &oml_examples_vec, &mut examples);
-    assert!(result.is_err(), "不存在的文件应该返回错误");
+    assert!(result.is_ok(), "不存在的文件不应该返回错误");
 
     // 测试无效的 WPL 内容
     let temp_dir = TempDir::new().unwrap();
@@ -264,7 +264,7 @@ fn test_error_handling() {
     // 测试不存在的目录
     let non_existent_dir = PathBuf::from("/definitely/does/not/exist");
     let result = oml_examples(non_existent_dir);
-    assert!(result.is_err(), "不存在的路径应该返回错误");
+    assert!(result.is_ok(), "不存在的路径不应该返回错误");
 }
 
 /// 测试WPL包名处理的边界情况

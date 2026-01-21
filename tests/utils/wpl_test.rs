@@ -190,18 +190,6 @@ rule chinese_log {
 }
 
 #[test]
-fn test_record_to_fields_empty() {
-    // 测试空记录的处理
-    use wp_model_core::model::data::Record;
-
-    let empty_record = Record::default();
-    let fields = record_to_fields(&empty_record);
-
-    // 空记录应该返回空字段列表或者包含默认字段
-    assert!(fields.is_empty() || fields.len() >= 0, "空记录处理应该正常");
-}
-
-#[test]
 fn test_json_formatting_edge_cases() {
     let log_data = r#"test_value"#;
     let wpl_rule = r#"package /example/simple {

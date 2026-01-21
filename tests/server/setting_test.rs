@@ -1,6 +1,6 @@
 use std::fs;
 use tempfile::TempDir;
-use wp_editor::server::{LogConf, Setting, WebConf};
+use wp_editor::server::Setting;
 
 /// 测试在没有配置文件情况下的设置加载
 /// 验证系统能够在缺少配置文件时使用合理的默认值
