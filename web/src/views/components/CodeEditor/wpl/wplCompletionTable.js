@@ -28,6 +28,13 @@ const WPL_COMPLETION_TABLE = [
     insertText: 'chars',
   },
   {
+    label: 'array',
+    kind: 'type',
+    description: '数组类型后面可以接里面字段的类型',
+    example: '["a", "b", "c"]',
+    insertText: 'array/chars',
+  },
+  {
     label: 'digit',
     kind: 'type',
     description: '整数',

@@ -22,3 +22,46 @@
 .editor :global(.cm-scroller) {
   font-variant-ligatures: none;
 }
+
+.editor :global(.cm-content .cm-highlight-keyword),
+.editor :global(.cm-content .cm-highlight-type),
+.editor :global(.cm-content .cm-highlight-function),
+.editor :global(.cm-content .cm-highlight-atom),
+.editor :global(.cm-content .cm-highlight-string),
+.editor :global(.cm-content .cm-highlight-number),
+.editor :global(.cm-content .cm-highlight-operator),
+.editor :global(.cm-content .cm-highlight-variable) {
+  color: inherit;
+}
+
+.editor :global(.cm-content .cm-highlight-keyword) {
+  color: #80F4FF !important;
+}
+
+.editor :global(.cm-content .cm-highlight-type) {
+  color: #FFF2b3 !important;
+}
+
+.editor :global(.cm-content .cm-highlight-function) {
+  color: #68BEA6 !important;
+}
+
+.editor :global(.cm-content .cm-highlight-atom) {
+  color: #a5b4fcff !important;
+}
+
+.editor :global(.cm-content .cm-highlight-string) {
+  color: #86efac !important;
+}
+
+.editor :global(.cm-content .cm-highlight-number) {
+  color: #fde047 !important;
+}
+
+.editor :global(.cm-content .cm-highlight-operator) {
+  color: #cbd5f5 !important;
+}
+
+.editor :global(.cm-content .cm-highlight-variable) {
+  color: #e2e8f0 !important;
+}
