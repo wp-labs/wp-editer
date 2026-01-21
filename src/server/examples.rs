@@ -18,6 +18,9 @@ pub fn wpl_examples(
     oml_examples: &Vec<(WildArray, String)>,
     examples: &mut BTreeMap<String, WplExample>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    if !wpl_path.exists() {
+        return Ok(());
+    }
     if wpl_path.is_file() {
         if wpl_path.extension().and_then(|ext| ext.to_str()) != Some("wpl") {
             return Ok(());
@@ -75,6 +78,9 @@ pub fn oml_examples(
     oml_path: PathBuf,
 ) -> Result<Vec<(WildArray, String)>, Box<dyn std::error::Error>> {
     let mut results = Vec::new();
+    if !oml_path.exists() {
+        return Ok(results);
+    }
     if oml_path.is_file() {
         if oml_path.extension().and_then(|ext| ext.to_str()) != Some("oml") {
             return Ok(results);
