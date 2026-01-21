@@ -28,6 +28,13 @@ const WPL_COMPLETION_TABLE = [
     insertText: 'chars',
   },
   {
+    label: 'array',
+    kind: 'type',
+    description: 'The array type can be followed by the types of the fields within it.',
+    example: '["a", "b", "c"]',
+    insertText: 'array/chars',
+  },
+  {
     label: 'digit',
     kind: 'type',
     description: 'Integer',

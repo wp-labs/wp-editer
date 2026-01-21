@@ -232,7 +232,7 @@ function SimulateDebugPage() {
       } else if (response?.fields && Array.isArray(response?.fields?.items)) {
         fieldsData = response.fields.items;
       }
-      const processedFields = processFieldsForDisplay(fieldsData);
+      const processedFields = processFieldsForDisplay(fieldsData, response.formatJson || '');
       setTransformResult({
         fields: processedFields,
         formatJson: response.formatJson || '',
@@ -295,9 +295,11 @@ function SimulateDebugPage() {
   /**
    * 从 value 对象中提取值
    * @param {Object} valueObj - value 对象，如 { "IpAddr": "..." } 或 { "Chars": "..." }
+   * @param {string} fieldName - 字段名称
+   * @param {string} formatJson - format_json 字符串
    * @returns {string} 提取的值字符串
    */
-  const extractValueFromObj = valueObj => {
+  const extractValueFromObj = (valueObj, fieldName, formatJson) => {
     if (valueObj === null || valueObj === undefined) {
       return '';
     }
@@ -309,7 +311,7 @@ function SimulateDebugPage() {
     // 处理普通数组
     if (Array.isArray(valueObj)) {
       const arrayValues = valueObj
-        .map(item => extractValueFromObj(item))
+        .map(item => extractValueFromObj(item, fieldName, formatJson))
         .filter(val => val !== '' && val !== null && val !== undefined);
       return arrayValues.length > 0 ? `[${arrayValues.join(', ')}]` : '';
     }
@@ -318,9 +320,9 @@ function SimulateDebugPage() {
     if (Array.isArray(valueObj.Array)) {
       const arrayValues = valueObj.Array.map(item => {
         if (item && typeof item === 'object' && 'value' in item) {
-          return extractValueFromObj(item.value);
+          return extractValueFromObj(item.value, fieldName, formatJson);
         }
-        return extractValueFromObj(item);
+        return extractValueFromObj(item, fieldName, formatJson);
       }).filter(val => val !== '' && val !== null && val !== undefined);
       return arrayValues.length > 0 ? `[${arrayValues.join(', ')}]` : '';
     }
@@ -337,8 +339,20 @@ function SimulateDebugPage() {
       return '';
     }
 
+    // 对于复杂嵌套对象（如 IpNet），尝试从 format_json 中读取
+    if (typeof rawValue === 'object' && fieldName && formatJson) {
+      try {
+        const jsonData = JSON.parse(formatJson);
+        if (jsonData && jsonData[fieldName] !== undefined) {
+          return String(jsonData[fieldName]);
+        }
+      } catch (e) {
+        // JSON 解析失败，继续使用原有逻辑
+      }
+    }
+
     if (typeof rawValue === 'object') {
-      return extractValueFromObj(rawValue);
+      return extractValueFromObj(rawValue, fieldName, formatJson);
     }
 
     return String(rawValue);
@@ -347,9 +361,10 @@ function SimulateDebugPage() {
   /**
    * 处理需要展示的字段列表，添加 no 序号并提取 value 值
    * @param {Array} fields - 原始字段数组
+   * @param {string} formatJson - format_json 字符串
    * @returns {Array} 处理后的字段数组
    */
-  const processFieldsForDisplay = fields => {
+  const processFieldsForDisplay = (fields, formatJson) => {
     const list = Array.isArray(fields) ? fields : [];
     return list.map((field, index) => {
       // 处理 meta 字段
@@ -368,7 +383,7 @@ function SimulateDebugPage() {
         ...field,
         no: index + 1,
         meta: metaDisplay,
-        value: extractValueFromObj(field?.value),
+        value: extractValueFromObj(field?.value, field?.name, formatJson),
       };
     });
   };
@@ -751,7 +766,7 @@ function SimulateDebugPage() {
                             size="small"
                             columns={resultColumns}
                             dataSource={filterFieldsByShowEmpty(
-                              processFieldsForDisplay(transformParseResult.fields),
+                              processFieldsForDisplay(transformParseResult.fields, transformParseResult.formatJson),
                               transformParseShowEmpty
                             )}
                             pagination={false}
@@ -785,7 +800,7 @@ function SimulateDebugPage() {
                           {formatJsonForDisplay(transformParseResult.formatJson, {
                             ...transformParseResult,
                             fields: filterFieldsByShowEmpty(
-                              processFieldsForDisplay(transformParseResult.fields),
+                              processFieldsForDisplay(transformParseResult.fields, transformParseResult.formatJson),
                               transformParseShowEmpty
                             ),
                           })}
