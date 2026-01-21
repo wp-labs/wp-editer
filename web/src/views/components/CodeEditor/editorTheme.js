@@ -24,25 +24,49 @@ export const editorTheme = EditorView.theme({
   '.cm-content .cm-highlight-keyword': {
     color: '#80F4FF !important',
   },
+  '.cm-content .cm-keyword': {
+    color: '#80F4FF !important',
+  },
   '.cm-content .cm-highlight-type': {
+    color: '#FFF2b3 !important',
+  },
+  '.cm-content .cm-typeName': {
     color: '#FFF2b3 !important',
   },
   '.cm-content .cm-highlight-function': {
     color: '#68BEA6 !important',
   },
+  '.cm-content .cm-function': {
+    color: '#68BEA6 !important',
+  },
   '.cm-content .cm-highlight-atom': {
+    color: '#a5b4fcff !important',
+  },
+  '.cm-content .cm-atom': {
     color: '#a5b4fcff !important',
   },
   '.cm-content .cm-highlight-string': {
     color: '#86efac !important',
   },
+  '.cm-content .cm-string': {
+    color: '#86efac !important',
+  },
   '.cm-content .cm-highlight-number': {
+    color: '#fde047 !important',
+  },
+  '.cm-content .cm-number': {
     color: '#fde047 !important',
   },
   '.cm-content .cm-highlight-operator': {
     color: '#cbd5f5 !important',
   },
+  '.cm-content .cm-operator': {
+    color: '#cbd5f5 !important',
+  },
   '.cm-content .cm-highlight-variable': {
+    color: '#e2e8f0 !important',
+  },
+  '.cm-content .cm-variableName': {
     color: '#e2e8f0 !important',
   },
   '.cm-tooltip-autocomplete': {
