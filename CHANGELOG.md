@@ -3,6 +3,29 @@
 本文件记录所有重要变更，格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.6.2-alpha] - 2026-01-21
+
+### Added
+
+- 添加 shadow-rs 依赖用于构建信息追踪
+
+### Changed
+
+- 更新 wp-engine 依赖至 v1.10.1 版本
+- 重构代码编辑器组件，重新组织 CodeMirror 配置
+- 优化自定义主题和 OML/WPL 语法补全
+- 重新构建前端资源包
+
+### Fixed
+
+- 修复 OML 语法高亮失效的问题
+- 修复规则库不存在时的错误处理
+- 修复单元测试问题
+
+### Removed
+
+- 移除 ^2 语法支持
+
 ## [1.6.1-alpha] - 2026-01-20
 
 ### Changed

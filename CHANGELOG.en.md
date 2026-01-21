@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.6.2-alpha] - 2026-01-21
+
+### Added
+
+- Add shadow-rs dependency for build information tracking
+
+### Changed
+
+- Update wp-engine dependencies to v1.10.1
+- Refactor CodeEditor component and reorganize CodeMirror configuration
+- Optimize custom themes and OML/WPL syntax completions
+- Rebuild frontend bundles
+
+### Fixed
+
+- Fix OML syntax highlighting failure issue
+- Fix error handling when rule base does not exist
+- Fix unit test issues
+
+### Removed
+
+- Remove ^2 syntax support
+
 ## [1.6.1-alpha] - 2026-01-20
 
 ### Changed
