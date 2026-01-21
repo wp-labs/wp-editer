@@ -8,7 +8,8 @@ import {
 } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { EditorState } from '@codemirror/state';
-import { StreamLanguage } from '@codemirror/language';
+import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/language';
+import { tags } from '@lezer/highlight';
 import {
   EditorView,
   highlightActiveLine,
@@ -367,6 +368,13 @@ const editorTheme = EditorView.theme({
   },
 });
 
+const wplKeywordHighlight = HighlightStyle.define([
+  {
+    tag: tags.keyword,
+    color: '#3b82f6',
+  },
+]);
+
 
 const CodeEditor = forwardRef((props, ref) => {
   const editorRef = useRef(null);
@@ -438,6 +446,7 @@ const CodeEditor = forwardRef((props, ref) => {
       ]),
       oneDark,
       editorTheme,
+      syntaxHighlighting(wplKeywordHighlight),
       ...(colorTheme ? [colorTheme] : []),
       updateListener,
     ];

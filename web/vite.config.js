@@ -25,13 +25,14 @@ export default defineConfig({
         manualChunks(id) {
           // node_modules 按包分割
           if (id.includes('node_modules')) {
-            // React 核心
-            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
-              return 'vendor-react';
-            }
-            // Ant Design
-            if (id.includes('antd') || id.includes('@ant-design') || id.includes('rc-')) {
-              return 'vendor-antd';
+            // React + Ant Design 合并为单 chunk，避免相互依赖导致初始化顺序问题
+            if (id.includes('/node_modules/react/') ||
+                id.includes('/node_modules/react-dom/') ||
+                id.includes('/node_modules/scheduler/') ||
+                id.includes('antd') ||
+                id.includes('@ant-design') ||
+                id.includes('rc-')) {
+              return 'vendor-ui';
             }
             // CodeMirror
             if (id.includes('@codemirror') || id.includes('@lezer')) {
@@ -42,7 +43,7 @@ export default defineConfig({
               return 'vendor-highlighter';
             }
             // Markdown 相关（按需加载）
-            if (id.includes('react-markdown') || id.includes('remark') || id.includes('rehype') || 
+            if (id.includes('react-markdown') || id.includes('remark') || id.includes('rehype') ||
                 id.includes('mdast') || id.includes('micromark') || id.includes('unist') || id.includes('hast')) {
               return 'vendor-markdown';
             }
@@ -51,7 +52,7 @@ export default defineConfig({
               return 'vendor-router';
             }
             // 其他工具库
-            if (id.includes('dayjs') || id.includes('ahooks') || id.includes('diff') || 
+            if (id.includes('dayjs') || id.includes('ahooks') || id.includes('diff') ||
                 id.includes('i18next') || id.includes('axios') || id.includes('@seed-fe')) {
               return 'vendor-utils';
             }
