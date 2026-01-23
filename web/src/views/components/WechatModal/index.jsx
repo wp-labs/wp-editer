@@ -15,7 +15,7 @@ function WechatModal({ open, onCancel }) {
     >
       <div style={{ textAlign: 'center', padding: '20px 0' }}>
         <img
-          src="/assets/images/vx.png"
+          src="/assets/images/community.png"
           alt="微信群二维码"
           style={{ width: '100%', maxWidth: '300px', borderRadius: '8px' }}
         />
