@@ -69,7 +69,6 @@ const LANGUAGE_DEFINITIONS = {
       'base64_decode',
     ],
     constants: [],
-    placeholders: [],
   },
 };
 
@@ -134,7 +133,7 @@ export const wplLanguage = StreamLanguage.define({
       if (word === 'array' || word.startsWith('array/')) return 'typeName';
       if (WPL_KEYWORDS.has(word)) return 'keyword';
       if (WPL_TYPES.has(word)) return 'typeName';
-      if (WPL_FUNCTIONS.has(word) || word.startsWith('plg_pipe/')) return 'function';
+      if (WPL_FUNCTIONS.has(word) || word.startsWith('plg_pipe/')) return 'variableName.function';
       if (WPL_BUILTINS.has(word)) return 'atom';
       return 'variableName';
     }

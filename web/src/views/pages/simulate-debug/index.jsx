@@ -554,9 +554,10 @@ function SimulateDebugPage() {
                   </div>
                   <CodeEditor
                     className="code-area"
+                    language="json"
+                    theme="vscodeDark"
                     value={inputValue}
                     onChange={value => setInputValue(value)}
-                    textColor="#ffffff"
                   />
                 </div>
 

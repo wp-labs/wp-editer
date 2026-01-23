@@ -1,24 +1,24 @@
 import { snippetCompletion } from '@codemirror/autocomplete';
 import { StreamLanguage } from '@codemirror/language';
-import { Decoration, MatchDecorator, ViewPlugin } from '@codemirror/view';
 import OML_COMPLETION_TABLE_ZH from './omlCompletionTable';
 import OML_COMPLETION_TABLE_EN from './omlCompletionTable.en';
 import { buildCompletionInfo, getCompletionLabels } from '../completionLabels';
 
 const LANGUAGE_DEFINITIONS = {
   oml: {
-    keywords: [],
-    types: [],
+    keywords: [
+      'match', 'object', 'pipe', 'option', 'collect', 'fmt',
+      'select', 'from', 'where', 'in', 'get',
+      'and', 'or', 'not',
+      'name', 'rule'
+    ],
+    types: ['auto', 'chars', 'digit', 'obj', 'array'],
     functions: [
-      'chars',
-      'digit',
       'read',
-      'option',
       'take',
       'Now::time',
       'Now::date',
       'Now::hour',
-      'match',
       'Time::to_ts_zone',
       'Time::to_ts',
       'Time::to_ts_ms',
@@ -38,13 +38,9 @@ const LANGUAGE_DEFINITIONS = {
       'path',
       'url',
       'skip_empty',
-      'pipe',
-      'fmt',
-      'object',
-      'collect',
     ],
+    privacyTypes: [],
     constants: [],
-    placeholders: [],
   },
 };
 
@@ -52,12 +48,8 @@ const OML_DEFINITION = LANGUAGE_DEFINITIONS.oml;
 const OML_KEYWORDS = new Set(OML_DEFINITION.keywords);
 const OML_TYPES = new Set(OML_DEFINITION.types);
 const OML_FUNCTIONS = new Set(OML_DEFINITION.functions);
-
-const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const OML_FUNCTION_PATTERN = new RegExp(
-  `\\b(?:${[...OML_FUNCTIONS].map((name) => escapeRegex(name)).join('|')})\\b`,
-  'g',
-);
+const OML_PRIVACY_TYPES = new Set(OML_DEFINITION.privacyTypes);
+const OML_CONSTANTS = new Set(OML_DEFINITION.constants);
 
 export const OML_COMPLETION_VALID_FOR = /[\w/:\[\]]+|\|/;
 
@@ -76,79 +68,144 @@ export const buildOmlCompletionOptions = (lang) => {
 };
 
 export const omlLanguage = StreamLanguage.define({
-  token(stream) {
+  startState() {
+    return {
+      inHeader: false,
+      inPrivacy: false,
+      afterColon: false,
+      afterEqual: false,
+    };
+  },
+  
+  token(stream, state) {
     if (stream.eatSpace()) {
       return null;
     }
+
     const ch = stream.peek();
-    if (ch === '"') {
+
+    // 注释
+    if (ch === '#' || (ch === '/' && stream.match('//', false))) {
+      stream.skipToEnd();
+      return 'comment';
+    }
+
+    // 分隔符 ---
+    if (stream.match(/^---/)) {
+      if (!state.inHeader) {
+        state.inHeader = true;
+      } else if (!state.inPrivacy) {
+        state.inPrivacy = true;
+      }
+      return 'keyword';
+    }
+
+    // 字符串
+    if (ch === '"' || ch === "'") {
+      const quote = ch;
       stream.next();
       while (!stream.eol()) {
-        if (stream.next() === '"' && !stream.match(/\\$/, false)) {
+        const next = stream.next();
+        if (next === quote) {
           break;
+        }
+        if (next === '\\') {
+          stream.next();
         }
       }
       return 'string';
     }
-    if (stream.match(/-?\d+(\.\d+)?/)) {
+
+    // 数字（包括 IP 地址）
+    if (stream.match(/^-?\d+(\.\d+){0,3}/)) {
       return 'number';
     }
-    if (stream.match(/[\w/:]+/)) {
-      const word = stream.current();
-      const normalized = word.replace(/:+$/, '');
-      const hasCall = stream.match(/\s*\(/, false);
-      if (hasCall && (OML_FUNCTIONS.has(word) || OML_FUNCTIONS.has(normalized) || word.includes('::'))) {
-        return 'function';
+
+    // @ 符号（用于 fmt 表达式中的变量引用）
+    if (ch === '@') {
+      stream.next();
+      if (stream.match(/\w+/)) {
+        return 'variableName';
       }
-      if (OML_KEYWORDS.has(word) || OML_KEYWORDS.has(normalized)) return 'keyword';
-      if (OML_TYPES.has(word) || OML_TYPES.has(normalized)) return 'typeName';
-      if (OML_FUNCTIONS.has(word) || OML_FUNCTIONS.has(normalized)) return 'function';
-      return 'variableName';
-    }
-    if (stream.match(/[{}()[\],|:]/)) {
       return 'operator';
     }
+
+    // JSON 路径
+    if (ch === '/' && stream.match(/^\/[\w/\[\]]+/)) {
+      return 'string';
+    }
+
+    // 操作符和标点
+    if (stream.match(/^[{}()[\],|;=!:]/)) {
+      const op = stream.current();
+      if (op === ':') state.afterColon = true;
+      if (op === '=') state.afterEqual = true;
+      if (op === ';') {
+        state.afterEqual = false;
+        state.afterColon = false;
+      }
+      return 'operator';
+    }
+
+    // 标识符和关键字
+    if (stream.match(/^[\w:]+/)) {
+      const word = stream.current();
+      const normalized = word.replace(/:+$/, '');
+      
+      // 向前查看是否有括号（不消耗字符）
+      const savedPos = stream.pos;
+      let hasCall = false;
+      while (stream.peek() === ' ' || stream.peek() === '\t') {
+        stream.next();
+      }
+      if (stream.peek() === '(') {
+        hasCall = true;
+      }
+      stream.pos = savedPos; // 恢复位置
+
+      // 隐私段中的隐私类型
+      if (state.inPrivacy && state.afterColon && OML_PRIVACY_TYPES.has(word)) {
+        state.afterColon = false;
+        return 'typeName';
+      }
+
+      // 类型声明（在冒号后面，等号前面）
+      if (state.afterColon && !state.afterEqual && OML_TYPES.has(word)) {
+        state.afterColon = false;
+        return 'typeName';
+      }
+
+      // 常量
+      if (OML_CONSTANTS.has(word)) {
+        return 'atom';
+      }
+
+      // 关键字
+      if (OML_KEYWORDS.has(word) || OML_KEYWORDS.has(normalized)) {
+        return 'keyword';
+      }
+
+      // 类型名
+      if (OML_TYPES.has(word) || OML_TYPES.has(normalized)) {
+        return 'typeName';
+      }
+
+      // 函数：包含 :: 或在函数列表中或后面跟括号
+      if (word.includes('::') || OML_FUNCTIONS.has(word) || OML_FUNCTIONS.has(normalized) || hasCall) {
+        return 'variableName.function';
+      }
+
+      // 隐私类型
+      if (OML_PRIVACY_TYPES.has(word)) {
+        return 'typeName';
+      }
+
+      // 默认为变量名
+      return 'variableName';
+    }
+
+    // 其他字符
     stream.next();
     return null;
   },
 });
-
-const omlFunctionDecorator = new MatchDecorator({
-  regexp: /\b[\w:]+(?=\s*\()/g,
-  decoration: Decoration.mark({ class: 'cm-function' }),
-});
-
-const omlFunctionNameDecorator = new MatchDecorator({
-  regexp: OML_FUNCTION_PATTERN,
-  decoration: Decoration.mark({ class: 'cm-function' }),
-});
-
-export const omlFunctionHighlighter = ViewPlugin.fromClass(
-  class {
-    constructor(view) {
-      this.decorations = omlFunctionDecorator.createDeco(view);
-    }
-
-    update(update) {
-      this.decorations = omlFunctionDecorator.updateDeco(update, this.decorations);
-    }
-  },
-  {
-    decorations: (instance) => instance.decorations,
-  },
-);
-
-export const omlFunctionNameHighlighter = ViewPlugin.fromClass(
-  class {
-    constructor(view) {
-      this.decorations = omlFunctionNameDecorator.createDeco(view);
-    }
-
-    update(update) {
-      this.decorations = omlFunctionNameDecorator.updateDeco(update, this.decorations);
-    }
-  },
-  {
-    decorations: (instance) => instance.decorations,
-  },
-);

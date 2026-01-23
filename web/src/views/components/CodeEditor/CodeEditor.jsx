@@ -1,8 +1,8 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
-import { EditorState, Prec } from '@codemirror/state';
-import { syntaxHighlighting } from '@codemirror/language';
+import { EditorState } from '@codemirror/state';
+import { json } from '@codemirror/lang-json';
 import {
   EditorView,
   highlightActiveLine,
@@ -11,10 +11,10 @@ import {
   lineNumbers,
 } from '@codemirror/view';
 import { oneDark } from '@codemirror/theme-one-dark';
+import { vscodeDark } from '@uiw/codemirror-theme-vscode';
 import { useTranslation } from 'react-i18next';
 import styles from './CodeEditor.module.css';
 import { editorTheme } from './editorTheme';
-import { customHighlight } from './customHighlight';
 import {
   buildWplCompletionOptions,
   WPL_COMPLETION_VALID_FOR,
@@ -23,8 +23,6 @@ import {
 import {
   buildOmlCompletionOptions,
   OML_COMPLETION_VALID_FOR,
-  omlFunctionHighlighter,
-  omlFunctionNameHighlighter,
   omlLanguage,
 } from './oml/omlLanguage';
 
@@ -47,6 +45,7 @@ function CodeEditor(props, ref) {
   const viewRef = useRef(null);
   const language = props.language || 'plain';
   const textColor = props.textColor;
+  const theme = props.theme; // 可选的主题属性
   const { i18n } = useTranslation();
   const uiLanguage = i18n.language;
   const wplCompletionOptions = useMemo(() => buildWplCompletionOptions(uiLanguage), [uiLanguage]);
@@ -110,12 +109,17 @@ function CodeEditor(props, ref) {
         ...historyKeymap,
         ...defaultKeymap,
       ]),
-      oneDark,
       editorTheme,
-      Prec.highest(syntaxHighlighting(customHighlight)),
       ...(colorTheme ? [colorTheme] : []),
       updateListener,
     ];
+
+    // 添加主题：默认使用 vscodeDark
+    if (theme === 'vscodeDark' || !theme) {
+      extensions.push(vscodeDark);
+    } else {
+      extensions.push(oneDark);
+    }
 
     if (language === 'wpl') {
       extensions.splice(6, 0, wplLanguage, autocompletion({ override: [wplCompletionSource] }));
@@ -126,9 +130,10 @@ function CodeEditor(props, ref) {
         0,
         omlLanguage,
         autocompletion({ override: [omlCompletionSource] }),
-        omlFunctionHighlighter,
-        omlFunctionNameHighlighter,
       );
+    }
+    if (language === 'json') {
+      extensions.splice(6, 0, json());
     }
 
     const state = EditorState.create({
@@ -147,7 +152,7 @@ function CodeEditor(props, ref) {
       view.destroy();
       viewRef.current = null;
     };
-  }, [language, uiLanguage, wplCompletionSource, omlCompletionSource, colorTheme]);
+  }, [language, uiLanguage, wplCompletionSource, omlCompletionSource, colorTheme, theme]);
 
   useEffect(() => {
     const view = viewRef.current;
