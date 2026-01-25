@@ -1,3 +1,249 @@
+# Contributing Guide
+
+Thank you for your interest in the wp-editor project! We welcome contributions of all kinds, including but not limited to:
+
+- Reporting bugs
+- Discussing the current state of the code
+- Submitting fixes
+- Proposing new features
+- Becoming a maintainer
+
+## Release Process
+
+This project follows a three-stage release model: **alpha → beta → main**
+
+### Environments and Deployment URLs
+
+| Environment | Branch | Deployment URL | Description |
+|-------------|--------|----------------|-------------|
+| Alpha | `alpha` | [editor.alpha.warpparse.ai](https://editor.alpha.warpparse.ai) | Development testing environment with latest features |
+| Beta | `beta` | [editor.beta.warpparse.ai](https://editor.beta.warpparse.ai) | Pre-release environment for final validation |
+| Production | `main` | [editor.warpparse.ai](https://editor.warpparse.ai) | Production environment with stable releases |
+
+### Release Flow Details
+
+1. **Alpha Stage**
+   - All new features and fixes are first merged into the `alpha` branch
+   - Automatically deployed to the alpha environment
+   - Used for feature testing and initial validation
+
+2. **Beta Stage**
+   - Stable versions validated in alpha are merged into the `beta` branch
+   - Automatically deployed to the beta environment
+   - Complete integration testing and performance testing
+
+3. **Production Stage**
+   - Fully tested versions from beta are merged into the `main` branch
+   - Automatically deployed to the production environment
+   - Official version tags are released
+
+## Development Workflow
+
+### 1. Fork the Repository
+
+Fork this project to your account on GitHub.
+
+### 2. Clone the Repository
+
+```bash
+git clone https://github.com/YOUR_USERNAME/wp-editor.git
+cd wp-editor
+```
+
+### 3. Add Upstream Remote
+
+```bash
+git remote add upstream https://github.com/wp-labs/wp-editor.git
+```
+
+### 4. Create a Feature Branch
+
+Create your feature branch from the `alpha` branch:
+
+```bash
+git checkout alpha
+git pull upstream alpha
+git checkout -b feature/your-feature-name
+```
+
+Branch naming conventions:
+- `feature/feature-name` - New features
+- `fix/issue-description` - Bug fixes
+- `docs/documentation-description` - Documentation updates
+- `refactor/refactor-description` - Code refactoring
+- `test/test-description` - Testing related
+
+### 5. Development
+
+#### Backend Development Guidelines
+
+- Follow Rust coding standards and best practices
+- Format code with `cargo fmt`
+- Check code quality with `cargo clippy`
+- Ensure all tests pass: `cargo test`
+- Add unit tests and integration tests for new features
+
+#### Frontend Development Guidelines
+
+- Follow the project's ESLint and Prettier configurations
+- Follow development standards defined in `web/AGENTS.md`
+- Check code quality with `pnpm lint`
+- Format code with `pnpm format`
+- Ensure all tests pass: `pnpm test`
+- Add comments in Chinese for critical logic
+
+#### General Guidelines
+
+- Write commit messages in Chinese
+- Follow Conventional Commits specification
+- Each commit should be an independent, meaningful change
+- Avoid committing unrelated files (use `.gitignore`)
+
+### 6. Commit Your Changes
+
+```bash
+git add .
+git commit -m "feat: 添加某某功能"
+```
+
+Commit message format:
+
+```
+<type>: <short description>
+
+[optional detailed description]
+
+[optional footer]
+```
+
+Commit types:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation update
+- `style`: Code formatting (no functional changes)
+- `refactor`: Refactoring (neither feature nor fix)
+- `perf`: Performance optimization
+- `test`: Testing related
+- `chore`: Build process or auxiliary tool changes
+
+### 7. Push to Remote Repository
+
+```bash
+git push origin feature/your-feature-name
+```
+
+### 8. Create a Pull Request
+
+1. Open your forked repository on GitHub
+2. Click "New Pull Request"
+3. Select `alpha` as the target branch
+4. Fill in the PR title and description:
+   - Title: Concise description of the changes
+   - Description: Detailed explanation of changes, reasons, and test results
+5. Link related issues (if any)
+6. Wait for code review
+
+### 9. Code Review
+
+- Maintainers will review your code
+- Make necessary modifications based on feedback
+- Keep your branch updated:
+  ```bash
+  git fetch upstream
+  git rebase upstream/alpha
+  git push origin feature/your-feature-name --force
+  ```
+
+### 10. Merge
+
+After code review approval, maintainers will merge your PR into the `alpha` branch.
+
+## Reporting Bugs
+
+If you find a bug, please report it via GitHub Issues:
+
+1. Use a clear and descriptive title
+2. Provide detailed reproduction steps
+3. Describe expected vs. actual behavior
+4. Include relevant logs, screenshots, or error messages
+5. Specify your environment (OS, browser version, etc.)
+
+## Proposing New Features
+
+If you have a feature suggestion:
+
+1. Check if a similar suggestion already exists in Issues
+2. Create a new Issue with a detailed description of your idea
+3. Explain the use cases and value of the feature
+4. If possible, provide design proposals or prototypes
+
+## Environment Setup
+
+### Backend Environment
+
+```bash
+# Install Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Build project
+cargo build
+
+# Run tests
+cargo test
+
+# Run service
+cargo run
+```
+
+### Frontend Environment
+
+```bash
+cd web
+
+# Install dependencies
+pnpm install
+
+# Start development server
+pnpm dev
+
+# Run tests
+pnpm test
+
+# Build for production
+pnpm build
+```
+
+## Code Review Checklist
+
+Before submitting a PR, ensure:
+
+- [ ] Code follows project coding standards
+- [ ] All tests pass
+- [ ] New features have corresponding tests
+- [ ] Documentation is updated (if needed)
+- [ ] Commit messages are clear
+- [ ] No unrelated file changes
+- [ ] Code has been self-reviewed
+- [ ] Critical logic has explanatory comments
+
+## License
+
+By contributing code, you agree that your contributions will be licensed under the [Apache License 2.0](LICENSE).
+
+## Contact
+
+If you have any questions, feel free to:
+
+- Submit a GitHub Issue
+- Start a Discussion
+- Contact project maintainers
+
+---
+
+Thank you for your contribution! 🎉
+
+---
+
 # 贡献指南
 
 感谢您对 wp-editor 项目的关注！我们欢迎任何形式的贡献，包括但不限于：
