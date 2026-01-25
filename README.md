@@ -1,6 +1,116 @@
 # wp-editor
 
-Wp Editor 是一个独立运行的 WEB 系统，专门用于日志解析和数据转换。它提供了完整的日志解析、数据转换和项目管理功能。
+![License](https://img.shields.io/badge/license-Apache%202.0-blue)
+![Test Coverage](https://img.shields.io/badge/test%20coverage-TBD-lightgrey)
+
+wp-editor is a standalone web system designed for log parsing and data transformation. It provides comprehensive log parsing, data transformation, and project management capabilities.
+
+## Features
+
+- **Log Parsing**: Supports WPL (Warp Parse Language) rules, capable of parsing logs in multiple formats
+- **Data Transformation**: Supports OML (Object Mapping Language) rules to transform parsed data into specified formats
+- **Real-time Preview**: Supports real-time parsing and transformation result preview
+- **Rule Editor**: Built-in CodeJar editor with syntax highlighting and Tab key indentation support
+
+## Tech Stack
+
+### Backend
+
+- **Language**: Rust (Edition 2024)
+- **Web Framework**: Actix Web 4.4
+- **Core Engine**: warp-flow
+- **Async Runtime**: Tokio
+
+### Frontend
+
+- **Framework**: React 19.0.0
+- **Build Tool**: Vite 6.3.5
+- **UI Components**: Ant Design 5.24.9
+- **Editor**: CodeJar
+
+## Usage Guide
+
+### 1. Writing WPL Rules
+
+WPL (Warp Parse Language) is used to define log parsing rules:
+
+```wpl
+package /example/simple {
+    rule nginx {
+        (ip:sip,2*_,time:recv_time<[,]>,http/request",http/status,digit,chars",http/agent",_")
+    }
+}
+```
+
+### 2. Writing OML Rules
+
+OML (Object Mapping Language) is used to define data transformation rules:
+
+```oml
+name : /oml/example/simple
+rule :
+    /example/simple*
+---
+recv_time  = take() ;
+occur_time = Now::time() ;
+src_ip     = take(option:[src-ip,sip,source-ip] );
+```
+
+### 3. Testing Parsing
+
+- Enter sample logs on the parser page
+- The system will display parsing results in real-time
+- Supports single log and batch log parsing
+
+## API Documentation
+
+### Basic Endpoints
+
+- `GET /api/hello` - Health check
+- `GET /api/version` - Get version information
+
+### Core Function Endpoints
+
+- `POST /api/parse-logs` - Parse logs
+- `POST /api/convert-record` - Transform data
+
+## License
+
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
+
+### Apache License 2.0 Overview
+
+The Apache License 2.0 is a permissive open-source license that:
+
+- Allows commercial use, modification, and distribution
+- Requires preservation of copyright and license notices
+- Provides an explicit grant of patent rights from contributors
+- Disclaims warranties and limits liability
+- Is compatible with various other open-source licenses
+
+For the full license terms, please refer to the [LICENSE](LICENSE) file.
+
+## Contributing
+
+We welcome contributions of all kinds! For detailed contribution guidelines, development workflow, and the release process, please refer to our [CONTRIBUTING.md](CONTRIBUTING.md) guide.
+
+Key highlights:
+- Three-stage release process: alpha → beta → main
+- Pull requests should target the `alpha` branch
+- Code review is required before merging
+
+## Support
+
+If you have any questions or suggestions, please submit an Issue or contact the development team.
+
+---
+
+# wp-editor
+
+![License](https://img.shields.io/badge/license-Apache%202.0-blue)
+![Test Coverage](https://img.shields.io/badge/test%20coverage-TBD-lightgrey)
+
+wp-editor 是一个独立运行的 WEB 系统，专门用于日志解析和数据转换。它提供了完整的日志解析、数据转换和项目管理功能。
 
 ## 功能特性
 
@@ -25,79 +135,6 @@ Wp Editor 是一个独立运行的 WEB 系统，专门用于日志解析和数�
 - **UI 组件**: Ant Design 5.24.9
 - **编辑器**: CodeJar
 
-## 快速开始
-
-### 环境要求
-
-- Rust 1.70+
-- Node.js 20+
-- Cargo 包管理器
-
-### 安装步骤
-
-1. **克隆项目**
-
-```bash
-git clone <repository-url>
-cd wp-editor
-```
-
-1. **构建后端**
-
-```bash
-cargo build
-```
-
-1. **运行服务**
-
-```bash
-# 运行后端服务
-cargo run
-
-```
-
-### 配置说明
-
-配置文件位于 `config/config.toml`:
-
-```toml
-[log]
-level = "info,ctrl=info,launch=info"
-output = "Console"
-output_path = "./logs/"
-
-[web]
-host = "0.0.0.0"
-port = 8080
-
-[repo]
-wpl_rule_repo = "./rules"
-oml_rule_repo = "./rules/models/oml"
-```
-
-### 处理个人Rule库路径
-
-由于每个人都可能有自己的Rule库路径，为了避免提交冲突，我们提供了以下解决方案：
-
-#### 方案：使用软链接（推荐）
-
-1. 创建软链接指向个人配置文件：
-
-   ```bash
-   ln -sf your/path/to/warp-rules/models/wpl ../wp-rule/models/wpl
-   ln -sf your/path/to/warp-rules/models/oml ../wp-rule/models/oml
-   ```
-
-2. 这样每次运行程序时都会使用个人配置，而不会影响团队共享的配置文件
-
-### 注意事项
-
-- `wpl_rule_repo`和`oml_rule_repo`可以是绝对路径或相对路径
-- 相对路径是相对于项目根目录的路径
-- 如果不指定这些路径，程序会使用默认路径：
-  - `wpl_rule_repo`: `../wp-rule/models/wpl`
-  - `oml_rule_repo`: `../wp-rule/models/oml`
-
 ## 使用指南
 
 ### 1. 编写 WPL 规则
@@ -117,7 +154,7 @@ package /example/simple {
 OML (Object Mapping Language) 用于定义数据转换规则:
 
 ```oml
-name : /oml/example/simple 
+name : /oml/example/simple
 rule :
     /example/simple*
 ---
@@ -144,108 +181,31 @@ src_ip     = take(option:[src-ip,sip,source-ip] );
 - `POST /api/parse-logs` - 解析日志
 - `POST /api/convert-record` - 转换数据
 
-## 项目结构
-
-```
-wp-editor/
-├── .github/          # GitHub Actions 工作流配置
-├── _gal/             # 内部工具配置,使用gflow更新版本依赖
-├── config/           # 配置文件
-│   └── config.toml
-├── crates/           # 子 crate
-│   └── migrations/   # 数据库迁移
-├── src/              # 后端源码
-│   ├── api/          # API 接口实现
-│   │   ├── debug.rs
-│   │   ├── knowledge.rs
-│   │   └── mod.rs
-│   ├── db/           # 数据库操作
-│   │   ├── knowledge_config.rs
-│   │   ├── mod.rs
-│   │   └── pool.rs
-│   ├── server/       # 服务器配置
-│   │   ├── app.rs
-│   │   ├── mod.rs
-│   │   └── setting.rs
-│   ├── utils/        # 工具函数
-│   │   ├── knowledge.rs
-│   │   ├── mod.rs
-│   │   ├── oml.rs
-│   │   └── wpl.rs
-│   ├── error.rs
-│   ├── lib.rs
-│   └── main.rs
-├── tests/            # 测试代码
-│   ├── api/          # API 测试
-│   └── utils/        # 工具测试
-├── web/              # 前端源码
-│   ├── dist/         # 构建输出
-│   ├── public/       # 静态资源
-│   ├── src/          # 前端源码
-│   │   ├── configs/  # 配置
-│   │   ├── services/ # API 服务
-│   │   ├── styles/   # 样式
-│   │   ├── test/     # 前端测试
-│   │   ├── utils/    # 前端工具
-│   │   ├── views/    # 页面组件
-│   │   │   ├── components/ # 通用组件
-│   │   │   └── pages/      # 页面
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── index.html
-│   ├── package.json
-│   └── vite.config.js
-├── Cargo.lock
-├── Cargo.toml
-├── Dockerfile
-├── README.md
-└── build.rs
-```
-
-## 开发指南
-
-### 后端开发
-
-- 使用 `cargo test` 运行测试
-- 使用 `cargo clippy` 检查代码质量
-- 遵循 Rust 代码规范
-
-### 前端开发
-
-- 使用 `npm run lint` 检查代码质量
-- 使用 `npm run build` 构建生产版本
-- 遵循 React 18+ 最佳实践
-
-## 部署
-
-### Docker 部署
-
-```bash
-docker build -t wp-editor .
-docker run -p 8080:8080 wp-editor
-```
-
-### 直接部署
-
-1. 构建后端: `cargo build --release`
-2. 运行: `./target/release/wp-editor`
-
-## 贡献指南
-
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
-
 ## 许可证
 
 本项目采用 Apache License 2.0 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 
+### Apache License 2.0 概述
+
+Apache License 2.0 是一个宽松的开源许可证，具有以下特点：
+
+- 允许商业使用、修改和分发
+- 要求保留版权和许可证声明
+- 为贡献者明确授予专利权
+- 免除担保并限制责任
+- 与多种其他开源许可证兼容
+
+有关完整的许可证条款，请参考 [LICENSE](LICENSE) 文件。
+
+## 贡献指南
+
+我们欢迎任何形式的贡献！有关详细的贡献指南、开发流程和发布流程，请参考我们的 [CONTRIBUTING.md](CONTRIBUTING.md) 文档。
+
+主要亮点：
+- 三阶段发布流程：alpha → beta → main
+- Pull Request 应该针对 `alpha` 分支
+- 合并前需要代码审查
+
 ## 支持
 
 如有问题或建议，请提交 Issue 或联系开发团队。
-
-## 详细文档
-
-更多详细信息请查看 [doc/README.md](doc/README.md) 文档。
