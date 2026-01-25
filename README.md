@@ -3,7 +3,7 @@
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue)
 ![Test Coverage](https://img.shields.io/badge/test%20coverage-TBD-lightgrey)
 
-wp-editor is a standalone web system designed for log parsing and data transformation. It provides comprehensive log parsing, data transformation, and project management capabilities.
+wp-editor is a standalone web system designed for writing and validating WPL (log parsing rules) and OML (data transformation rules).
 
 ## Features
 
@@ -110,7 +110,7 @@ If you have any questions or suggestions, please submit an Issue or contact the 
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue)
 ![Test Coverage](https://img.shields.io/badge/test%20coverage-TBD-lightgrey)
 
-wp-editor 是一个独立运行的 WEB 系统，专门用于日志解析和数据转换。它提供了完整的日志解析、数据转换和项目管理功能。
+wp-editor 是一个独立运行的 WEB 系统，专门用于 WPL（日志解析规则）和 OML（数据转换规则）的编写和验证。
 
 ## 功能特性
 
