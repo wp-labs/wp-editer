@@ -42,6 +42,13 @@
       "parse": "解析",
       "convert": "转换"
     },
+    "workspace": {
+      "title": "工作区",
+      "loadSuccess": "已加载工作区内容",
+      "loadSuccessWithResults": "已加载工作区内容和解析结果",
+      "autoSaved": "工作区内容已自动保存",
+      "autoSavedWithResults": "工作区内容和解析结果已自动保存"
+    },
     "examples": {
       "title": "规则示例库",
       "desc": "点击示例，自动填充日志与规则",

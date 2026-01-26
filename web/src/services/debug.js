@@ -330,7 +330,6 @@ export async function parseLogs(options) {
  */
 export async function convertRecord(options) {
   const { oml, connectionId, parseResult } = options;
-  console.log('convertRecord', { oml, connectionId, parseResult });
 
   /**
    * 构造转换错误对象，携带后端响应内容，便于前端展示

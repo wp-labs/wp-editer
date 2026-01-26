@@ -12,6 +12,7 @@ import {
   base64Decode,
 } from '@/services/debug';
 import CodeEditor from '@/views/components/CodeEditor';
+import { useWorkspace } from '@/hooks/useWorkspace';
 
 /**
  * Wp Editor
@@ -36,6 +37,17 @@ const DEFAULT_EXAMPLES = [
 
 function SimulateDebugPage() {
   const { t } = useTranslation();
+  
+  // 工作区管理
+  const {
+    workspaceMode,
+    workspaceData,
+    saveWorkspace,
+    updateWorkspace,
+    clearWorkspace,
+    switchMode,
+  } = useWorkspace();
+  
   const [activeKey, setActiveKey] = useState('parse');
   const [inputValue, setInputValue] = useState('');
   const [ruleValue, setRuleValue] = useState('');
@@ -136,12 +148,30 @@ function SimulateDebugPage() {
   const wplFormat = async () => {
     try {
       const response = await wplCodeFormat(ruleValue);
-      console.log('格式化WPL代码响应:', response);
-      setRuleValue(response?.wpl_code || '');
+      const formattedWpl = response?.wpl_code || '';
+      setRuleValue(formattedWpl);
     } catch (error) {
       message.error(`${t('simulateDebug.parseRule.formatError')}：${error?.message || error}`);
     }
   };
+
+  // 监听输入变化，在工作区模式下更新工作区数据
+  useEffect(() => {
+    if (workspaceMode === 'workspace') {
+      updateWorkspace({
+        log: inputValue,
+        wpl: ruleValue,
+        oml: transformOml,
+        parseResult: result,
+        parseError: parseError,
+        transformParseResult: transformParseResult,
+        transformResult: transformResult,
+        transformError: transformError,
+        selectedExample: selectedExample,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputValue, ruleValue, transformOml, result, parseError, transformParseResult, transformResult, transformError, selectedExample, workspaceMode]);
 
   // 页面加载后默认展开示例并尝试拉取
   useEffect(() => {
@@ -155,6 +185,7 @@ function SimulateDebugPage() {
   const handleApplyExample = async exampleItem => {
     if (!exampleItem) return;
     const { sample_data: sampleData, wpl_code: wplCode, oml_code: omlCode } = exampleItem;
+    
     setInputValue(sampleData || '');
     setRuleValue(wplCode || '');
     setTransformOml(omlCode || '');
@@ -191,22 +222,82 @@ function SimulateDebugPage() {
     setInputValue('');
     setRuleValue('');
     setResult(null);
-    setParseError(null); // 清空解析错误
+    setParseError(null);
     // 清空转换页面
     setTransformOml('');
     setTransformParseResult(null);
     setTransformResult(null);
-    setTransformError(null); // 清空转换错误
+    setTransformError(null);
     // 清空选中示例状态
     setSelectedExample(null);
+    
+    // 如果在工作区模式，也清空工作区数据（包括解析结果）
+    if (workspaceMode === 'workspace') {
+      clearWorkspace();
+    }
+  };
+  
+  /**
+   * 切换工作区/示例区
+   */
+  const handleSwitchMode = (mode) => {
+    const currentData = {
+      log: inputValue,
+      wpl: ruleValue,
+      oml: transformOml,
+      // 保存解析结果
+      parseResult: result,
+      parseError: parseError,
+      // 保存转换结果
+      transformParseResult: transformParseResult,
+      transformResult: transformResult,
+      transformError: transformError,
+      // 保存其他状态
+      selectedExample: selectedExample,
+    };
+    
+    const loadedData = switchMode(mode, currentData);
+    
+    if (mode === 'workspace' && loadedData) {
+      // 切换回工作区，加载保存的数据
+      setInputValue(loadedData.log || '');
+      setRuleValue(loadedData.wpl || '');
+      setTransformOml(loadedData.oml || '');
+      
+      // 恢复解析结果
+      setResult(loadedData.parseResult || null);
+      setParseError(loadedData.parseError || null);
+      
+      // 恢复转换结果
+      setTransformParseResult(loadedData.transformParseResult || null);
+      setTransformResult(loadedData.transformResult || null);
+      setTransformError(loadedData.transformError || null);
+      
+      // 恢复其他状态
+      setSelectedExample(loadedData.selectedExample || null);
+      
+      // 根据是否有解析结果显示不同提示
+      const hasResults = loadedData.parseResult || loadedData.transformResult;
+      message.success(hasResults 
+        ? t('simulateDebug.workspace.loadSuccessWithResults')
+        : t('simulateDebug.workspace.loadSuccess')
+      );
+    } else if (mode === 'examples') {
+      // 切换到示例区
+      const hasResults = result || transformResult;
+      message.success(hasResults 
+        ? t('simulateDebug.workspace.autoSavedWithResults')
+        : t('simulateDebug.workspace.autoSaved')
+      );
+    }
   };
 
   // 处理 Base64 解码按钮点击
   const handleBase64Decode = async () => {
     try {
       const response = await base64Decode(inputValue);
-      console.log('Base64解码响应:', response);
-      setInputValue(response || '');
+      const decodedValue = response || '';
+      setInputValue(decodedValue);
     } catch (error) {
       message.error(`${t('simulateDebug.logData.base64Error')}：${error?.message || error}`);
     }
@@ -218,14 +309,12 @@ function SimulateDebugPage() {
       return;
     }
     setLoading(true);
-    setTransformError(null); // 重置转换错误状态
+    setTransformError(null);
     try {
-      console.log('转换页解析结果:', transformParseResult);
       const response = await convertRecord({
         oml: transformOml,
         parseResult: transformParseResult,
       });
-      // 新 API 直接返回 { fields: [...] } 格式
       let fieldsData = [];
       if (Array.isArray(response?.fields)) {
         fieldsData = response.fields;
@@ -251,7 +340,8 @@ function SimulateDebugPage() {
   const omlFormat = async () => {
     try {
       const response = await omlCodeFormat(transformOml);
-      setTransformOml(response?.oml_code || '');
+      const formattedOml = response?.oml_code || '';
+      setTransformOml(formattedOml);
     } catch (error) {
       message.error(`${t('simulateDebug.omlInput.formatError')}：${error?.message || error}`);
     }
@@ -290,6 +380,39 @@ function SimulateDebugPage() {
       const fieldValue = fieldItem.value;
       return fieldValue !== '' && fieldValue !== null && fieldValue !== undefined;
     });
+  };
+
+  /**
+   * 过滤 JSON 对象中的空字段
+   * 用于 JSON 模式下的显示空值开关
+   */
+  const filterEmptyFields = (obj) => {
+    if (!obj || typeof obj !== 'object') {
+      return obj;
+    }
+    
+    if (Array.isArray(obj)) {
+      return obj
+        .map(item => filterEmptyFields(item))
+        .filter(item => item !== null && item !== undefined && item !== '');
+    }
+    
+    const filtered = {};
+    Object.keys(obj).forEach(key => {
+      const value = obj[key];
+      if (value !== null && value !== undefined && value !== '') {
+        if (typeof value === 'object') {
+          const filteredValue = filterEmptyFields(value);
+          if (Object.keys(filteredValue).length > 0 || Array.isArray(filteredValue)) {
+            filtered[key] = filteredValue;
+          }
+        } else {
+          filtered[key] = value;
+        }
+      }
+    });
+    
+    return filtered;
   };
 
   /**
@@ -471,15 +594,6 @@ function SimulateDebugPage() {
     );
   };
 
-  // 获取页面标题（与旧版本一致）
-  const getPageTitle = () => {
-    const titles = {
-      parse: t('simulateDebug.tabs.parse'),
-      convert: t('simulateDebug.tabs.convert'),
-    };
-    return titles[activeKey] || 'Wp Editor';
-  };
-
   return (
     <>
       <div>
@@ -499,32 +613,52 @@ function SimulateDebugPage() {
             <h2>{t('simulateDebug.tabs.convert')}</h2>
           </button>
         </aside>
-        <div className="example-list example-list--compact example-list--spaced">
-          <div className="example-list__header">
-            <div>
-              <h4 className="example-list__title">{t('simulateDebug.examples.title')}</h4>
-              <p className="example-list__desc">{t('simulateDebug.examples.desc')}</p>
+
+        <aside style={{ marginTop: "10px", marginBottom: "10px" }} className="side-nav" data-group="workspace-mode">
+          <button
+            type="button"
+            className={`side-item ${workspaceMode === 'workspace' ? 'is-active' : ''}`}
+            onClick={() => handleSwitchMode('workspace')}
+          >
+            <h2>{t('simulateDebug.workspace.title')}</h2>
+          </button>
+          <button
+            type="button"
+            className={`side-item ${workspaceMode === 'examples' ? 'is-active' : ''}`}
+            onClick={() => handleSwitchMode('examples')}
+          >
+            <h2>{t('simulateDebug.examples.title')}</h2>
+          </button>
+        </aside>
+        
+        {workspaceMode === 'examples' && (
+          <div className="example-list example-list--compact example-list--spaced">
+            <div className="example-list__header">
+              <div>
+                <h4 className="example-list__title">{t('simulateDebug.examples.title')}</h4>
+                <p className="example-list__desc">{t('simulateDebug.examples.desc')}</p>
+              </div>
             </div>
+            {examplesLoading ? (
+              <div className="example-list__message">{t('simulateDebug.examples.loading')}</div>
+            ) : examples && examples.length > 0 ? (
+              <div className="example-list__grid example-list__grid--small">
+                {examples.map(exampleItem => (
+                  <button
+                    key={exampleItem.name || exampleItem.key}
+                    type="button"
+                    className={`example-list__item ${selectedExample === exampleItem.name ? 'is-active' : ''}`}
+                    onClick={() => handleApplyExample(exampleItem)}
+                  >
+                    {exampleItem.name || t('simulateDebug.examples.unnamed')}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="example-list__message">{t('simulateDebug.examples.noData')}</div>
+            )}
           </div>
-          {examplesLoading ? (
-            <div className="example-list__message">{t('simulateDebug.examples.loading')}</div>
-          ) : examples && examples.length > 0 ? (
-            <div className="example-list__grid example-list__grid--small">
-              {examples.map(exampleItem => (
-                <button
-                  key={exampleItem.name || exampleItem.key}
-                  type="button"
-                  className={`example-list__item ${selectedExample === exampleItem.name ? 'is-active' : ''}`}
-                  onClick={() => handleApplyExample(exampleItem)}
-                >
-                  {exampleItem.name || t('simulateDebug.examples.unnamed')}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="example-list__message">{t('simulateDebug.examples.noData')}</div>
-          )}
-        </div>
+        )}
       </div>
       <section className="page-panels">
         <article className="panel is-visible">

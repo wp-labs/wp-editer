@@ -42,6 +42,13 @@
       "parse": "Parse",
       "convert": "Convert"
     },
+    "workspace": {
+      "title": "Workspace",
+      "loadSuccess": "Workspace content loaded",
+      "loadSuccessWithResults": "Workspace content and parse results loaded",
+      "autoSaved": "Workspace content auto-saved",
+      "autoSavedWithResults": "Workspace content and parse results auto-saved"
+    },
     "examples": {
       "title": "Rule Examples",
       "desc": "Click example to auto-fill logs and rules",
