@@ -1,4 +1,4 @@
-use crate::{OmlFormatter, WplFormatter};
+use crate::{OmlFormatter, WplFormatter, utils::format::remove_annotations};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fs::File, io::Read, path::PathBuf};
 use wp_lang::WplCode;
@@ -91,6 +91,9 @@ pub fn oml_examples(
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
         let oml_fmt = oml_formatter.format_content(&contents);
+
+        // 去除注释
+        contents = remove_annotations(&contents);
         let code = oml_parse(&mut contents.as_str(), "")?;
         results.push((code.rules().clone(), oml_fmt));
         return Ok(results);
@@ -112,15 +115,6 @@ mod tests {
     use std::fs;
     use tempfile::TempDir;
 
-    // #[test]
-    // fn demo() {
-    //     let file_path = PathBuf::from("rules/models/wpl");
-    //     let mut examples = HashMap::new();
-
-    //     let result = wpl_examples(file_path, &mut examples);
-    //     println!("{:?}", examples);
-    //     assert!(result.is_ok());
-    // }
     #[test]
     fn test_wpl_examples_with_directory() {
         let temp_dir = TempDir::new().unwrap();

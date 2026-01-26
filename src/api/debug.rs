@@ -4,6 +4,7 @@ use std::path::PathBuf;
 // 模拟调试 API
 use crate::error::AppError;
 use crate::server::examples;
+use crate::utils::format::remove_annotations;
 use crate::utils::{convert_record, record_to_fields, warp_check_record};
 use crate::{OmlFormatter, ParsedField, Setting, WplFormatter};
 use actix_web::{HttpResponse, get, post, web};
@@ -26,7 +27,8 @@ pub struct DebugParseRequest {
 #[post("/api/debug/parse")]
 pub async fn debug_parse(req: web::Json<DebugParseRequest>) -> Result<HttpResponse, AppError> {
     // 调用 warp_check_record 获取 DataRecord
-    let record = warp_check_record(&req.rules, &req.logs)?;
+    let filtered = remove_annotations(&req.rules);
+    let record = warp_check_record(&filtered, &req.logs)?;
 
     // 直接返回 DataField 列表，由 Actix 负责序列化为 JSON
     let formatter = FormatType::from(&TextFmt::Json);
