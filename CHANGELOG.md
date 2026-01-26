@@ -3,6 +3,20 @@
 本文件记录所有重要变更，格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.7.0] - 2026-01-26
+
+### Added
+
+- 新增功能和特性
+
+### Changed
+
+- 版本更新至 1.7.0
+
+### Fixed
+
+- 修复相关问题
+
 ## [1.6.3-alpha] - 2026-01-23
 
 ### Changed
