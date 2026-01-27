@@ -3405,9 +3405,30 @@ mark.diff-highlight {
 .panel-block--scrollable .mode-content.is-active .code-block {
   flex: 1 1 auto;
   overflow-y: auto;
-  overflow-x: auto;
+  overflow-x: hidden;
   min-height: 0;
+  min-width: 0;
   max-height: 500px;
+  max-width: 100%;
+  width: 100%;
+  word-wrap: break-word;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+/* 确保代码块内的长行能够正确换行 */
+.code-block pre {
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  word-break: break-all !important;
+  overflow-wrap: break-word !important;
+}
+
+/* 表格value列样式优化 */
+.data-table.compact .ant-table-tbody > tr > td {
+  word-wrap: break-word;
+  word-break: break-all;
+  white-space: pre-wrap;
 }
 
 /* 分页样式 */

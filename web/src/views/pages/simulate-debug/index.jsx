@@ -360,7 +360,17 @@ function SimulateDebugPage() {
       title: t('simulateDebug.table.value'),
       dataIndex: 'value',
       key: 'value',
-      style: { wordWrap: 'break-word', wordBreak: 'break-all', maxWidth: 300 },
+      width: 300,
+      render: (text) => (
+        <div style={{ 
+          wordWrap: 'break-word', 
+          wordBreak: 'break-all', 
+          maxWidth: '300px',
+          whiteSpace: 'pre-wrap'
+        }}>
+          {text}
+        </div>
+      ),
     },
   ];
 
@@ -788,7 +798,13 @@ function SimulateDebugPage() {
                             className="code-block"
                             language="json"
                             style={oneDark}
-                            customStyle={{ margin: 0, background: '#0f172a' }}
+                            customStyle={{ 
+                              margin: 0, 
+                              background: '#0f172a',
+                              maxWidth: '100%',
+                              width: '100%',
+                              overflowX: 'hidden'
+                            }}
                             codeTagProps={{ style: { background: 'transparent' } }}
                             wrapLines
                             lineProps={{ style: { background: 'transparent' } }}
@@ -926,7 +942,13 @@ function SimulateDebugPage() {
                           className="code-block"
                           language="json"
                           style={oneDark}
-                          customStyle={{ margin: 0, background: '#0f172a' }}
+                          customStyle={{ 
+                            margin: 0, 
+                            background: '#0f172a',
+                            maxWidth: '100%',
+                            width: '100%',
+                            overflowX: 'hidden'
+                          }}
                           codeTagProps={{ style: { background: 'transparent' } }}
                           wrapLines
                           lineProps={{ style: { background: 'transparent' } }}
@@ -1025,7 +1047,13 @@ function SimulateDebugPage() {
                           className="code-block"
                           language="json"
                           style={oneDark}
-                          customStyle={{ margin: 0, background: '#0f172a' }}
+                          customStyle={{ 
+                            margin: 0, 
+                            background: '#0f172a',
+                            maxWidth: '100%',
+                            width: '100%',
+                            overflowX: 'hidden'
+                          }}
                           codeTagProps={{ style: { background: 'transparent' } }}
                           wrapLines
                           lineProps={{ style: { background: 'transparent' } }}
