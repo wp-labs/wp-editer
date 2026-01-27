@@ -231,9 +231,11 @@ impl WplFormatter {
             final_out.push('\n');
         }
 
-        if !final_out.ends_with('\n') {
-            final_out.push('\n');
+        // 清理末尾多余的换行，最多保留一个空行
+        while final_out.ends_with("\n\n\n") {
+            final_out.pop();
         }
+
         Ok(final_out)
     }
 

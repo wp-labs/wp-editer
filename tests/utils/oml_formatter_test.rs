@@ -19,7 +19,6 @@ block = match read(kind) {
         value = 2;
     }
 }
-
 ";
 
     assert_eq!(formatted, expected, "格式化后应统一缩进与换行");
@@ -38,7 +37,6 @@ fn format_content_should_split_by_semicolon_outside_string() {
     let expected = "\
 pos_sn = read(option:[serial_num]);
 access_ip: ip = read(access_ip);
-
 ";
 
     assert_eq!(
@@ -56,7 +54,6 @@ fn format_content_should_remove_space_before_semicolon() {
     let expected = "\
 value = 1;
 another = 2;
-
 ";
 
     assert_eq!(
@@ -117,7 +114,6 @@ extend_fields = object {
     backrule_id, priv_info = read();
 };
 data_src_system = digit(13);
-
 ";
 
     assert_eq!(
@@ -147,7 +143,6 @@ rule : demo
 
 collect_time = pipe @collect_time_tmp | Time::to_ts_ms;
 value = read(a) | Func::call;
-
 ";
 
     assert_eq!(
@@ -175,7 +170,6 @@ rule : demo
 
 // comment with ; and | should stay
 value = 1;
-
 ";
 
     assert_eq!(
@@ -206,7 +200,6 @@ rule : qingteng/host
 ---
 
 block = {}
-
 ";
 
     assert_eq!(formatted, expected, "属性块应折叠为单行，内容保持原有顺序");
@@ -239,7 +232,6 @@ block = {}
 value = 1;
 
 value = 2;
-
 ";
 
     assert_eq!(
@@ -268,7 +260,6 @@ rule :
 ---
 
 pos_sn = read(dev_sn);
-
 ";
 
     assert_eq!(
@@ -317,7 +308,6 @@ rule :
 ---
 
 pos_sn = read(dev_sn);
-
 ";
 
     assert_eq!(
@@ -356,7 +346,6 @@ event_risk_level = match read(option:[judgeForTI]) {
     digit(3) => chars(不告警;不拦截);
     digit(4) => chars(不告警;可拦截);
 };
-
 ";
 
     assert_eq!(

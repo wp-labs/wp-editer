@@ -299,7 +299,7 @@ function SimulateDebugPage() {
       const decodedValue = response || '';
       setInputValue(decodedValue);
     } catch (error) {
-      message.error(`${t('simulateDebug.logData.base64Error')}：${error?.message || error}`);
+      message.error(`${t('simulateDebug.logData.base64Error')}`);
     }
   };
 

@@ -104,9 +104,11 @@ impl OmlFormatter {
 
         out.push_str(&body_formatted);
 
-        if !out.ends_with('\n') {
-            out.push('\n');
+        // 清理末尾多余的换行，最多保留一个空行
+        while out.ends_with("\n\n\n") {
+            out.pop();
         }
+
         Ok(out)
     }
 
@@ -349,13 +351,9 @@ impl OmlFormatter {
         }
 
         let mut res = collapse_blank_lines(&out);
-        // 确保尾部有一个空行
-        if !res.is_empty() && !res.ends_with("\n\n") {
-            if res.ends_with('\n') {
-                res.push('\n');
-            } else {
-                res.push_str("\n\n");
-            }
+        // 清理末尾多余的换行，最多保留一个空行
+        while res.ends_with("\n\n\n") {
+            res.pop();
         }
         res
     }

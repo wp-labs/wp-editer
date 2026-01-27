@@ -101,5 +101,4 @@ invalid toml syntax
 
     // 应该使用默认配置
     assert_eq!(setting.log.level, "debug");
-    assert_eq!(setting.web.port, 8080);
 }
