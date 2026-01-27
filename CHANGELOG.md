@@ -3,7 +3,14 @@
 本文件记录所有重要变更，格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [1.7.0] - 2026-01-26
+## [1.7.1-alpha] - 2026-01-27
+
+### Changed
+
+- 版本更新至 1.7.1-alpha
+- 优化调试页面 JSON 模式长行显示，避免内容撑开容器
+
+## [1.7.0-alpha] - 2026-01-26
 
 ### Added
 
@@ -11,7 +18,7 @@
 
 ### Changed
 
-- 版本更新至 1.7.0
+- 版本更新至 1.7.0-alpha
 
 ### Fixed
 
