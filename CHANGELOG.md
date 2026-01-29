@@ -3,6 +3,15 @@
 本文件记录所有重要变更，格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.8.0-alpha] - 2026-01-29
+
+### Changed
+
+- 版本更新至 1.8.0-alpha
+- 更新社区二维码图片
+- 升级wp-motor依赖版本至v1.11.1-alpha
+- 更新相关依赖包版本
+
 ## [1.7.1-alpha] - 2026-01-27
 
 ### Changed
